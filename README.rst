@@ -3,14 +3,7 @@ Client interface for Scrapinghub API
 ====================================
 
 The ``scrapinghub`` module is a Python library for communicating with the
-:ref:`Scrapinghub API <api>`.
-
-You can download it from the following link (you may want to right click and
-select "Save As"):
-
-This documentation contains some examples to illustrate how to use the
-``scrapinghub`` module. For more information see: :ref:`api`.
-
+`Scrapinghub API`_.
 
 First, you connect to Scrapinghub::
 
@@ -83,3 +76,5 @@ To mark several jobs with tag ``consumed`` (``JobSet`` also supports the
 ``update()`` method)::
 
     >>> project.jobs(state='finished').update(add_tag='consumed')
+
+.. _Scrapinhub API: http://panel.scrapinghub.com/help/api.html
