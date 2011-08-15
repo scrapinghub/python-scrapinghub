@@ -77,4 +77,4 @@ To mark several jobs with tag ``consumed`` (``JobSet`` also supports the
 
     >>> project.jobs(state='finished').update(add_tag='consumed')
 
-.. _Scrapinhub API: http://panel.scrapinghub.com/help/api.html
+.. _Scrapinghub API: http://panel.scrapinghub.com/help/api.html
