@@ -2,21 +2,19 @@
 Client interface for Scrapinghub API
 ====================================
 
-The ``hublib`` module is a Python library for communicating with the
+The ``scrapinghub`` module is a Python library for communicating with the
 :ref:`Scrapinghub API <api>`.
 
 You can download it from the following link (you may want to right click and
 select "Save As"):
 
-Download: `hublib.py`_
-
 This documentation contains some examples to illustrate how to use the
-``hublib`` module. For more information see: :ref:`api`.
+``scrapinghub`` module. For more information see: :ref:`api`.
 
 
 First, you connect to Scrapinghub::
 
-    >>> from hublib import Connection
+    >>> from scrapinghub import Connection
     >>> conn = Connection('http://panel.scrapinghub.com/api/', 'user', 'password')
     >>> conn
     Connection(http://panel.scrapinghub.com/api/)
@@ -85,6 +83,3 @@ To mark several jobs with tag ``consumed`` (``JobSet`` also supports the
 ``update()`` method)::
 
     >>> project.jobs(state='finished').update(add_tag='consumed')
-
-.. _hublib.py: /download/hublib.py
-

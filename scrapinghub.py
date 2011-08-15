@@ -1,7 +1,4 @@
-"""Scrapinghub API Client Library
-
-See documentation in doc/hublib.rst.
-"""
+"""Scrapinghub API Client Library"""
 
 import base64
 import urllib
@@ -37,7 +34,7 @@ class Connection(object):
 
     def __init__(self, url, username_or_apikey, password=''):
         self.url = url
-        self._request_headers = {'User-Agent': 'hublib/1.0'}
+        self._request_headers = {'User-Agent': 'scrapinghub/1.0'}
         self._set_auth(username_or_apikey, password)
 
     def __repr__(self):
