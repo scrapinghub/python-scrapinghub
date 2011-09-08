@@ -63,29 +63,16 @@ class ProjectTest(unittest.TestCase):
         self.assertEqual(str(p2), 'Project(Connection(http://server/api/), bar)')
 
     def test_schedule(self):
-        content = json.dumps(dict(status='ok', jobs=dict(foo='a1')))
+        content = json.dumps(dict(status='ok', jobid='a1'))
 
         p = self.client['foo']
         with MockResponse(self.client, content) as mock:
             result = p.schedule('foo', arg='bar')
-            self.assertEqual(result['foo'], 'a1')
+            self.assertEqual(result, 'a1')
             self.assertEqual(mock.url,
                              'http://server/api/schedule.json')
             self.assertEqual(mock.data,
                              'project=foo&spider=foo&arg=bar')
-
-    def test_schedule_multi(self):
-        content = json.dumps(dict(status='ok', jobs=dict(s1='a1', s2='a2')))
-
-        p = self.client['foo']
-        with MockResponse(self.client, content) as mock:
-            result = p.schedule(['s1', 's2'], arg='bar')
-            self.assertEqual(result['s1'], 'a1')
-            self.assertEqual(result['s2'], 'a2')
-            self.assertEqual(mock.url,
-                             'http://server/api/schedule.json')
-            self.assertEqual(mock.data,
-                             'project=foo&spider=s1&spider=s2&arg=bar')
 
     def test_jobs_empty(self):
         content = '\n'.join([

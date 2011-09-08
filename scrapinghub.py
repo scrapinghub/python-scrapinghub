@@ -150,10 +150,10 @@ class Project(object, RequestProxyMixin):
     def __repr__(self):
         return "Project({0.connection!r}, {0.name})".format(self)
 
-    def schedule(self, spider_or_spiders, **params):
-        params['spider'] = spider_or_spiders
+    def schedule(self, spider, **params):
+        params['spider'] = spider
         result = self._post('schedule', 'json', params)
-        return result['jobs']
+        return result['jobid']
 
     def jobs(self, **params):
         return JobSet(self, **params)
