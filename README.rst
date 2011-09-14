@@ -25,11 +25,15 @@ And select a particular project to work with::
     >>> project.name
     '123'
 
+To schedule a spider run (it returns the job id)::
 
-If you want to schedule a spider::
+    >>> project.schedule('myspider', arg1='val1')
+    u'4ca37770a1a3a24c45000005'
 
-    >>> project.schedule('groupon.com', arg1='val1')
-    [u'4ca37770a1a3a24c45000005', u'4ca33330a1a3a24c45000005']
+To get the list of spiders in the project::
+
+    >>> project.spiders()
+    [u'spider1', u'spider2']
 
 To get all finished jobs::
 
