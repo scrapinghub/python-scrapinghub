@@ -81,4 +81,12 @@ To mark several jobs with tag ``consumed`` (``JobSet`` also supports the
 
     >>> project.jobs(state='finished').update(add_tag='consumed')
 
+To delete a job::
+
+    >>> job.delete()
+
+To delete several jobs (``JobSet`` also supports the ``update()`` method)::
+
+    >>> project.jobs(state='finished').delete()
+
 .. _Scrapinghub API: http://panel.scrapinghub.com/help/api.html

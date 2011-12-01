@@ -163,6 +163,17 @@ class ProjectTest(unittest.TestCase):
             self.assertEqual(mock.data,
                              'project=foo&job=a1&add_tag=t1')
 
+        # delete job
+        content = json.dumps(dict(status='ok', count=1))
+        with MockResponse(self.client, content) as mock:
+            result = job.delete()
+            self.assertEqual(result, 1)
+
+            self.assertEqual(mock.url,
+                             'http://server/api/jobs/delete.json')
+            self.assertEqual(mock.data,
+                             'project=foo&job=a1')
+
         # fetch items
         content = '\n'.join([
             json.dumps(dict(_id='i1')),
