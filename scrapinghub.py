@@ -207,6 +207,10 @@ class JobSet(object, RequestProxyMixin):
         result = self._post('jobs_update', 'json', params)
         return result['count']
 
+    def delete(self):
+        for job in self:
+            job.delete()
+
     def _load_jobs(self):
         # only load once
         if self._jobs is None:
@@ -254,6 +258,10 @@ class Job(object, RequestProxyMixin):
     def update(self, **modifiers):
         # XXX: only allow add_tag/remove_tag
         result = self._post('jobs_update', 'json', modifiers)
+        return result['count']
+
+    def delete(self):
+        result = self._post('jobs_delete', 'json')
         return result['count']
 
     @property
