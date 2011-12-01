@@ -34,7 +34,7 @@ class MockResponse(object):
 class ConnectionTest(unittest.TestCase):
 
     def setUp(self):
-        self.client = Connection('http://server/api/', 'john', 'doe')
+        self.client = Connection('john', 'doe', url='http://server/api/')
 
     def test_initialization(self):
         self.assertEqual(self.client.url, 'http://server/api/')
@@ -54,7 +54,7 @@ class ConnectionTest(unittest.TestCase):
 class ProjectTest(unittest.TestCase):
 
     def setUp(self):
-        self.client = Connection('http://server/api/', 'john', 'doe')
+        self.client = Connection('john', 'doe', url='http://server/api/')
 
     def test_project_access(self):
         p1 = self.client['foo']

@@ -32,8 +32,10 @@ class Connection(object):
         'spiders': 'spiders/list'
     }
 
-    def __init__(self, url, username_or_apikey, password=''):
-        self.url = url
+    SCRAPINGHUB_API_URL = 'http://panel.scrapinghub.com/api/'
+
+    def __init__(self, username_or_apikey, password='', url=None):
+        self.url = url or self.SCRAPINGHUB_API_URL
         self._request_headers = {'User-Agent': 'scrapinghub/1.0'}
         self._set_auth(username_or_apikey, password)
 

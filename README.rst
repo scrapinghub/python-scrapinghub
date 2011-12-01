@@ -8,9 +8,17 @@ The ``scrapinghub`` module is a Python library for communicating with the
 First, you connect to Scrapinghub::
 
     >>> from scrapinghub import Connection
-    >>> conn = Connection('http://panel.scrapinghub.com/api/', 'user', 'password')
+    >>> conn = Connection('user', 'password')
     >>> conn
     Connection(http://panel.scrapinghub.com/api/)
+
+or::
+
+    >>> from scrapinghub import Connection
+    >>> conn = Connection('user', 'password', url='http://mypanel.scrapinghub.com/api/')
+    >>> conn
+    Connection(http://mypanel.scrapinghub.com/api/)
+
 
 You can list the projects available to your account::
 
