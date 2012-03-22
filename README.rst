@@ -2,6 +2,15 @@
 Client interface for Scrapinghub API
 ====================================
 
+Requirements
+============
+
+* Python 2.6 or above
+* `Requests`_ library
+
+Usage
+=====
+
 The ``scrapinghub`` module is a Python library for communicating with the
 `Scrapinghub API`_.
 
@@ -90,3 +99,4 @@ To delete several jobs (``JobSet`` also supports the ``update()`` method)::
     >>> project.jobs(state='finished').delete()
 
 .. _Scrapinghub API: http://panel.scrapinghub.com/help/api.html
+.. _Requests: http://docs.python-requests.org/

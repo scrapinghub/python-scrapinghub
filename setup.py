@@ -4,7 +4,7 @@ except ImportError:
     from distutils.core import setup
 
 setup(name='scrapinghub',
-      version='0.1',
+      version='0.2',
       license='BSD',
       description='Client interface for Scrapinghub API',
       author='Scrapinghub',
@@ -12,6 +12,7 @@ setup(name='scrapinghub',
       url='http://github.com/scrapinghub/python-scrapinghub',
       platforms = ['Any'],
       py_modules = ['scrapinghub'],
+      install_requires = ['requests'],
       classifiers = [ 'Development Status :: 4 - Beta',
                       'License :: OSI Approved :: BSD License',
                       'Operating System :: OS Independent',

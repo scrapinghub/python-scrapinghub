@@ -3,9 +3,9 @@
 import base64
 import urllib
 import json
+import requests
 
-from urllib2 import urlopen, Request
-from urlparse import urljoin
+from requests.compat import urljoin
 
 
 __all__ = ["APIError", "Connection"]
@@ -34,7 +34,7 @@ class Connection(object):
 
     def __init__(self, url, username_or_apikey, password=''):
         self.url = url
-        self._request_headers = {'User-Agent': 'scrapinghub/1.0'}
+        self._request_headers = {'User-Agent': 'python-scrapinghub/1.0'}
         self._set_auth(username_or_apikey, password)
 
     def __repr__(self):
@@ -71,8 +71,8 @@ class Connection(object):
         return self._request(url, data, headers, format, raw)
 
     def _request(self, url, data, headers, format, raw):
-        """Performs the request using `self._urlopen` and returns
-        the content based on given `format`.
+        """Performs the request using and returns the content deserialized,
+        based on given `format`.
 
         Available formats:
             * json - Returns a json object and checks for errors
@@ -87,12 +87,17 @@ class Connection(object):
         if headers:
             request_headers.update(headers)
 
-        response = self._urlopen(url, data, request_headers)
-        if raw:
-            return response
+        if data is None:
+            response = requests.get(url, headers=request_headers)
+        else:
+            response = requests.post(url, headers=request_headers, data=data)
+        return self._decode_response(response, format, raw)
 
-        if format == 'json':
-            data = json.loads(response.read())
+    def _decode_response(self, response, format, raw):
+        if raw:
+            return response.raw
+        elif format == 'json':
+            data = json.loads(response.text)
             # validate response
             try:
                 if data['status'] == 'ok':
@@ -104,11 +109,7 @@ class Connection(object):
             except KeyError:
                 raise APIError("JSON response does not contain status")
         else: # jl
-            return (json.loads(line) for line in response)
-
-    def _urlopen(self, url, data, request_headers):
-        """Performs the request using urllib2 and returns file-like object"""
-        return urlopen(Request(url, data, request_headers))
+            return (json.loads(line) for line in response.iter_lines())
 
     ##
     ## public methods
