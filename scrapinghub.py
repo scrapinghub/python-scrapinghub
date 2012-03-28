@@ -1,5 +1,6 @@
 """Scrapinghub API Client Library"""
 
+import os
 import base64
 import urllib
 import json
@@ -33,7 +34,11 @@ class Connection(object):
         'spiders': 'spiders/list'
     }
 
-    def __init__(self, username_or_apikey, password='', _old_passwd='', url='http://panel.scrapinghub.com'):
+    def __init__(self, username_or_apikey=None, password='', _old_passwd='', url='http://panel.scrapinghub.com'):
+        if username_or_apikey is None:
+            username_or_apikey = os.environ.get('SH_APIKEY')
+            if username_or_apikey is None:
+                raise RuntimeError("No API key provided and SH_APIKEY environment variable not set")
         if username_or_apikey.startswith('http://'):
             warnings.warn("Instantiating scrapinghub.Connection with url as first argument is deprecated", stacklevel=2)
             url, username_or_apikey, password = username_or_apikey, password, _old_passwd
