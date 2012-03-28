@@ -34,7 +34,7 @@ class Connection(object):
         'spiders': 'spiders/list'
     }
 
-    def __init__(self, username_or_apikey=None, password='', _old_passwd='', url='http://panel.scrapinghub.com'):
+    def __init__(self, username_or_apikey=None, password='', _old_passwd='', url='http://panel.scrapinghub.com/api/'):
         if username_or_apikey is None:
             username_or_apikey = os.environ.get('SH_APIKEY')
             if username_or_apikey is None:
