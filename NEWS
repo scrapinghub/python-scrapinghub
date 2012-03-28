@@ -9,6 +9,7 @@ Version 0.2
 - added support for gzip transfer encoding to increase API throughput on low
   bandwidth connections
 - deprecated first url argument of scrapinghub.Connection object
+- added support for loading API key from SH_APIKEY environment variable
 
 Version 0.1
 -----------
