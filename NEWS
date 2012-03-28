@@ -8,6 +8,7 @@ Version 0.2
 - ported to uses Requests library (instead of urllib2)
 - added support for gzip transfer encoding to increase API throughput on low
   bandwidth connections
+- deprecated first url argument of scrapinghub.Connection object
 
 Version 0.1
 -----------

@@ -3,6 +3,7 @@
 import base64
 import urllib
 import json
+import warnings
 import requests
 
 from requests.compat import urljoin
@@ -32,13 +33,17 @@ class Connection(object):
         'spiders': 'spiders/list'
     }
 
-    def __init__(self, url, username_or_apikey, password=''):
+    def __init__(self, username_or_apikey, password='', _old_passwd='', url='http://panel.scrapinghub.com'):
+        if username_or_apikey.startswith('http://'):
+            warnings.warn("Instantiating scrapinghub.Connection with url as first argument is deprecated", stacklevel=2)
+            url, username_or_apikey, password = username_or_apikey, password, _old_passwd
         self.url = url
+        self.username_or_apikey = username_or_apikey
         self._request_headers = {'User-Agent': 'python-scrapinghub/1.0'}
         self._set_auth(username_or_apikey, password)
 
     def __repr__(self):
-        return "Connection({0.url})".format(self)
+        return "Connection(%r)" % self.username_or_apikey
 
     def _set_auth(self, username, password):
         auth = base64.urlsafe_b64encode("{0}:{1}".format(username, password))
