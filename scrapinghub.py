@@ -131,12 +131,16 @@ class Connection(object):
         """
         return Project(self, key)
 
-    def project_names(self):
+    def project_ids(self):
         """Returns a list of projects available for this connection and
         crendentials.
         """
         result = self._get('listprojects', 'json')
         return result['projects']
+
+    def project_names(self):
+        warnings.warn("scrapinghub.Connection.project_names() method is deprecated, use project_ids() method instead", stacklevel=2)
+        return self.project_ids()
 
 
 class RequestProxyMixin:

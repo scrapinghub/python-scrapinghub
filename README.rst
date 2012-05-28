@@ -23,7 +23,7 @@ First, you connect to Scrapinghub::
 
 You can list the projects available to your account::
 
-    >>> conn.project_names()
+    >>> conn.project_ids()
     [u'123', u'456']
 
 And select a particular project to work with::
