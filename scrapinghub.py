@@ -1,14 +1,13 @@
 """Scrapinghub API Client Library"""
 
 import os
-import base64
-import urllib
 import json
 import warnings
 import requests
 from cStringIO import StringIO
 
 from requests.compat import urljoin
+from requests.models import urlencode
 
 
 __all__ = ["APIError", "Connection"]
@@ -46,15 +45,11 @@ class Connection(object):
             url, username_or_apikey, password = username_or_apikey, password, _old_passwd
         self.url = url
         self.username_or_apikey = username_or_apikey
+        self.auth = (username_or_apikey, password)
         self._request_headers = {'User-Agent': 'python-scrapinghub/1.0'}
-        self._set_auth(username_or_apikey, password)
 
     def __repr__(self):
         return "Connection(%r)" % self.username_or_apikey
-
-    def _set_auth(self, username, password):
-        auth = base64.urlsafe_b64encode("{0}:{1}".format(username, password))
-        self._request_headers["Authorization"] = "Basic {0}".format(auth)
 
     def _build_url(self, method, format):
         """Returns full url for given method and format"""
@@ -97,9 +92,9 @@ class Connection(object):
             request_headers.update(headers)
 
         if data is None and files is None:
-            response = requests.get(url, headers=request_headers)
+            response = requests.get(url, headers=request_headers, auth=self.auth)
         else:
-            response = requests.post(url, headers=request_headers, data=data, files=files)
+            response = requests.post(url, headers=request_headers, auth=self.auth, data=data, files=files)
         return self._decode_response(response, format, raw)
 
     def _decode_response(self, response, format, raw):
@@ -299,21 +294,4 @@ class Job(object, RequestProxyMixin):
 
 class APIError(Exception):
     pass
-
-
-def urlencode(query, doseq=0):
-    if hasattr(query, 'items'):
-        query = query.items()
-    return urllib.urlencode(
-        [(to_str(k),
-          isinstance(v, (list, tuple)) and [to_str(i) for i in v] or to_str(v))
-         for k, v in query],
-        doseq)
-
-
-def to_str(val, encoding='utf-8'):
-    if isinstance(val, unicode):
-        return val.encode(encoding)
-    return str(val)
-
 
