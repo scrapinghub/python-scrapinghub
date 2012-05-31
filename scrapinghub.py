@@ -31,7 +31,8 @@ class Connection(object):
         'schedule': 'schedule',
         'items': 'items',
         'log': 'log',
-        'spiders': 'spiders/list'
+        'spiders': 'spiders/list',
+        'reports_add': 'reports/add',
     }
 
     def __init__(self, username_or_apikey=None, password='', _old_passwd='', url='http://panel.scrapinghub.com/api/'):
@@ -72,15 +73,12 @@ class Connection(object):
             url = "{0}?{1}".format(url, urlencode(params, True))
         return self._request(url, None, headers, format, raw)
 
-    def _post(self, method, format, params=None, headers=None, raw=False):
+    def _post(self, method, format, params=None, headers=None, raw=False, files=None):
         """Performs POST request"""
         url = self._build_url(method, format)
-        data = None
-        if params:
-            data = urlencode(params, True)
-        return self._request(url, data, headers, format, raw)
+        return self._request(url, params, headers, format, raw, files)
 
-    def _request(self, url, data, headers, format, raw):
+    def _request(self, url, data, headers, format, raw, files=None):
         """Performs the request using and returns the content deserialized,
         based on given `format`.
 
@@ -97,10 +95,10 @@ class Connection(object):
         if headers:
             request_headers.update(headers)
 
-        if data is None:
+        if data is None and files is None:
             response = requests.get(url, headers=request_headers)
         else:
-            response = requests.post(url, headers=request_headers, data=data)
+            response = requests.post(url, headers=request_headers, data=data, files=files)
         return self._decode_response(response, format, raw)
 
     def _decode_response(self, response, format, raw):
@@ -152,9 +150,9 @@ class RequestProxyMixin:
         params = self._add_params(params or {})
         return self._request_proxy._get(method, format, params, headers, raw)
 
-    def _post(self, method, format, params=None, headers=None, raw=False):
+    def _post(self, method, format, params=None, headers=None, raw=False, files=None):
         params = self._add_params(params or {})
-        return self._request_proxy._post(method, format, params, headers, raw)
+        return self._request_proxy._post(method, format, params, headers, raw, files)
 
 
 class Project(object, RequestProxyMixin):
@@ -278,6 +276,10 @@ class Job(object, RequestProxyMixin):
     def delete(self):
         result = self._post('jobs_delete', 'json')
         return result['count']
+
+    def add_report(self, report, params):
+        result = self._post('reports_add', 'json', params, files=report)
+        return result['status']
 
     @property
     def _request_proxy(self):
