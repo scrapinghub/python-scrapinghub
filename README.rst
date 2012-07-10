@@ -70,6 +70,11 @@ To retrieve all scraped items from a job::
     >>> for item in job.items():
     ...     # do something with item (it's just a dict)
 
+To retrieve all log entries from a job::
+
+    >>> for logitem in job.log():
+    ...     # logitem is a dict with logLevel, message, time
+
 To get job info::
 
     >>> job.info['spider']
