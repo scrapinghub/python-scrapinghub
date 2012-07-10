@@ -104,10 +104,6 @@ class Connection(object):
             data = json.loads(response.text)
             # validate response
             try:
-                # special check for Log API as it isn't compatible with the rest of API
-                if response.status_code == 200 and isinstance(data, list):
-                    return data
-
                 if data['status'] == 'ok':
                     return data
                 elif data['status'] in ('error', 'badrequest'):
@@ -287,8 +283,8 @@ class Job(object, RequestProxyMixin):
         files = {'content': ('report', StringIO(content))}
         self._post('reports_add', 'json', params, files=files)
 
-    def logs(self, **params):
-        return self._get('log', 'json', params)
+    def log(self, **params):
+        return self._get('log', 'jl', params)
 
     @property
     def _request_proxy(self):
