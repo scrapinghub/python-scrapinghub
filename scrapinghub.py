@@ -288,6 +288,9 @@ class Job(object, RequestProxyMixin):
         files = {'content': ('report', StringIO(content))}
         self._post('reports_add', 'json', params, files=files)
 
+    def log(self, **params):
+        return self._get('log', 'jl', params)
+
     @property
     def _request_proxy(self):
         return self.project
