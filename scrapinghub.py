@@ -152,12 +152,17 @@ class RequestProxyMixin:
 
 
 class Project(object, RequestProxyMixin):
-    def __init__(self, connection, name):
+    def __init__(self, connection, projectid):
         self.connection = connection
-        self.name = name
+        self.id = projectid
 
     def __repr__(self):
-        return "Project({0.connection!r}, {0.name})".format(self)
+        return "Project({0.connection!r}, {0.id})".format(self)
+
+    @property
+    def name(self):
+        warnings.warn("Project.name is deprecated, use Project.id instead", stacklevel=2)
+        return self.id
 
     def schedule(self, spider, **params):
         params['spider'] = spider
@@ -183,7 +188,7 @@ class Project(object, RequestProxyMixin):
 
     def _add_params(self, params):
         # force project param
-        params.update(project=self.name)
+        params.update(project=self.id)
         return params
 
 
