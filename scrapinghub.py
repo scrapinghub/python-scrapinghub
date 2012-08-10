@@ -92,9 +92,12 @@ class Connection(object):
             request_headers.update(headers)
 
         if data is None and files is None:
-            response = requests.get(url, headers=request_headers, auth=self.auth)
+            response = requests.get(url, headers=request_headers,
+                                    auth=self.auth, prefetch=False)
         else:
-            response = requests.post(url, headers=request_headers, auth=self.auth, data=data, files=files)
+            response = requests.post(url, headers=request_headers,
+                                     auth=self.auth, data=data,
+                                     files=files, prefetch=False)
         return self._decode_response(response, format, raw)
 
     def _decode_response(self, response, format, raw):
