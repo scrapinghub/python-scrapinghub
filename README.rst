@@ -59,11 +59,13 @@ Scrapy integration
 The Scrapy integration code assumes you have the following environment
 variables defined within the Scrapy process:
 
-* SCRAPY_PROJECT_ID
-* SCRAPY_SPIDER
-* SCRAPY_JOB
+* SHUB_PROJECT
+* SHUB_SPIDER
+* SHUB_JOB
+* SHUB_JOBAUTH
 
-These are used to construct the respective HubStorage url paths.
+These are used to construct the respective HubStorage url paths, and perform
+authentication.
 
 To store items in HubStorage enable the following extension::
 
