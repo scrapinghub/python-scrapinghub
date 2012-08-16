@@ -17,11 +17,12 @@ class Client(object):
     def open_item_writer(self, path):
         return ItemWriter(self, self._items_url(path))
 
-    def iter_items(self, path, method='GET'):
-        return (json.loads(x) for x in self.iter_json_items(path))
+    def iter_items(self, path, method='GET', data=None):
+        return (json.loads(x) for x in self.iter_json_items(path, method, data))
 
-    def iter_json_items(self, path, method='GET'):
-        r = requests.request(method, self._items_url(path), auth=(self.apikey, ''))
+    def iter_json_items(self, path, method='GET', data=None):
+        r = requests.request(method, self._items_url(path), prefetch=False,
+            auth=(self.apikey, ''), data=data)
         r.raise_for_status()
         return r.iter_lines()
 
