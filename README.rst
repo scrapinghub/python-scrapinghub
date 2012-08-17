@@ -59,6 +59,7 @@ Scrapy integration
 The Scrapy integration code assumes you have the following environment
 variables defined within the Scrapy process:
 
+* SHUB_STORAGE
 * SHUB_PROJECT
 * SHUB_SPIDER
 * SHUB_JOB
