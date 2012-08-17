@@ -20,7 +20,7 @@ class HubStorage(object):
 
     @classmethod
     def from_settings(cls, settings):
-        url = settings.get('HS_URL', 'http://localhost:8002')
+        url = settings.get('SHUB_STORAGE', 'http://localhost:8002')
         return cls(url)
 
     def item_scraped(self, item, spider):

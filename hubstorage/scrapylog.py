@@ -21,7 +21,7 @@ def initialize_hubstorage_logging():
     global observer
 
     level = getattr(log, settings['LOG_LEVEL'])
-    url = settings.get('HS_URL', 'http://localhost:8002')
+    url = settings.get('SHUB_STORAGE', 'http://localhost:8002')
     e = os.environ
     observer = HubStorageLogObserver(e['SHUB_JOBAUTH'], e['SHUB_PROJECT'],
         e['SHUB_SPIDER'], e['SHUB_JOB'], level=level, url=url)
