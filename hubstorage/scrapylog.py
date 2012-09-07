@@ -55,6 +55,13 @@ def get_log_item(ev, min_level=log.INFO):
     why = ev.get('why', None)
     if why:
         msg = "%s\n%s" % (why, msg)
+    fmt = ev.get('format')
+    if fmt:
+        try:
+            msg = fmt % ev
+        except:
+            msg = "UNABLE TO FORMAT LOG MESSAGE: fmt=%r ev=%r" % (fmt, ev)
+            level = log.ERROR
     msg = msg.replace('\n', '\n\t') # to replicate typical scrapy log appeareance
     return {'message': msg, 'level': level, 'time': int(time.time()*1000)}
 
