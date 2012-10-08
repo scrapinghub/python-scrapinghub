@@ -1,37 +1,22 @@
-import sys, os, time
-
-stderr = sys.stderr
+import os, time
 
 from twisted.python import log as txlog
-from scrapy.conf import settings
 from scrapy.utils.python import unicode_to_str
 from scrapy import log
 from hubstorage import Client
 
-# this is to provide access to logger stats (ie. number of errors) from
-# external modules
-observer = None
-
 def initialize_hubstorage_logging():
-    """Initialized twisted logging to use only a hubstorage log observer
-
-    Scrapy will no longer initialize logging and nothing will be send to stdout
-    or stderr.
+    """Initialize twisted logging to use a hubstorage log observer, and return
+    that observer.
     """
-    global observer
-
-    level = getattr(log, settings['LOG_LEVEL'])
-    url = settings.get('SHUB_STORAGE', 'http://localhost:8002')
     e = os.environ
+    url = e.get('SHUB_STORAGE', 'http://localhost:8002')
     observer = HubStorageLogObserver(e['SHUB_JOBAUTH'], e['SHUB_PROJECT'],
-        e['SHUB_SPIDER'], e['SHUB_JOB'], level=level, url=url)
+        e['SHUB_SPIDER'], e['SHUB_JOB'], url=url)
     txlog.startLoggingWithObserver(observer.emit, setStdout=False)
     from twisted.internet import reactor
     reactor.addSystemEventTrigger('after', 'shutdown', observer.stop)
-    logfile = settings['LOG_FILE']
-    if logfile:
-        sflo = log.ScrapyFileLogObserver(open(logfile, 'w'), level, 'utf-8')
-        txlog.addObserver(sflo.emit)
+    return observer
 
 def get_log_item(ev, min_level=log.INFO):
     """Get HubStorage log item for the given Twisted event, or None if no
@@ -82,3 +67,6 @@ class HubStorageLogObserver(object):
 
     def stop(self):
         self.writer.close()
+
+    def change_level(self, level):
+        self.level = getattr(log, level)
