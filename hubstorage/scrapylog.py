@@ -10,9 +10,8 @@ def initialize_hubstorage_logging():
     that observer.
     """
     e = os.environ
-    url = e.get('SHUB_STORAGE', 'http://localhost:8002')
     observer = HubStorageLogObserver(e['SHUB_JOBAUTH'], e['SHUB_PROJECT'],
-        e['SHUB_SPIDER'], e['SHUB_JOB'], url=url)
+        e['SHUB_SPIDER'], e['SHUB_JOB'], url=e['SHUB_STORAGE'])
     txlog.startLoggingWithObserver(observer.emit, setStdout=False)
     from twisted.internet import reactor
     reactor.addSystemEventTrigger('after', 'shutdown', observer.stop)
