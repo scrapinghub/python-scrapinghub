@@ -8,7 +8,7 @@ import warnings
 
 
 __all__ = ["APIError", "Connection"]
-__version__ = '1.0'
+__version__ = '1.1'
 
 
 class Connection(object):
