@@ -141,7 +141,7 @@ class Connection(object):
         return self.project_ids()
 
 
-class RequestProxyMixin:
+class RequestProxyMixin(object):
 
     def _add_params(self, params):
         return params
@@ -155,7 +155,7 @@ class RequestProxyMixin:
         return self._request_proxy._post(method, format, params, headers, raw, files)
 
 
-class Project(object, RequestProxyMixin):
+class Project(RequestProxyMixin):
     def __init__(self, connection, projectid):
         self.connection = connection
         self.id = projectid
@@ -196,7 +196,7 @@ class Project(object, RequestProxyMixin):
         return params
 
 
-class JobSet(object, RequestProxyMixin):
+class JobSet(RequestProxyMixin):
 
     def __init__(self, project, **params):
         self.project = project
@@ -257,7 +257,7 @@ class JobSet(object, RequestProxyMixin):
         return params2
 
 
-class Job(object, RequestProxyMixin):
+class Job(RequestProxyMixin):
     def __init__(self, project, id, info):
         self.project = project
         self._id = id
