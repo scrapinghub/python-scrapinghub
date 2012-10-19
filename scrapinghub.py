@@ -1,16 +1,14 @@
-"""Scrapinghub API Client Library"""
+"""
+Scrapinghub API Client Library
+"""
 
 import os
 import json
 import warnings
-import requests
-from cStringIO import StringIO
-
-from requests.compat import urljoin
-from requests.models import urlencode
 
 
 __all__ = ["APIError", "Connection"]
+__version__ = '1.0'
 
 
 class Connection(object):
@@ -46,13 +44,14 @@ class Connection(object):
         self.url = url
         self.username_or_apikey = username_or_apikey
         self.auth = (username_or_apikey, password)
-        self._request_headers = {'User-Agent': 'python-scrapinghub/1.0'}
+        self._request_headers = {'User-Agent': 'python-scrapinghub/{0}'.format(__version__)}
 
     def __repr__(self):
         return "Connection(%r)" % self.username_or_apikey
 
     def _build_url(self, method, format):
         """Returns full url for given method and format"""
+        from requests.compat import urljoin
         # TODO: verify method's format support
         try:
             base_path = self.API_METHODS[method]
@@ -64,6 +63,7 @@ class Connection(object):
 
     def _get(self, method, format, params=None, headers=None, raw=False):
         """Performs GET request"""
+        from requests.models import urlencode
         url = self._build_url(method, format)
         if params:
             url = "{0}?{1}".format(url, urlencode(params, True))
@@ -84,6 +84,7 @@ class Connection(object):
 
         Raises APIError if json response have error status.
         """
+        import requests
         if format not in ('json', 'jl'):
             raise APIError("format must be either json or jl")
 
@@ -282,6 +283,7 @@ class Job(object, RequestProxyMixin):
         return result['count']
 
     def add_report(self, key, content, content_type='text/plain'):
+        from requests.compat import StringIO
         params = {
             'project': self.project.name,
             'job': self.id,

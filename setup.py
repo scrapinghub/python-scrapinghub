@@ -1,10 +1,12 @@
+from scrapinghub import __version__
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
+
 setup(name='scrapinghub',
-      version='0.2',
+      version=__version__,
       license='BSD',
       description='Client interface for Scrapinghub API',
       author='Scrapinghub',
