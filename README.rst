@@ -2,6 +2,9 @@
 Client interface for Scrapinghub API
 ====================================
 
+.. image:: https://secure.travis-ci.org/scrapinghub/python-scrapinghub.png?branch=master
+   :target: http://travis-ci.org/scrapinghub/python-scrapinghub
+
 Requirements
 ============
 
