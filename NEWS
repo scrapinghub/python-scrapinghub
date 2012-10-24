@@ -1,10 +1,11 @@
 python-scrapinghub release notes
 ================================
 
-Version 0.2
+Version 1.1
 -----------
-(release date to be announced)
+(release on Oct 19th, 2012)
 
+- report correct version on user-agent string
 - ported to uses Requests library (instead of urllib2)
 - added support for gzip transfer encoding to increase API throughput on low
   bandwidth connections
