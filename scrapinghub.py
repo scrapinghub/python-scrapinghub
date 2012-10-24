@@ -278,6 +278,7 @@ class Job(RequestProxyMixin):
         return "Job({0.project!r}, {0.id})".format(self)
 
     def items(self):
+        import requests
         offset = 0
         for attempt in xrange(self.MAX_RETRIES):
             try:
@@ -285,7 +286,7 @@ class Job(RequestProxyMixin):
                     yield item
                     offset += 1
                 break
-            except Exception as exc:
+            except requests.RequestException as exc:
                 msg = "Error reading items.jl (retrying in %ds): project=%s job=%s offset=%d attempt=%d/%d error=%s"
                 args = (self.RETRY_INTERVAL, self.project, self._id, offset, attempt, self.MAX_RETRIES, exc)
                 logger.error(msg, *args)
