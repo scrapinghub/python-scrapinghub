@@ -1,6 +1,12 @@
 python-scrapinghub release notes
 ================================
 
+Version 1.1.1
+-------------
+(release date to be announced)
+
+- added automatic retry to items download, when the request fails
+
 Version 1.1
 -----------
 (release on Oct 19th, 2012)

@@ -4,12 +4,15 @@ Scrapinghub API Client Library
 
 import os
 import json
+import logging
+import time
 import warnings
 
 
 __all__ = ["APIError", "Connection"]
-__version__ = '1.1'
+__version__ = '1.1.1'
 
+logger = logging.getLogger('scrapinghub')
 
 class Connection(object):
     """Main class to access Scrapinghub API.
@@ -258,6 +261,10 @@ class JobSet(RequestProxyMixin):
 
 
 class Job(RequestProxyMixin):
+
+    MAX_RETRIES = 180
+    RETRY_INTERVAL = 60
+
     def __init__(self, project, id, info):
         self.project = project
         self._id = id
@@ -271,7 +278,19 @@ class Job(RequestProxyMixin):
         return "Job({0.project!r}, {0.id})".format(self)
 
     def items(self):
-        return self._get('items', 'jl')
+        offset = 0
+        for attempt in xrange(self.MAX_RETRIES):
+            try:
+                for item in self._get('items', 'jl', params={'offset': offset}):
+                    yield item
+                    time.sleep(1)
+                    offset += 1
+                break
+            except Exception as exc:
+                msg = "Error reading items.jl (retrying in %ds): project=%s job=%s offset=%d attempt=%d/%d error=%s"
+                args = (self.RETRY_INTERVAL, self.project, self._id, offset, attempt, self.MAX_RETRIES, exc)
+                logger.error(msg, *args)
+                time.sleep(self.RETRY_INTERVAL)
 
     def update(self, **modifiers):
         # XXX: only allow add_tag/remove_tag
