@@ -283,7 +283,6 @@ class Job(RequestProxyMixin):
             try:
                 for item in self._get('items', 'jl', params={'offset': offset}):
                     yield item
-                    time.sleep(1)
                     offset += 1
                 break
             except Exception as exc:
