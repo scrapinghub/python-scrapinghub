@@ -10,9 +10,9 @@ class HubStorage(object):
     def __init__(self):
         if 'SHUB_JOB' not in os.environ:
             raise NotConfigured
-        apikey = os.environ['SHUB_JOBAUTH']
+        auth = os.environ['SHUB_JOBAUTH']
         apiurl = os.environ['SHUB_STORAGE']
-        client = Client(apikey, url=apiurl)
+        client = Client(auth, url=apiurl)
         path = "/items/%(SHUB_PROJECT)s/%(SHUB_SPIDER)s/%(SHUB_JOB)s" % os.environ
         self.writer = client.open_item_writer(path)
         log.msg("HubStorage: writing items to %s" % urlparse.urljoin(apiurl, path))

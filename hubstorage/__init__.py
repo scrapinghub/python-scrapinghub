@@ -1,6 +1,6 @@
 """HubStorage client library"""
 
-import atexit, warnings
+import atexit, warnings, socket
 from urlparse import urljoin
 from threading import Thread, Event
 from Queue import Queue, Empty
@@ -10,8 +10,9 @@ log = logging.getLogger('hubstorage')
 
 class Client(object):
 
-    def __init__(self, apikey, url="http://localhost:8002"):
-        self.apikey = apikey
+    def __init__(self, auth, url="http://localhost:8002"):
+        p = auth.partition(':')
+        self.auth = p[0], p[2]
         self.url = url
 
     def open_item_writer(self, path):
@@ -22,7 +23,7 @@ class Client(object):
 
     def iter_json_items(self, path, method='GET', data=None):
         r = requests.request(method, self._items_url(path), prefetch=False,
-            auth=(self.apikey, ''), data=data)
+            auth=self.auth, data=data)
         r.raise_for_status()
         return r.iter_lines()
 
@@ -95,8 +96,13 @@ class ItemWriter(object):
                     try:
                         self._upload_items(items, offset)
                         break
-                    except requests.RequestException, e:
-                        log.warning("Failed uploading items to %s: %s", self.url, str(e))
+                    except (socket.error, requests.RequestException) as e:
+                        if isinstance(e, requests.HTTPError):
+                            r = e.response
+                            msg = "[HTTP error %d] %s" % (r.status_code, r.text.rstrip())
+                        else:
+                            msg = str(e)
+                        log.warning("Failed writing data %s: %s", self.url, msg)
                         time.sleep(self.retry_wait_time)
             finally:
                 for _ in items:
@@ -105,9 +111,8 @@ class ItemWriter(object):
 
     def _upload_items(self, items, offset):
         data = "\n".join(items)
-        headers = {'content-range': 'items %d-/*' % offset}
-        r = requests.post(self.url, data=data, headers=headers, prefetch=True,
-            auth=(self.client.apikey, ''))
+        url = self.url + "?start=%d" % offset
+        r = requests.post(url, data=data, prefetch=True, auth=self.client.auth)
         r.raise_for_status()
 
     def _atexit(self):
