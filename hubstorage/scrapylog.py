@@ -12,9 +12,7 @@ def initialize_hubstorage_logging():
     e = os.environ
     observer = HubStorageLogObserver(e['SHUB_JOBAUTH'], e['SHUB_PROJECT'],
         e['SHUB_SPIDER'], e['SHUB_JOB'], url=e['SHUB_STORAGE'])
-    txlog.startLoggingWithObserver(observer.emit, setStdout=False)
-    from twisted.internet import reactor
-    reactor.addSystemEventTrigger('after', 'shutdown', observer.stop)
+    observer.start()
     return observer
 
 def get_log_item(ev, min_level=log.INFO):
@@ -51,18 +49,25 @@ def get_log_item(ev, min_level=log.INFO):
 
 class HubStorageLogObserver(object):
 
-    def __init__(self, apikey, project, spider, job, level=log.INFO, url='http://localhost:8002'):
+    def __init__(self, auth, project, spider, job, level=log.INFO, url='http://localhost:8002'):
         self.level = level
         self.errors_count = 0
-        self.client = Client(apikey, url=url)
-        path = "/logs/%s/%s/%s" % (project, spider, job)
-        self.writer = self.client.open_item_writer(path)
+        self.url = url
+        self.auth = auth
+        self.path = "/logs/%s/%s/%s" % (project, spider, job)
 
     def emit(self, ev):
         logitem = get_log_item(ev, self.level)
         if logitem:
             self.writer.write_item(logitem)
             self.errors_count += logitem['level'] == log.ERROR
+
+    def start(self):
+        client = Client(self.auth, url=self.url)
+        self.writer = client.open_item_writer(self.path)
+        txlog.startLoggingWithObserver(self.emit, setStdout=False)
+        from twisted.internet import reactor
+        reactor.addSystemEventTrigger('after', 'shutdown', self.stop)
 
     def stop(self):
         self.writer.close()
