@@ -7,7 +7,6 @@ Hub Storage client library
 This is the HubStorage client library, which contains:
 
 * basic client api (hubstorage.Client)
-* scrapy integration (hubstorage.scrapyitems & hubstorage.scrapylog)
 * a simple command line tool (hubstorage.tool)
 * a tool to convert log files from log.json API format to HubStorage format
   (hubstorage.shlog2jl)
@@ -52,31 +51,5 @@ To upload a jsonlines file into a job using `pipe viewer`_ to monitor progress
 and throughput::
 
     pv -l items.jl | python -m hubstorage.tool --load items/53/34/7
-
-Scrapy integration
-------------------
-
-The Scrapy integration code assumes you have the following environment
-variables defined within the Scrapy process:
-
-* SHUB_STORAGE
-* SHUB_PROJECT
-* SHUB_SPIDER
-* SHUB_JOB
-* SHUB_JOBAUTH
-
-These are used to construct the respective HubStorage url paths, and perform
-authentication.
-
-To store items in HubStorage enable the following extension::
-
-    EXTENSIONS = {
-        'hubstorage.scrapyitems.HubStorage': 1,
-    }
-
-To store logs in HubStorage enable the HubStorage log observer with::
-
-    from hubstorage.scrapylog import initialize_hubstorage_logging
-    initialize_hubstorage_logging()
 
 .. _pipe viewer: http://www.ivarch.com/programs/pv.shtml
