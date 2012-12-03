@@ -42,7 +42,7 @@ class ResourceType(object):
         return self._jldecode(r.iter_lines())
 
     def _jlencode(self, iterable):
-        if isinstance(iterable, dict):
+        if isinstance(iterable, (dict, str, unicode)):
             iterable = [iterable]
         return u'\n'.join(dumps(o, default=self._jldefault) for o in iterable)
 
