@@ -1,4 +1,5 @@
 """
 HubStorage client library
 """
-from oldclient import Client
+from .oldclient import Client
+from .client import HSClient
