@@ -19,6 +19,41 @@ Requirements
 Basic API
 ---------
 
+Example creating a new job::
+
+    >> hs = HSClient(auth=apikey)
+    >> job = hs.new_job(projectid='1111111', spider='foo')
+    >> job.key
+    '1111111/1/1'
+
+    >> job.metadata['state']
+    'pending'
+
+    >> job.update(state='running')
+    >> job.metadata['state']
+    'running'
+
+    >> job.logs.info('Job started')
+    >> job.items.write({'title': 'lorem ipsum...'})
+
+    ...
+
+Example getting job data later::
+
+    >> job = hs.get_job('1111111/1/1')
+    >> job.metadata['state']
+    'running'
+
+    >> job.logs.get().next()
+    {'message': 'Job started', 'time': 123456789, 'level': 20}
+
+    >> job.items.get().next()
+    {'title': 'lorem ipsum...'}
+
+
+Basic API (old)
+---------------
+
 Example for writing::
 
     from hubstorage import Client
