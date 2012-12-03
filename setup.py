@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='hubstorage',
-      version='0.2',
+      version='0.3',
       license='BSD',
       description='Client interface for Scrapinghub HubStorage',
       author='Scrapinghub',
