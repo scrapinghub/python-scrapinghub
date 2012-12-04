@@ -25,9 +25,7 @@ class Collections(ResourceType):
         try:
             return self.apipost(path, jl=_values)
         except HTTPError as exc:
-            if exc.response.status_code == 404:
-                raise KeyError(_key)
-            elif exc.response.status_code in (400, 413):
+            if exc.response.status_code in (400, 413):
                 raise ValueError(exc.response.text)
             else:
                 raise

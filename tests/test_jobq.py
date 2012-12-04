@@ -6,17 +6,13 @@ from hstestcase import HSTestCase
 
 class JobqTest(HSTestCase):
 
-    def setUp(self):
-        super(JobqTest, self).setUp()
-        self.jobq = self.hsclient.get_jobq(self.projectid)
-
     def test_basic(self):
         #authpos(JOBQ_PUSH_URL, data="", expect=400)
-        spider1 = self.jobq.push('spidey')
-        spider2 = self.jobq.push(spider='spidey')
-        spider3 = self.jobq.push(spider='spidey', metatest='somekey')
-        spider4 = self.jobq.push('spidey')
-        summary = dict((s['name'], s) for s in self.jobq.summary())
+        spider1 = self.project.jobq.push('spidey')
+        spider2 = self.project.jobq.push(spider='spidey')
+        spider3 = self.project.jobq.push(spider='spidey', metatest='somekey')
+        spider4 = self.project.jobq.push('spidey')
+        summary = dict((s['name'], s) for s in self.project.jobq.summary())
         pending = summary['pending']
         pending_summaries = pending['summary']
         assert len(pending_summaries) >= 4
@@ -40,7 +36,7 @@ class JobqTest(HSTestCase):
         job2.started()
 
         # check job queues again
-        summary = dict((s['name'], s) for s in self.jobq.summary())
+        summary = dict((s['name'], s) for s in self.project.jobq.summary())
         assert summary['pending']['count'] >= 2
         assert summary['running']['count'] >= 1
         assert summary['finished']['count'] >= 1
@@ -53,6 +49,6 @@ class JobqTest(HSTestCase):
         assert finished_keys == [spider1['key']]
 
         job2.finished()
-        summary = dict((s['name'], s) for s in self.jobq.summary())
+        summary = dict((s['name'], s) for s in self.project.jobq.summary())
         finished_keys = filter_test(summary['finished']['summary'])
         assert finished_keys == [spider2['key'], spider1['key']]

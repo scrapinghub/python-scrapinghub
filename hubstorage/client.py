@@ -1,40 +1,27 @@
 """
 High level Hubstorage client
 """
-import os, requests
+import requests
 from .utils import xauth
-from .jobs import Jobs
-from .jobq import JobQ
-from .activity import Activity
-from .collectionsrt import Collections
-
-
-ENDPOINT = os.environ.get('SHUB_STORAGE', 'http://storage.scrapinghub.com:8002')
+from .project import Project
+from .job import Job
 
 
 class HSClient(object):
 
-    def __init__(self, auth=None, endpoint=ENDPOINT):
+    DEFAULT_ENDPOINT = 'http://storage.scrapinghub.com:8002'
+
+    def __init__(self, auth=None, endpoint=None):
         self.auth = xauth(auth)
-        self.endpoint = endpoint
-        self.conn = requests.session()
+        self.endpoint = endpoint or self.DEFAULT_ENDPOINT
+        self.session = requests.session()
 
-    def get_job(self, key, auth=None):
-        auth = xauth(auth) or self.auth
-        return Jobs(key, client=self, auth=auth)
+    def get_job(self, *args, **kwargs):
+        return Job(self, *args, **kwargs)
 
-    def new_job(self, projectid, spider, **jobparams):
-        jobq = self.get_jobq(projectid)
-        data = jobq.push(spider, **jobparams)
-        key = data['key']
-        auth = (key, data['auth'])
-        return Jobs(key, client=self, auth=auth)
+    def new_job(self, projectid, *args, **jobparams):
+        project = self.get_project(projectid)
+        return project.new_job(*args, **jobparams)
 
-    def get_jobq(self, projectid):
-        return JobQ(projectid, client=self, auth=self.auth)
-
-    def get_activity(self, projectid):
-        return Activity(projectid, client=self, auth=self.auth)
-
-    def get_collections(self, projectid):
-        return Collections(projectid, client=self, auth=self.auth)
+    def get_project(self, *args, **kwargs):
+        return Project(self, *args, **kwargs)
