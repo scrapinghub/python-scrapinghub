@@ -1,8 +1,7 @@
 """
 Test Collections
 """
-import json, random
-from unittest import TestCase
+import random
 from hstestcase import HSTestCase
 
 

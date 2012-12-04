@@ -1,8 +1,6 @@
 """
 Test Activty
 """
-import json, random
-from unittest import TestCase
 from hstestcase import HSTestCase
 
 
