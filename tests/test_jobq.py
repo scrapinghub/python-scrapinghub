@@ -4,10 +4,10 @@ Test JobQ
 from hstestcase import HSTestCase
 
 
-class ActivityTest(HSTestCase):
+class JobqTest(HSTestCase):
 
     def setUp(self):
-        super(ActivityTest, self).setUp()
+        super(JobqTest, self).setUp()
         self.jobq = self.hsclient.get_jobq(self.projectid)
 
     def test_basic(self):
