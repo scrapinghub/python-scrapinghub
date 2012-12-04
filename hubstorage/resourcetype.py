@@ -1,45 +1,36 @@
 from datetime import datetime
 from json import loads, dumps
-from .utils import urlpathjoin
+from .utils import urlpathjoin, xauth
 
 
 class ResourceType(object):
 
     resource_type = None
 
-    def __init__(self, key, client, auth, resource_type=None):
-        self.key = key
+    def __init__(self, client, key, auth=None):
+        self.key = urlpathjoin(self.resource_type, key)
         self.client = client
-        self.auth = auth
-        if resource_type is not None:
-            self.resource_type = resource_type
+        self.auth = xauth(auth) or client.auth
+        self.url = urlpathjoin(client.endpoint, self.key)
 
-        self.url = urlpathjoin(client.endpoint, self.resource_type, key)
-
-    def _rawpost(self, _path=None, **kwargs):
-        url = urlpathjoin(self.url, _path)
+    def apirequest(self, _path=None, **kwargs):
+        kwargs['url'] = urlpathjoin(self.url, _path)
         kwargs.setdefault('auth', self.auth)
-        return self.client.conn.post(url, **kwargs)
-
-    def _rawget(self, _path=None, **kwargs):
-        url = urlpathjoin(self.url, _path)
-        kwargs.setdefault('auth', self.auth)
-        return self.client.conn.get(url, **kwargs)
-
-    def apipost(self, _path=None, **kwargs):
-        """POST an iterable of docs and returns an interable of results"""
         if 'jl' in kwargs:
             kwargs['data'] = self._jlencode(kwargs.pop('jl'))
 
-        r = self._rawpost(_path, **kwargs)
+        r = self.client.session.request(**kwargs)
         r.raise_for_status()
         return self._jldecode(r.iter_lines())
 
+    def apipost(self, _path=None, **kwargs):
+        return self.apirequest(_path, method='POST', **kwargs)
+
     def apiget(self, _path=None, **kwargs):
-        """GET to endpoint and return an iterable of results"""
-        r = self._rawget(_path, **kwargs)
-        r.raise_for_status()
-        return self._jldecode(r.iter_lines())
+        return self.apirequest(_path, method='GET', **kwargs)
+
+    def apidelete(self, _path=None, **kwargs):
+        return self.apirequest(_path, method='DELETE', **kwargs)
 
     def _jlencode(self, iterable):
         if isinstance(iterable, (dict, str, unicode)):

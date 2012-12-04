@@ -17,17 +17,34 @@ def urlpathjoin(*parts):
     's/78'
     >>> urlpathjoin('s', 78, 'foo')
     's/78/foo'
+    >>> urlpathjoin('s/78/foo')
+    's/78/foo'
+    >>> urlpathjoin((111, 'jobs'), 33)
+    '111/jobs/33'
+    >>> urlpathjoin('http://localhost:8003/', ('jobs', '1111111'), '2/1')
+    'http://localhost:8003/jobs/1111111/2/1'
 
     """
-    url = parts[0]
-    for part in parts[1:]:
-        if part is not None:
-            url = urljoin(url.rstrip('/') + '/', str(part))
+    url = None
+    for p in parts:
+        if p is None:
+            continue
+        elif isinstance(p, tuple):
+            p = urlpathjoin(*p)
+        elif isinstance(p, unicode):
+            p = p.encode('utf8')
+        elif not isinstance(p, str):
+            p = str(p)
+
+        url = p if url is None else '{0}/{1}'.format(url.rstrip('/'), p)
+
     return url
+
 
 def xauth(auth):
     """Expand authentification token
 
+    >>> xauth(None)
     >>> xauth(('user', 'pass'))
     ('user', 'pass')
     >>> xauth('user:pass')

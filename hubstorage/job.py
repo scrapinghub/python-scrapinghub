@@ -1,40 +1,39 @@
 import logging
 from .resourcetype import ResourceType
-from .utils import millitime
+from .utils import millitime, urlpathjoin
 
 
-class Jobs(ResourceType):
+class Job(object):
 
-    resource_type = 'jobs'
-
-    def __init__(self, key, client, auth):
-        super(Jobs, self).__init__(key, client, auth)
-        self.items = Items(key, client, auth)
-        self.logs = Logs(key, client, auth)
-        self.samples = Samples(key, client, auth)
-        self._metadata = None
+    def __init__(self, client, key, auth=None, metadata=None):
+        self.key = urlpathjoin(key)
+        assert len(self.key.split('/')) == 3, 'Jobkey must be projectid/spiderid/jobid: %s' % self.key
+        self._metadata = metadata
+        self.jobsmeta = JobsMeta(client, self.key, auth)
+        self.items = Items(client, self.key, auth)
+        self.logs = Logs(client, self.key, auth)
+        self.samples = Samples(client, self.key, auth)
 
     @property
     def metadata(self):
         if self._metadata is None:
-            self._metadata = self.apiget().next()
+            self._metadata = self.jobsmeta.get().next()
         return self._metadata
 
     @property
     def stats(self):
-        if self._metadata is None:
-            self._metadata = self.apiget('stats').next()
-        return self._metadata
+        if self._stats is None:
+            self._stats = self.jobsmeta.get_stats()
+        return self._stats
 
     def expire(self):
-        self._metadata = None
         self._stats = None
+        self._metadata = None
 
     def update(self, *args, **kwargs):
-        data = dict(*args, **kwargs)
-        data.setdefault('updated_time', millitime())
-        self.apipost(jl=data)
-        self.metadata.update(data)
+        kwargs.setdefault('updated_time', millitime())
+        self.jobsmeta.update(*args, **kwargs)
+        self.metadata.update(*args, **kwargs)
 
     def started(self):
         self.update(state='running', started_time=millitime())
@@ -50,6 +49,29 @@ class Jobs(ResourceType):
             self.logs.error(message)
         self.finished(reason)
 
+    def purged(self):
+        self.update(state='purged')
+
+
+class JobsMeta(ResourceType):
+
+    resource_type = 'jobs'
+
+    def get(self, _key=None, **params):
+        return self.apiget(_key, params=params)
+
+    def set(self, key, value):
+        self.update(key=value)
+
+    def delete(self, _key):
+        self.apidelete(_key)
+
+    def update(self, *args, **kwargs):
+        self.apipost(jl=dict(*args, **kwargs))
+
+    def get_stats(self):
+        return self.apiget('stats').next()
+
 
 class Logs(ResourceType):
 
@@ -62,6 +84,9 @@ class Logs(ResourceType):
             self._offset = stats.get('totals', {}).get('input_values', -1)
         self._offset += step
         return self._offset
+
+    def get(self, _key=None, **params):
+        return self.apiget(_key, params=params)
 
     def log(self, message, level=logging.INFO, ts=None, **other):
         if ts is None:
@@ -92,4 +117,10 @@ class Samples(ResourceType):
 class Items(ResourceType):
 
     resource_type = 'items'
+
+    def get(self, _key=None, **params):
+        return self.apiget(_key, params=params)
+
+    def write(self, data):
+        self.apipost(jl=data)
 
