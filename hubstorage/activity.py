@@ -7,3 +7,6 @@ class Activity(ResourceType):
 
     def get(self, **params):
         return self.apiget(params=params)
+
+    def post(self, _value, **params):
+        return self.apipost(jl=_value, params=params)
