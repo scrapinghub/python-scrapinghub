@@ -51,7 +51,7 @@ class ItemsResourceType(ResourceType):
     def writer(self):
         if self._writer is None:
             start = self._get_itemcount() if self.batch_append else self.batch_start
-            self._writer = self.client.bu.create_writer(
+            self._writer = self.client.batchuploader.create_writer(
                 url=self.url,
                 auth=self.auth,
                 size=self.batch_size,
