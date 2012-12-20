@@ -9,7 +9,7 @@ class Job(object):
         self.key = urlpathjoin(key)
         assert len(self.key.split('/')) == 3, 'Jobkey must be projectid/spiderid/jobid: %s' % self.key
         self._metadata = metadata
-        self.jobsmeta = JobsMeta(client, self.key, auth)
+        self.jobs = Jobs(client, self.key, auth)
         self.items = Items(client, self.key, auth)
         self.logs = Logs(client, self.key, auth)
         self.samples = Samples(client, self.key, auth)
@@ -17,13 +17,13 @@ class Job(object):
     @property
     def metadata(self):
         if self._metadata is None:
-            self._metadata = self.jobsmeta.get().next()
+            self._metadata = self.jobs.get().next()
         return self._metadata
 
     @property
     def stats(self):
         if self._stats is None:
-            self._stats = self.jobsmeta.get_stats()
+            self._stats = self.jobs.get_stats()
         return self._stats
 
     def expire(self):
@@ -32,7 +32,7 @@ class Job(object):
 
     def update(self, *args, **kwargs):
         kwargs.setdefault('updated_time', millitime())
-        self.jobsmeta.update(*args, **kwargs)
+        self.jobs.update(*args, **kwargs)
         self.metadata.update(*args, **kwargs)
 
     def started(self):
@@ -53,7 +53,7 @@ class Job(object):
         self.update(state='purged')
 
 
-class JobsMeta(ResourceType):
+class Jobs(ResourceType):
 
     resource_type = 'jobs'
 
