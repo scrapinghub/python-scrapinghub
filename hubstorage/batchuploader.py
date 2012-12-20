@@ -14,7 +14,6 @@ logger = logging.getLogger('hubstorage.batchuploader')
 class BatchUploader(object):
 
     retry_wait_time = 5.0
-    checkpoint_interval = 15
 
     def __init__(self, client):
         self.client = client
@@ -25,12 +24,14 @@ class BatchUploader(object):
         self._thread.start()
         atexit.register(self._atexit)
 
-    def create_writer(self, url, offset=0, auth=None, batchsize=1000):
+    def create_writer(self, url, start=0, auth=None, size=1000, interval=15, qsize=None):
         auth = xauth(auth) or self.client.auth
         w = _BatchWriter(url=url,
                          auth=auth,
-                         offset=offset,
-                         batchsize=batchsize)
+                         size=size,
+                         start=start,
+                         interval=interval,
+                         qsize=qsize)
         self._writers.append(w)
         return w
 
@@ -51,11 +52,11 @@ class BatchUploader(object):
     def _worker(self):
         while self._writers or not self.closed:
             closed = []
-            now = time.time()
-            ts = now - self.checkpoint_interval
             for w in self._writers:
                 q = w.itemsq
-                if q.qsize() >= w.batchsize or w.checkpoint < ts or w.closed:
+                now = time.time()
+                ts = now - w.interval
+                if q.qsize() >= w.size or w.checkpoint < ts or w.closed:
                     self._checkpoint(w)
                     w.checkpoint = now
                     if w.closed and q.empty():
@@ -71,7 +72,7 @@ class BatchUploader(object):
         q = w.itemsq
         data = StringIO()
         with GzipFile(fileobj=data, mode='w') as gzo:
-            while count < w.batchsize:
+            while count < w.size:
                 try:
                     item = q.get_nowait()
                     gzo.write(item + u'\n')
@@ -116,18 +117,22 @@ class BatchUploader(object):
 
 class _BatchWriter(object):
 
-    def __init__(self, url, offset, auth, batchsize):
+    def __init__(self, url, start, auth, size, interval, qsize):
         self.url = url
-        self.offset = offset
-        self.auth = xauth(auth)
-        self.batchsize = batchsize
+        self.offset = start
+        self.auth = auth
+        self.size = size
+        self.interval = interval
         self.checkpoint = time.time()
-        self.itemsq = Queue(maxsize=batchsize * 2)
+        self.itemsq = Queue(size * 2 if qsize is None else qsize)
         self.closed = False
 
     def write(self, item):
         assert not self.closed, 'attempting writes to a closed writer'
         self.itemsq.put(jsonencode(item))
+
+    def flush(self):
+        self.itemsq.join()
 
     def close(self, block=True):
         self.closed = True

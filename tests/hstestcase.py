@@ -12,3 +12,7 @@ class HSTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.hsclient = HSClient(auth=cls.auth, endpoint=cls.endpoint)
         cls.project = cls.hsclient.get_project(cls.projectid)
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.hsclient.close()

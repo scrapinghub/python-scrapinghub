@@ -81,6 +81,8 @@ class JobsMetaTest(HSTestCase):
         job.items.write({'foo': 'bar'})
         job.logs.debug(message='hello')
         job.logs.info(message='hello again')
+        job.items.flush()
+        job.logs.flush()
         self.assertEqual(len(list(job.items.get())), 1)
         self.assertEqual(len(list(job.logs.get())), 2)
         # purge job and check its items/logs are removed

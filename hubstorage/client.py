@@ -16,7 +16,13 @@ class HSClient(object):
         self.auth = xauth(auth)
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
         self.session = requests.session()
-        self.bu = BatchUploader(self)
+        self._bu = None
+
+    @property
+    def bu(self):
+        if self._bu is None:
+            self._bu = BatchUploader(self)
+        return self._bu
 
     def get_job(self, *args, **kwargs):
         return Job(self, *args, **kwargs)
@@ -27,3 +33,7 @@ class HSClient(object):
 
     def get_project(self, *args, **kwargs):
         return Project(self, *args, **kwargs)
+
+    def close(self):
+        if self._bu:
+            self._bu.close()
