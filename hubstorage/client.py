@@ -8,7 +8,7 @@ from .job import Job
 from .batchuploader import BatchUploader
 
 
-class HSClient(object):
+class HubstorageClient(object):
 
     DEFAULT_ENDPOINT = 'http://storage.scrapinghub.com:8002'
 

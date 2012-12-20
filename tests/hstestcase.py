@@ -1,5 +1,5 @@
 import os, unittest
-from hubstorage import HSClient
+from hubstorage import HubstorageClient
 
 
 class HSTestCase(unittest.TestCase):
@@ -10,7 +10,7 @@ class HSTestCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.hsclient = HSClient(auth=cls.auth, endpoint=cls.endpoint)
+        cls.hsclient = HubstorageClient(auth=cls.auth, endpoint=cls.endpoint)
         cls.project = cls.hsclient.get_project(cls.projectid)
 
     @classmethod
