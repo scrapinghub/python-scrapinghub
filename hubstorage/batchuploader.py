@@ -1,4 +1,5 @@
 import time, atexit, logging, warnings, socket
+from gzip import GzipFile
 import requests
 from requests.compat import StringIO
 from collections import deque
@@ -77,15 +78,16 @@ class BatchUploader(object):
 
     def _writer_checkpoint(self, w):
         count = 0
-        data = StringIO()
         q = w.itemsq
-        while count < w.batchsize:
-            try:
-                item = q.get_nowait()
-                data.write(item + u'\n')
-                count += 1
-            except Empty:
-                break
+        data = StringIO()
+        with GzipFile(fileobj=data, mode='w') as gzo:
+            while count < w.batchsize:
+                try:
+                    item = q.get_nowait()
+                    gzo.write(item + u'\n')
+                    count += 1
+                except Empty:
+                    break
 
         if count > 0:
             # Send batch to uploader thread
@@ -134,6 +136,7 @@ class BatchUploader(object):
             data=batch['data'],
             auth=batch['auth'],
             params={'start': batch['offset']},
+            headers={'content-encoding': 'gzip'},
         )
 
 
