@@ -36,7 +36,7 @@ class JobsMetaTest(HSTestCase):
                 jobkey = jobinfo.pop('_key')
                 job = cls.hsclient.get_job(jobkey)
                 for key in jobinfo:
-                    job.jobsmeta.delete(key)
+                    job.jobs.delete(key)
 
         HSTestCase.tearDownClass()
 
@@ -64,14 +64,14 @@ class JobsMetaTest(HSTestCase):
         refmeta = dict(self.meta1, foo='bar')
         self.assertEqual(_clean(self.job1.metadata), refmeta)
 
-        self.job1.jobsmeta.delete('foo')
+        self.job1.jobs.delete('foo')
         self.job1.expire()
         self.assertEqual(_clean(self.job1.metadata), self.meta1)
 
     def test_authtoken_setting(self):
-        token = self.job1.jobsmeta.get('auth').next()
+        token = self.job1.jobs.get('auth').next()
         self.assertEqual(len(token), 8)
-        token2 = self.job1.jobsmeta.get('auth').next()
+        token2 = self.job1.jobs.get('auth').next()
         self.assertEqual(token, token2)
 
     def test_purge(self):

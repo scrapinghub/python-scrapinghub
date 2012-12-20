@@ -1,4 +1,4 @@
-from .job import Job, JobsMeta, Items, Logs
+from .job import Job, Jobs, Items, Logs
 from .jobq import JobQ
 from .activity import Activity
 from .collectionsrt import Collections
@@ -11,7 +11,7 @@ class Project(object):
         self.projectid = projectid
         self.client = client
         self.auth = auth
-        self.jobs = JobsMeta(client, projectid, auth=auth)
+        self.jobs = Jobs(client, projectid, auth=auth)
         self.items = Items(client, projectid, auth=auth)
         self.logs = Logs(client, projectid, auth=auth)
         self.jobq = JobQ(client, projectid, auth=auth)
