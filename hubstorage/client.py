@@ -5,6 +5,7 @@ import requests
 from .utils import xauth
 from .project import Project
 from .job import Job
+from .batchuploader import BatchUploader
 
 
 class HSClient(object):
@@ -15,6 +16,7 @@ class HSClient(object):
         self.auth = xauth(auth)
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
         self.session = requests.session()
+        self.bu = BatchUploader(self)
 
     def get_job(self, *args, **kwargs):
         return Job(self, *args, **kwargs)
