@@ -1,5 +1,5 @@
 import logging
-from .resourcetype import ResourceType
+from .resourcetype import ResourceType, ItemsResourceType
 from .utils import millitime, urlpathjoin
 
 
@@ -69,31 +69,16 @@ class JobsMeta(ResourceType):
     def update(self, *args, **kwargs):
         self.apipost(jl=dict(*args, **kwargs))
 
-    def get_stats(self):
-        return self.apiget('stats').next()
 
-
-class Logs(ResourceType):
+class Logs(ItemsResourceType):
 
     resource_type = 'logs'
 
-    _offset = None
-    def _increase_offset(self, step=1):
-        if self._offset is None:
-            stats = self.apiget('stats').next()
-            self._offset = stats.get('totals', {}).get('input_values', -1)
-        self._offset += step
-        return self._offset
-
-    def get(self, _key=None, **params):
-        return self.apiget(_key, params=params)
-
-    def log(self, message, level=logging.INFO, ts=None, **other):
-        if ts is None:
-            ts = millitime()
-
-        other.update(message=message, level=level, time=ts)
-        return self.apipost(jl=other, params={'start': self._increase_offset()}) 
+    def log(self, message, level=logging.INFO, ts=None, appendmode=False, **other):
+        other.update(message=message, level=level, time=ts or millitime())
+        if self._writer is None:
+            self.batch_append = appendmode
+        self.write(other)
 
     def debug(self, message, **other):
         self.log(message, level=logging.DEBUG, **other)
@@ -109,18 +94,11 @@ class Logs(ResourceType):
         self.log(message, level=logging.ERROR, **other)
 
 
-class Samples(ResourceType):
+class Samples(ItemsResourceType):
 
     resource_type = 'samples'
 
 
-class Items(ResourceType):
+class Items(ItemsResourceType):
 
     resource_type = 'items'
-
-    def get(self, _key=None, **params):
-        return self.apiget(_key, params=params)
-
-    def write(self, data):
-        self.apipost(jl=data)
-
