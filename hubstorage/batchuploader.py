@@ -55,8 +55,8 @@ class BatchUploader(object):
             for w in self._writers:
                 q = w.itemsq
                 now = time.time()
-                ts = now - w.interval
-                if q.qsize() >= w.size or w.checkpoint < ts or w.closed:
+                if q.qsize() >= w.size or w.closed or w.flushme \
+                        or w.checkpoint < now - w.interval:
                     self._checkpoint(w)
                     w.checkpoint = now
                     if w.closed and q.empty():
@@ -126,13 +126,16 @@ class _BatchWriter(object):
         self.checkpoint = time.time()
         self.itemsq = Queue(size * 2 if qsize is None else qsize)
         self.closed = False
+        self.flushme = False
 
     def write(self, item):
         assert not self.closed, 'attempting writes to a closed writer'
         self.itemsq.put(jsonencode(item))
 
     def flush(self):
+        self.flushme = True
         self.itemsq.join()
+        self.flushme = False
 
     def close(self, block=True):
         self.closed = True
