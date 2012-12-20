@@ -15,19 +15,14 @@ class BatchUploader(object):
 
     retry_wait_time = 5.0
     checkpoint_interval = 15
-    StopThread = object()
 
     def __init__(self, client):
         self.client = client
         self.closed = False
-        self._batchq = Queue()
         self._writers = deque()
-        self._batch_thread = Thread(target=self._batch_worker)
-        self._batch_thread.daemon = True
-        self._batch_thread.start()
-        self._writer_thread = Thread(target=self._writer_worker)
-        self._writer_thread.daemon = True
-        self._writer_thread.start()
+        self._thread = Thread(target=self._worker)
+        self._thread.daemon = True
+        self._thread.start()
         atexit.register(self._atexit)
 
     def create_writer(self, url, offset=0, auth=None, batchsize=1000):
@@ -43,9 +38,7 @@ class BatchUploader(object):
         self.closed = True
         for w in self._writers:
             w.close(block=False)
-
-        self._writer_thread.join()
-        self._batch_thread.join()
+        self._thread.join()
 
     def _atexit(self):
         if not self.closed:
@@ -55,7 +48,7 @@ class BatchUploader(object):
         if not self.closed:
             self.close()
 
-    def _writer_worker(self):
+    def _worker(self):
         while self._writers or not self.closed:
             closed = []
             now = time.time()
@@ -63,7 +56,7 @@ class BatchUploader(object):
             for w in self._writers:
                 q = w.itemsq
                 if q.qsize() >= w.batchsize or w.checkpoint < ts or w.closed:
-                    self._writer_checkpoint(w)
+                    self._checkpoint(w)
                     w.checkpoint = now
                     if w.closed and q.empty():
                         closed.append(w)
@@ -73,10 +66,7 @@ class BatchUploader(object):
 
             time.sleep(1)
 
-        # shutdown uploader thread
-        self._batchq.put(self.StopThread)
-
-    def _writer_checkpoint(self, w):
+    def _checkpoint(self, w):
         count = 0
         q = w.itemsq
         data = StringIO()
@@ -90,35 +80,21 @@ class BatchUploader(object):
                     break
 
         if count > 0:
-            # Send batch to uploader thread
-            self._batchq.put({
-                'url': w.url,
-                'offset': w.offset,
-                'data': data.getvalue(),
-                'auth': w.auth,
-            })
+            # Upload batch and retry in case of failures
+            self._tryupload({'url': w.url,
+                             'offset': w.offset,
+                             'data': data.getvalue(),
+                             'auth': w.auth})
             # Offset must be increased after sending the batch
             w.offset += count
             for _ in xrange(count):
                 q.task_done()
 
-    def _batch_worker(self):
-        q = self._batchq
-        while True:
-            batch = q.get()
-            if batch is self.StopThread:
-                q.task_done()
-                break
-
-            self._batch_tryupload(batch)
-            q.task_done()
-            time.sleep(1)
-
-    def _batch_tryupload(self, batch):
+    def _tryupload(self, batch):
         # TODO: Implements exponential backoff and a global timeout limit
         while True:
             try:
-                self._batch_upload(batch)
+                self._upload(batch)
                 break
             except (socket.error, requests.RequestException) as e:
                 if isinstance(e, requests.HTTPError):
@@ -129,15 +105,13 @@ class BatchUploader(object):
                 logger.warning("Failed writing data %s: %s", batch['url'], msg)
                 time.sleep(self.retry_wait_time)
 
-    def _batch_upload(self, batch):
-        self.client.session.request(
-            method='POST',
-            url=batch['url'],
-            data=batch['data'],
-            auth=batch['auth'],
-            params={'start': batch['offset']},
-            headers={'content-encoding': 'gzip'},
-        )
+    def _upload(self, batch):
+        self.client.session.request(method='POST',
+                                    url=batch['url'],
+                                    data=batch['data'],
+                                    auth=batch['auth'],
+                                    params={'start': batch['offset']},
+                                    headers={'content-encoding': 'gzip'})
 
 
 class _BatchWriter(object):
@@ -148,7 +122,7 @@ class _BatchWriter(object):
         self.auth = xauth(auth)
         self.batchsize = batchsize
         self.checkpoint = time.time()
-        self.itemsq = Queue()
+        self.itemsq = Queue(maxsize=batchsize * 2)
         self.closed = False
 
     def write(self, item):
