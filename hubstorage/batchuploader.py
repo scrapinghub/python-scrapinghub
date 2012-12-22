@@ -30,6 +30,7 @@ class BatchUploader(object):
 
     def create_writer(self, url, start=0, auth=None, size=1000, interval=15,
                       qsize=None, content_encoding='identity'):
+        assert not self.closed, 'Can not create new writers when closed'
         auth = xauth(auth) or self.client.auth
         w = _BatchWriter(url=url,
                          auth=auth,
