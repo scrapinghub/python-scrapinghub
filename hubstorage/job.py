@@ -45,6 +45,9 @@ class Job(object):
     def purged(self):
         self.update(state='purged')
 
+    def stop(self):
+        self.update(stop_requested=True)
+
 
 class Jobs(ResourceType):
 
