@@ -43,6 +43,7 @@ class ItemsResourceType(ResourceType):
     batch_start = 0
     batch_interval = 15.0
     batch_append = False
+    batch_content_encoding = 'identity'
 
     # batch writer reference in case of used
     _writer = None
@@ -58,6 +59,7 @@ class ItemsResourceType(ResourceType):
                 start=start,
                 interval=self.batch_interval,
                 qsize=self.batch_qsize,
+                content_encoding=self.batch_content_encoding
             )
         return self._writer
 
