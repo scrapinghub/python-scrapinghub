@@ -1,5 +1,4 @@
 import time
-from urlparse import urljoin
 
 
 def urlpathjoin(*parts):
@@ -62,4 +61,3 @@ def xauth(auth):
 
 def millitime(*a, **kw):
     return int(time.time(*a, **kw) * 1000)
-
