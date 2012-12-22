@@ -20,7 +20,7 @@ class Job(object):
             self._metadata = self.jobs.get().next()
         return self._metadata
 
-    def expire(self):
+    def expire_metadata(self):
         self._metadata = None
 
     def update(self, *args, **kwargs):
