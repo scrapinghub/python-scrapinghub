@@ -35,11 +35,11 @@ class BatchUploader(object):
         self._writers.append(w)
         return w
 
-    def close(self):
+    def close(self, timeout=None):
         self.closed = True
         for w in self._writers:
             w.close(block=False)
-        self._thread.join()
+        self._thread.join(timeout)
 
     def _atexit(self):
         if not self.closed:

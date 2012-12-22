@@ -34,6 +34,6 @@ class HubstorageClient(object):
     def get_project(self, *args, **kwargs):
         return Project(self, *args, **kwargs)
 
-    def close(self):
-        if self._batchuploader:
-            self._batchuploader.close()
+    def close(self, timeout=None):
+        if self._batchuploader is not None:
+            self.batchuploader.close(timeout)
