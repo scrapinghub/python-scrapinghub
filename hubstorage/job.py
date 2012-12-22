@@ -20,14 +20,7 @@ class Job(object):
             self._metadata = self.jobs.get().next()
         return self._metadata
 
-    @property
-    def stats(self):
-        if self._stats is None:
-            self._stats = self.jobs.get_stats()
-        return self._stats
-
     def expire(self):
-        self._stats = None
         self._metadata = None
 
     def update(self, *args, **kwargs):
