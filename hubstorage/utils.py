@@ -80,6 +80,5 @@ class iterqueue(object):
             try:
                 yield self.queue.get_nowait()
                 self.count += 1
-                self.queue.task_done()
             except Empty:
                 break

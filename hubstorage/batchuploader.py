@@ -74,7 +74,8 @@ class BatchUploader(object):
             time.sleep(1)
 
     def _checkpoint(self, w):
-        qiter = iterqueue(w.itemsq, w.size)
+        q = w.itemsq
+        qiter = iterqueue(q, w.size)
         data = self._content_encode(qiter, w)
         if qiter.count > 0:
             self._tryupload({
@@ -85,6 +86,8 @@ class BatchUploader(object):
                 'content-encoding': w.content_encoding,
             })
             w.offset += qiter.count
+            for _ in xrange(qiter.count):
+                q.task_done()
 
     def _content_encode(self, qiter, w):
         ce = w.content_encoding
