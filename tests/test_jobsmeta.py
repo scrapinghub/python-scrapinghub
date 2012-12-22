@@ -43,7 +43,7 @@ class JobsMetaTest(HSTestCase):
     def test_get(self):
         self.assertEqual(_clean(self.job1.metadata), self.meta1)
         self.assertEqual(self.job1.metadata['spider'], 'groupon')
-        self.job1.expire()
+        self.job1.expire_metadata()
         self.assertEqual(self.job1.metadata['spider'], 'groupon')
 
     def test_list(self):
@@ -60,12 +60,12 @@ class JobsMetaTest(HSTestCase):
 
     def test_post_delete(self):
         self.job1.update(foo='bar')
-        self.job1.expire()
+        self.job1.expire_metadata()
         refmeta = dict(self.meta1, foo='bar')
         self.assertEqual(_clean(self.job1.metadata), refmeta)
 
         self.job1.jobs.delete('foo')
-        self.job1.expire()
+        self.job1.expire_metadata()
         self.assertEqual(_clean(self.job1.metadata), self.meta1)
 
     def test_authtoken_setting(self):
