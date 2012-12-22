@@ -1,11 +1,15 @@
-import time, atexit, logging, warnings, socket
+import time
+import atexit
+import socket
+import logging
+import warnings
 from gzip import GzipFile
 import requests
 from requests.compat import StringIO
 from collections import deque
-from Queue import Queue, Empty
+from Queue import Queue
 from threading import Thread
-from .utils import xauth
+from .utils import xauth, iterqueue
 from .serialization import jsonencode
 
 logger = logging.getLogger('hubstorage.batchuploader')
@@ -24,14 +28,16 @@ class BatchUploader(object):
         self._thread.start()
         atexit.register(self._atexit)
 
-    def create_writer(self, url, start=0, auth=None, size=1000, interval=15, qsize=None):
+    def create_writer(self, url, start=0, auth=None, size=1000, interval=15,
+                      qsize=None, content_encoding='identity'):
         auth = xauth(auth) or self.client.auth
         w = _BatchWriter(url=url,
                          auth=auth,
                          size=size,
                          start=start,
                          interval=interval,
-                         qsize=qsize)
+                         qsize=qsize,
+                         content_encoding=content_encoding)
         self._writers.append(w)
         return w
 
@@ -68,28 +74,26 @@ class BatchUploader(object):
             time.sleep(1)
 
     def _checkpoint(self, w):
-        count = 0
-        q = w.itemsq
-        data = StringIO()
-        with GzipFile(fileobj=data, mode='w') as gzo:
-            while count < w.size:
-                try:
-                    item = q.get_nowait()
-                    gzo.write(item + u'\n')
-                    count += 1
-                except Empty:
-                    break
+        qiter = iterqueue(w.itemsq, w.size)
+        data = self._content_encode(qiter, w)
+        if qiter.count > 0:
+            self._tryupload({
+                'url': w.url,
+                'offset': w.offset,
+                'data': data,
+                'auth': w.auth,
+                'content-encoding': w.content_encoding,
+            })
+            w.offset += qiter.count
 
-        if count > 0:
-            # Upload batch and retry in case of failures
-            self._tryupload({'url': w.url,
-                             'offset': w.offset,
-                             'data': data.getvalue(),
-                             'auth': w.auth})
-            # Offset must be increased after sending the batch
-            w.offset += count
-            for _ in xrange(count):
-                q.task_done()
+    def _content_encode(self, qiter, w):
+        ce = w.content_encoding
+        if ce == 'identity':
+            return _encode_identity(qiter)
+        elif ce == 'gzip':
+            return _encode_gzip(qiter)
+        else:
+            raise ValueError('Writer using unknown content encoding: %s' % ce)
 
     def _tryupload(self, batch):
         # TODO: Implements exponential backoff and a global timeout limit
@@ -107,22 +111,26 @@ class BatchUploader(object):
                 time.sleep(self.retry_wait_time)
 
     def _upload(self, batch):
+        params = {'start': batch['offset']}
+        headers = {'content-encoding': batch['content-encoding']}
         self.client.session.request(method='POST',
                                     url=batch['url'],
                                     data=batch['data'],
                                     auth=batch['auth'],
-                                    params={'start': batch['offset']},
-                                    headers={'content-encoding': 'gzip'})
+                                    params=params,
+                                    headers=headers)
 
 
 class _BatchWriter(object):
 
-    def __init__(self, url, start, auth, size, interval, qsize):
+    def __init__(self, url, start, auth, size, interval, qsize,
+                 content_encoding):
         self.url = url
         self.offset = start
         self.auth = auth
         self.size = size
         self.interval = interval
+        self.content_encoding = content_encoding
         self.checkpoint = time.time()
         self.itemsq = Queue(size * 2 if qsize is None else qsize)
         self.closed = False
@@ -141,3 +149,18 @@ class _BatchWriter(object):
         self.closed = True
         if block:
             self.itemsq.join()
+
+
+def _encode_identity(iter):
+    data = StringIO()
+    for item in iter:
+        data.write(item + '\n')
+    return data.getvalue()
+
+
+def _encode_gzip(iter):
+    data = StringIO()
+    with GzipFile(fileobj=data, mode='w') as gzo:
+        for item in iter:
+            gzo.write(item + '\n')
+    return data.getvalue()

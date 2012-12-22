@@ -73,6 +73,7 @@ class Jobs(ResourceType):
 class Logs(ItemsResourceType):
 
     resource_type = 'logs'
+    batch_content_encoding = 'gzip'
 
     def log(self, message, level=logging.INFO, ts=None, appendmode=False, **other):
         other.update(message=message, level=level, time=ts or millitime())
@@ -102,3 +103,4 @@ class Samples(ItemsResourceType):
 class Items(ItemsResourceType):
 
     resource_type = 'items'
+    batch_content_encoding = 'gzip'

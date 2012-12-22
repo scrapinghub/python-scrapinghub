@@ -1,4 +1,5 @@
 import time
+from Queue import Empty
 
 
 def urlpathjoin(*parts):
@@ -61,3 +62,24 @@ def xauth(auth):
 
 def millitime(*a, **kw):
     return int(time.time(*a, **kw) * 1000)
+
+
+class iterqueue(object):
+    """Iterate a queue til a maximum number of messages are read or the queue is empty
+
+    it exposes an attribute "count" with the number of messages read
+    """
+
+    def __init__(self, queue, maxcount):
+        self.queue = queue
+        self.maxcount = maxcount
+        self.count = 0
+
+    def __iter__(self):
+        while not self.maxcount or self.count < self.maxcount:
+            try:
+                yield self.queue.get_nowait()
+                self.count += 1
+                self.queue.task_done()
+            except Empty:
+                break
