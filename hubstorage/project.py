@@ -7,7 +7,7 @@ from .collectionsrt import Collections
 class Project(object):
 
     def __init__(self, client, projectid, auth=None):
-        assert len(projectid.split('/')) == 1, 'projectkey must be just one id: %s' % projectid
+        assert len(str(projectid).split('/')) == 1, 'projectkey must be just one id: %s' % projectid
         self.projectid = projectid
         self.client = client
         self.auth = auth
