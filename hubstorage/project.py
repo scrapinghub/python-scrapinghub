@@ -31,7 +31,7 @@ class Project(object):
         data = self.jobq.push(spidername, **jobparams)
         key = data['key']
         auth = (key, data['auth'])
-        return Job(key, client=self, auth=auth)
+        return Job(self.client, key, auth=auth)
 
 
 class Jobs(ResourceType):
