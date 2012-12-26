@@ -4,6 +4,7 @@ import socket
 import logging
 import warnings
 from gzip import GzipFile
+from itertools import count
 import requests
 from requests.compat import StringIO
 from collections import deque
@@ -18,6 +19,7 @@ logger = logging.getLogger('hubstorage.batchuploader')
 class BatchUploader(object):
 
     retry_wait_time = 5.0
+    worker_loop_delay = 1.0
 
     def __init__(self, client):
         self.client = client
@@ -57,10 +59,15 @@ class BatchUploader(object):
             self.close()
 
     def _worker(self):
+        ctr = count()
         while not self.closed or self._writers:
-            time.sleep(1.0)
             if not self._writers:
+                time.sleep(self.worker_loop_delay)
                 continue
+
+            # Delay once all writers are processed
+            if ctr.next() % len(self._writers) == 0:
+                time.sleep(self.worker_loop_delay)
 
             w = self._writers.popleft()
             q = w.itemsq
