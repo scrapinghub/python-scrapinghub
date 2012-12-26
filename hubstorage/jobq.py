@@ -14,4 +14,3 @@ class JobQ(ResourceType):
     def summary(self, _queuename=None):
         path = urlpathjoin('summary', _queuename)
         return list(self.apiget(path))
-

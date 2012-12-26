@@ -1,5 +1,8 @@
+import logging
 from .utils import urlpathjoin, xauth
 from .serialization import jlencode, jldecode
+
+logger = logging.getLogger('hubstorage.resourcetype')
 
 
 class ResourceType(object):
@@ -20,6 +23,8 @@ class ResourceType(object):
             kwargs['data'] = jlencode(kwargs.pop('jl'))
 
         r = self.client.session.request(**kwargs)
+        if not r.ok:
+            logger.debug('%s: %s', r, r.content)
         r.raise_for_status()
         return jldecode(r.iter_lines())
 
@@ -31,9 +36,6 @@ class ResourceType(object):
 
     def apidelete(self, _path=None, **kwargs):
         return self.apirequest(_path, method='DELETE', **kwargs)
-
-    def get_stats(self):
-        return self.apiget('stats').next()
 
 
 class ItemsResourceType(ResourceType):
@@ -64,14 +66,22 @@ class ItemsResourceType(ResourceType):
         return self._writer
 
     def _get_itemcount(self):
-        return self.get_stats().get('totals', {}).get('input_values', 0)
+        return self.stats().get('totals', {}).get('input_values', 0)
 
     def flush(self):
         if self._writer is not None:
             self._writer.flush()
 
-    def get(self, _key=None, **params):
-        return self.apiget(_key, params=params)
-
     def write(self, item):
         self.writer.write(item)
+
+    def list(self, _key=None, **params):
+        return self.apiget(_key, params=params)
+
+    def get(self, _key, **params):
+        """Return first matching result"""
+        for o in self.list(_key, params=params):
+            return o
+
+    def stats(self):
+        return self.apiget('stats').next()
