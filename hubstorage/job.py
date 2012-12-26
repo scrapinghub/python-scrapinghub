@@ -17,19 +17,19 @@ class Job(object):
     def jobauth(self):
         return self.key, self.metadata.authtoken()
 
-    def update(self, *args, **kwargs):
+    def _update(self, *args, **kwargs):
         kwargs.setdefault('updated_time', millitime())
         self.metadata.update(*args, **kwargs)
         self.metadata.save()
 
     def started(self):
-        self.update(state='running', started_time=millitime())
+        self._update(state='running', started_time=millitime())
 
     def finished(self, close_reason=None):
         data = {'state': 'finished'}
         if 'close_reason' not in self.metadata:
             data['close_reason'] = close_reason or 'no_reason'
-        self.update(data)
+        self._update(data)
 
     def failed(self, reason, message=None):
         if message:
@@ -37,10 +37,10 @@ class Job(object):
         self.finished(reason)
 
     def purged(self):
-        self.update(state='purged')
+        self._update(state='purged')
 
     def stop(self):
-        self.update(stop_requested=True)
+        self._update(stop_requested=True)
 
 
 class JobMeta(ResourceType, MutableMapping):
