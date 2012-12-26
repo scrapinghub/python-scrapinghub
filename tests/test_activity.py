@@ -29,6 +29,6 @@ class ActivityTest(HSTestCase):
 
     def test_timestamp(self):
         self.project.activity.add({'foo': 'bar'}, baz='qux')
-        entry = self.project.activity.list(count=1, meta='_key').next()
+        entry = self.project.activity.list(count=1).next()
         self.assertTrue(entry.pop('timestamp', None))
         self.assertEqual(entry, {'foo': 'bar', 'baz': 'qux'})
