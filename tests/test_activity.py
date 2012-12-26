@@ -17,12 +17,18 @@ class ActivityTest(HSTestCase):
         self.project.activity.post(data2)
 
         # read them back - activity should be second request first (reverse chronological order)
-        result = list(self.project.activity.get(count=20))
+        result = list(self.project.activity.list(count=20))
         self.assertEqual(len(result), 20)
         reconstructed = result[10:] + result[:10]
         self.assertEqual(orig_data, reconstructed)
 
     def test_filters(self):
         self.project.activity.post({'c': i} for i in xrange(10))
-        r = list(self.project.activity.get(filter='["c", ">", [5]]', count=2))
+        r = list(self.project.activity.list(filter='["c", ">", [5]]', count=2))
         self.assertEqual(r, [{'c': 6}, {'c': 7}])
+
+    def test_timestamp(self):
+        self.project.activity.add({'foo': 'bar'}, baz='qux')
+        entry = self.project.activity.list(count=1, meta='_key').next()
+        self.assertTrue(entry.pop('timestamp', None))
+        self.assertEqual(entry, {'foo': 'bar', 'baz': 'qux'})
