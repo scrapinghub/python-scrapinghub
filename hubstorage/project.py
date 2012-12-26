@@ -11,10 +11,10 @@ class Project(object):
         assert len(str(projectid).split('/')) == 1, 'projectkey must be just one id: %s' % projectid
         self.projectid = projectid
         self.client = client
-        self.auth = auth
         self.jobs = Jobs(client, projectid, auth=auth)
         self.items = Items(client, projectid, auth=auth)
         self.logs = Logs(client, projectid, auth=auth)
+        self.samples = Samples(client, projectid, auth=auth)
         self.jobq = JobQ(client, projectid, auth=auth)
         self.activity = Activity(client, projectid, auth=auth)
         self.collections = Collections(client, projectid, auth=auth)
@@ -56,6 +56,14 @@ class Items(ResourceType):
 class Logs(ResourceType):
 
     resource_type = 'logs'
+
+    def list(self, _key=None, **params):
+        return self.apiget(_key, params=params)
+
+
+class Samples(ResourceType):
+
+    resource_type = 'samples'
 
     def list(self, _key=None, **params):
         return self.apiget(_key, params=params)
