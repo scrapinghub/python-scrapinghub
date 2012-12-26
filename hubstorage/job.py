@@ -1,4 +1,5 @@
 import logging
+from collections import MutableMapping
 from .resourcetype import ResourceType, ItemsResourceType
 from .utils import millitime, urlpathjoin
 
@@ -8,25 +9,18 @@ class Job(object):
     def __init__(self, client, key, auth=None, metadata=None):
         self.key = urlpathjoin(key)
         assert len(self.key.split('/')) == 3, 'Jobkey must be projectid/spiderid/jobid: %s' % self.key
-        self._metadata = metadata
-        self.jobs = Jobs(client, self.key, auth)
         self.items = Items(client, self.key, auth)
         self.logs = Logs(client, self.key, auth)
         self.samples = Samples(client, self.key, auth)
+        self.metadata = JobMeta(client, self.key, auth)
 
-    @property
-    def metadata(self):
-        if self._metadata is None:
-            self._metadata = self.jobs.get().next()
-        return self._metadata
-
-    def expire_metadata(self):
-        self._metadata = None
+    def jobauth(self):
+        return self.key, self.metadata.authtoken()
 
     def update(self, *args, **kwargs):
         kwargs.setdefault('updated_time', millitime())
-        self.jobs.update(*args, **kwargs)
         self.metadata.update(*args, **kwargs)
+        self.metadata.save()
 
     def started(self):
         self.update(state='running', started_time=millitime())
@@ -39,7 +33,7 @@ class Job(object):
 
     def failed(self, reason, message=None):
         if message:
-            self.logs.error(message)
+            self.logs.error(message, appendmode=True)
         self.finished(reason)
 
     def purged(self):
@@ -49,21 +43,61 @@ class Job(object):
         self.update(stop_requested=True)
 
 
-class Jobs(ResourceType):
+class JobMeta(ResourceType, MutableMapping):
 
     resource_type = 'jobs'
+    _cached = None
 
-    def get(self, _key=None, **params):
-        return self.apiget(_key, params=params)
+    def __init__(self, *a, **kw):
+        super(JobMeta, self).__init__(*a, **kw)
+        self._cached = None
+        self._deleted = set()
 
-    def set(self, key, value):
-        self.update(key=value)
+    @property
+    def _data(self):
+        if self._cached is None:
+            r = self.apiget()
+            try:
+                self._cached = r.next()
+            except StopIteration:
+                self._cached = {}
 
-    def delete(self, _key):
-        self.apidelete(_key)
+        return self._cached
 
-    def update(self, *args, **kwargs):
-        self.apipost(jl=dict(*args, **kwargs))
+    def expire(self):
+        self._cached = None
+
+    def save(self):
+        for key in self._deleted:
+            self.apidelete(key)
+        self._deleted.clear()
+        if self._cached:
+            data = dict((k, v) for k, v in self._data.iteritems()
+                        if k not in ('auth', '_key'))
+            self.apipost(jl=data)
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+        self._deleted.discard(key)
+
+    def __delitem__(self, key):
+        del self._data[key]
+        self._deleted.add(key)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
+
+    def summary(self):
+        return self.apiget('summary').next()
+
+    def authtoken(self):
+        return self.apiget('auth').next()
 
 
 class Logs(ItemsResourceType):
@@ -91,12 +125,15 @@ class Logs(ItemsResourceType):
         self.log(message, level=logging.ERROR, **other)
 
 
-class Samples(ItemsResourceType):
-
-    resource_type = 'samples'
-
-
 class Items(ItemsResourceType):
 
     resource_type = 'items'
     batch_content_encoding = 'gzip'
+
+
+class Samples(ItemsResourceType):
+
+    resource_type = 'samples'
+
+    def stats(self):
+        raise NotImplementedError('Resource does not expose stats')

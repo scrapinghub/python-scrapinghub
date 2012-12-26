@@ -1,7 +1,8 @@
-from .job import Job, Jobs, Items, Logs
+from .job import Job
 from .jobq import JobQ
 from .activity import Activity
 from .collectionsrt import Collections
+from .resourcetype import ResourceType
 
 
 class Project(object):
@@ -22,7 +23,7 @@ class Project(object):
         return self.client.get_job((self.projectid, _key), *args, **kwargs)
 
     def get_jobs(self, _key=None, **kwargs):
-        for metadata in self.jobs.get(_key, meta='_key', **kwargs):
+        for metadata in self.jobs.list(_key, meta='_key', **kwargs):
             key = metadata.pop('_key')
             yield self.client.get_job(key, metadata=metadata)
 
@@ -31,3 +32,30 @@ class Project(object):
         key = data['key']
         auth = (key, data['auth'])
         return Job(key, client=self, auth=auth)
+
+
+class Jobs(ResourceType):
+
+    resource_type = 'jobs'
+
+    def list(self, _key=None, **params):
+        return self.apiget(_key, params=params)
+
+    def summary(self):
+        return self.apiget('summary').next()
+
+
+class Items(ResourceType):
+
+    resource_type = 'items'
+
+    def list(self, _key=None, **params):
+        return self.apiget(_key, params=params)
+
+
+class Logs(ResourceType):
+
+    resource_type = 'logs'
+
+    def list(self, _key=None, **params):
+        return self.apiget(_key, params=params)
