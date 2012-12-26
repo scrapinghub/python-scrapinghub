@@ -9,13 +9,18 @@ class Job(object):
     def __init__(self, client, key, auth=None, metadata=None):
         self.key = urlpathjoin(key)
         assert len(self.key.split('/')) == 3, 'Jobkey must be projectid/spiderid/jobid: %s' % self.key
+        self._auth = auth
         self.items = Items(client, self.key, auth)
         self.logs = Logs(client, self.key, auth)
         self.samples = Samples(client, self.key, auth)
         self.metadata = JobMeta(client, self.key, auth)
 
-    def jobauth(self):
-        return self.key, self.metadata.authtoken()
+    @property
+    def auth(self):
+        if self._auth is None:
+            token = self.metadata.authtoken()
+            self._auth = (self.key, token)
+        return self._auth
 
     def _update(self, *args, **kwargs):
         kwargs.setdefault('updated_time', millitime())

@@ -33,7 +33,7 @@ class ProjectTest(HSTestCase):
 
         # keep a jobid for get_job and unreference job
         jobid = job.key
-        jobauth = job.jobauth()
+        jobauth = job.auth
         del job
 
         spiderid = jobid.split('/')[1]

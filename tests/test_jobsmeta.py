@@ -74,8 +74,7 @@ class JobsMetaTest(HSTestCase):
     def test_authtoken_setting(self):
         token = self.job1.metadata.apiget('auth').next()
         self.assertEqual(len(token), 8)
-        jobauth = self.job1.jobauth()
-        self.assertEqual(jobauth, (self.job1.key, token))
+        self.assertEqual(self.job1.auth, (self.job1.key, token))
 
     def test_purge(self):
         jobid = str(random.randint(1, 1000000))
