@@ -46,8 +46,6 @@ class BatchUploader(object):
 
     def close(self, timeout=None):
         self.closed = True
-        for w in self._writers:
-            w.close(block=False)
         self._thread.join(timeout)
 
     def _atexit(self):
@@ -60,8 +58,11 @@ class BatchUploader(object):
 
     def _worker(self):
         ctr = count()
-        while not self.closed or self._writers:
+        while True:
             if not self._writers:
+                # Stop thread if closed and idle, but if open wait for writers
+                if self.closed:
+                    break
                 time.sleep(self.worker_loop_delay)
                 continue
 
@@ -69,15 +70,22 @@ class BatchUploader(object):
             if ctr.next() % len(self._writers) == 0:
                 time.sleep(self.worker_loop_delay)
 
+            # Get next writer to process
             w = self._writers.popleft()
-            q = w.itemsq
+
+            # Close open writers if uploader is closed
+            if self.closed and not w.closed:
+                w.close(block=False)
+
+            # Checkpoint writer if eligible
             now = time.time()
-            if q.qsize() >= w.size or w.closed or w.flushme \
+            if w.itemsq.qsize() >= w.size or w.closed or w.flushme \
                     or w.checkpoint < now - w.interval:
                 self._checkpoint(w)
                 w.checkpoint = now
 
-            if not (w.closed and q.empty()):
+            # Re-queue pending or open writers
+            if not (w.closed and w.itemsq.empty()):
                 self._writers.append(w)
 
     def _checkpoint(self, w):
