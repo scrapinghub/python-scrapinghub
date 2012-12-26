@@ -57,22 +57,21 @@ class BatchUploader(object):
             self.close()
 
     def _worker(self):
-        while self._writers or not self.closed:
-            closed = []
-            for w in self._writers:
-                q = w.itemsq
-                now = time.time()
-                if q.qsize() >= w.size or w.closed or w.flushme \
-                        or w.checkpoint < now - w.interval:
-                    self._checkpoint(w)
-                    w.checkpoint = now
-                    if w.closed and q.empty():
-                        closed.append(w)
+        while not self.closed or self._writers:
+            time.sleep(1.0)
+            if not self._writers:
+                continue
 
-            for w in closed:
-                self._writers.remove(w)
+            w = self._writers.popleft()
+            q = w.itemsq
+            now = time.time()
+            if q.qsize() >= w.size or w.closed or w.flushme \
+                    or w.checkpoint < now - w.interval:
+                self._checkpoint(w)
+                w.checkpoint = now
 
-            time.sleep(1)
+            if not (w.closed and q.empty()):
+                self._writers.append(w)
 
     def _checkpoint(self, w):
         q = w.itemsq
