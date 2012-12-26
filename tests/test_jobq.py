@@ -8,11 +8,12 @@ class JobqTest(HSTestCase):
 
     def test_basic(self):
         #authpos(JOBQ_PUSH_URL, data="", expect=400)
-        spider1 = self.project.jobq.push('spidey')
-        spider2 = self.project.jobq.push(spider='spidey')
-        spider3 = self.project.jobq.push(spider='spidey', metatest='somekey')
-        spider4 = self.project.jobq.push('spidey')
-        summary = dict((s['name'], s) for s in self.project.jobq.summary())
+        jobq = self.project.jobq
+        spider1 = jobq.push('spidey')
+        spider2 = jobq.push(spider='spidey')
+        spider3 = jobq.push(spider='spidey', metatest='somekey')
+        spider4 = jobq.push('spidey')
+        summary = dict((s['name'], s) for s in jobq.summary())
         pending = summary['pending']
         pending_summaries = pending['summary']
         assert len(pending_summaries) >= 4
@@ -39,10 +40,14 @@ class JobqTest(HSTestCase):
         job4 = self.hsclient.get_job(spider4['key'])
 
         # check job queues again
-        summary = dict((s['name'], s) for s in self.project.jobq.summary())
+        summary = dict((s['name'], s) for s in jobq.summary())
         assert summary['pending']['count'] >= 2
         assert summary['running']['count'] >= 1
         assert summary['finished']['count'] >= 1
+        # check each queue
+        assert jobq.summary('pending')['count'] >= 2
+        assert jobq.summary('running')['count'] >= 1
+        assert jobq.summary('finished')['count'] >= 1
 
         pending_keys = filter_test(summary['pending']['summary'])
         assert pending_keys == [spider4['key'], spider3['key']]
