@@ -34,17 +34,20 @@ class Collections(ResourceType):
         path = urlpathjoin(_type, _name, 'deleted')
         return self.apipost(path, jl=_keys)
 
+    def new_collection(self, coltype, colname):
+        return Collection(coltype, colname, self)
+
     def new_store(self, colname):
-        return Collection('s', colname, self)
+        return self.new_collection('s', colname)
 
     def new_cached_store(self, colname):
-        return Collection('cs', colname, self)
+        return self.new_collection('cs', colname)
 
     def new_versioned_store(self, colname):
-        return Collection('vs', colname, self)
+        return self.new_collection('vs', colname)
 
     def new_versioned_cached_store(self, colname):
-        return Collection('vcs', colname, self)
+        return self.new_collection('vcs', colname)
 
 
 class Collection(object):
