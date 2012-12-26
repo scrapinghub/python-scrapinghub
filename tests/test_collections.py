@@ -25,6 +25,10 @@ class CollectionsTest(HSTestCase):
             self.project.collections.new_versioned_cached_store(self.test_collection_name),
         ]
 
+        test_collections.extend(
+            self.project.collections.new_collection(t, self.test_collection_name + 'b')
+            for t in ('s', 'vs', 'cs', 'vcs'))
+
         for col in test_collections:
             col.set(item_to_send)
             returned_item = col.get(test_key)
@@ -70,4 +74,4 @@ class CollectionsTest(HSTestCase):
         self.assertRaises(KeyError, col.get, 'does_not_exist')
         self.assertRaises(ValueError, col.set, {'foo': 42})
         self.assertRaises(ValueError, col.set, {'_key': []})
-        self.assertRaises(ValueError, col.set, {'_key': 'large_test', 'value': 'x'*1024**2})
+        self.assertRaises(ValueError, col.set, {'_key': 'large_test', 'value': 'x' * 1024 ** 2})
