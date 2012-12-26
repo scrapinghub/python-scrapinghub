@@ -16,11 +16,12 @@ class JobqTest(HSTestCase):
         pending = summary['pending']
         pending_summaries = pending['summary']
         assert len(pending_summaries) >= 4
-        assert len(pending_summaries) <= 8 # 8 are requested
+        assert len(pending_summaries) <= 8  # 8 are requested
         assert pending['count'] >= len(pending_summaries)
 
         # expected keys, in the order they should be in the queue
         expected_keys = [spider4['key'], spider3['key'], spider2['key'], spider1['key']]
+
         # only count the keys we inserted, as other tests may be running
         def filter_test(summary):
             """filter out all summaries not in our test"""
@@ -34,6 +35,8 @@ class JobqTest(HSTestCase):
         job1.finished()
         job2 = self.hsclient.get_job(spider2['key'])
         job2.started()
+        job3 = self.hsclient.get_job(spider3['key'])
+        job4 = self.hsclient.get_job(spider4['key'])
 
         # check job queues again
         summary = dict((s['name'], s) for s in self.project.jobq.summary())
@@ -52,3 +55,8 @@ class JobqTest(HSTestCase):
         summary = dict((s['name'], s) for s in self.project.jobq.summary())
         finished_keys = filter_test(summary['finished']['summary'])
         assert finished_keys == [spider2['key'], spider1['key']]
+
+        job1.purged()
+        job2.purged()
+        job3.purged()
+        job4.purged()
