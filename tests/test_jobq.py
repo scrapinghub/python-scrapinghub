@@ -63,5 +63,4 @@ class JobqTest(HSTestCase):
 
     def test_project(self):
         job = self.project.new_job('spidey')
-        self.assertTrue(job.items.auth, job.jobauth())
         job.purged()
