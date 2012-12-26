@@ -60,3 +60,8 @@ class JobqTest(HSTestCase):
         job2.purged()
         job3.purged()
         job4.purged()
+
+    def test_project(self):
+        job = self.project.new_job('spidey')
+        self.assertTrue(job.items.auth, job.jobauth())
+        job.purged()
