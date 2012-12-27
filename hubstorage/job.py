@@ -6,21 +6,23 @@ from .utils import millitime, urlpathjoin
 
 class Job(object):
 
-    def __init__(self, client, key, auth=None, metadata=None):
+    def __init__(self, client, key, auth=None, jobauth=None, metadata=None):
         self.key = urlpathjoin(key)
         assert len(self.key.split('/')) == 3, 'Jobkey must be projectid/spiderid/jobid: %s' % self.key
-        self._auth = auth
-        self.items = Items(client, self.key, auth)
-        self.logs = Logs(client, self.key, auth)
-        self.samples = Samples(client, self.key, auth)
-        self.metadata = JobMeta(client, self.key, auth)
+        self._jobauth = jobauth
+        # It can't use self.jobauth because metadata is not ready yet
+        self.auth = jobauth or auth
+        self.metadata = JobMeta(client, self.key, self.auth)
+        self.items = Items(client, self.key, self.auth)
+        self.logs = Logs(client, self.key, self.auth)
+        self.samples = Samples(client, self.key, self.auth)
 
     @property
-    def auth(self):
-        if self._auth is None:
+    def jobauth(self):
+        if self._jobauth is None:
             token = self.metadata.authtoken()
-            self._auth = (self.key, token)
-        return self._auth
+            self._jobauth = (self.key, token)
+        return self._jobauth
 
     def _update(self, *args, **kwargs):
         kwargs.setdefault('updated_time', millitime())
