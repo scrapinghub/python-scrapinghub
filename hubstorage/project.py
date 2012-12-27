@@ -9,9 +9,9 @@ from .utils import urlpathjoin, xauth
 class Project(object):
 
     def __init__(self, client, projectid, auth=None):
+        self.client = client
         self.projectid = urlpathjoin(projectid)
         assert len(self.projectid.split('/')) == 1, 'projectkey must be just one id: %s' % projectid
-        self.client = client
         self.auth = xauth(auth) or client.auth
         self.jobs = Jobs(client, self.projectid, auth=auth)
         self.items = Items(client, self.projectid, auth=auth)
@@ -22,7 +22,17 @@ class Project(object):
         self.collections = Collections(client, self.projectid, auth=auth)
 
     def get_job(self, _key, *args, **kwargs):
-        return self.client.get_job((self.projectid, _key), *args, **kwargs)
+        key = urlpathjoin(_key)
+        parts = key.split('/')
+        if len(parts) == 2:
+            key = (self.projectid, key)
+        elif len(parts) == 3 and parts[0] == self.projectid:
+            pass
+        else:
+            raise ValueError('Invalid jobkey %s for project %s' % (key, self.projectid))
+
+        kwargs.setdefault('auth', self.auth)
+        return self.client.get_job(key, *args, **kwargs)
 
     def get_jobs(self, _key=None, **kwargs):
         for metadata in self.jobs.list(_key, meta='_key', **kwargs):
@@ -33,7 +43,7 @@ class Project(object):
         data = self.jobq.push(spidername, **jobparams)
         key = data['key']
         auth = (key, data['auth'])
-        return Job(self.client, key, auth=auth)
+        return Job(self.client, key, jobauth=auth)
 
 
 class Jobs(ResourceType):

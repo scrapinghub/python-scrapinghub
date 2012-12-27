@@ -71,10 +71,20 @@ class JobsMetaTest(HSTestCase):
         self.job1.metadata.expire()
         self.assertEqual(_clean(self.job1.metadata), self.meta1)
 
-    def test_authtoken_setting(self):
+    def test_jobauth(self):
+        job = self.project.new_job('spidey')
+        self.assertTrue(job.auth, job.jobauth)
+        samejob = self.hsclient.get_job(job.key)
+        self.assertEqual(samejob.jobauth, job.jobauth)
+        self.assertEqual(samejob.items.auth, self.hsclient.auth)
+
+    def test_authtoken(self):
+        self.job1.metadata.expire()
         token = self.job1.metadata.apiget('auth').next()
         self.assertEqual(len(token), 8)
-        self.assertEqual(self.job1.auth, (self.job1.key, token))
+        token2 = self.job1.metadata.get('auth')
+        self.assertEqual(token2, token)
+        self.assertEqual(self.job1.jobauth, (self.job1.key, token))
 
     def test_purge(self):
         jobid = str(random.randint(1, 1000000))

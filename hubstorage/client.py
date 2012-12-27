@@ -29,9 +29,9 @@ class HubstorageClient(object):
     def get_job(self, *args, **kwargs):
         return Job(self, *args, **kwargs)
 
-    def new_job(self, projectid, *args, **jobparams):
-        project = self.get_project(projectid)
-        return project.new_job(*args, **jobparams)
+    def new_job(self, projectid, spidername, auth=None, **jobparams):
+        project = self.get_project(projectid, auth=auth)
+        return project.new_job(spidername, **jobparams)
 
     def get_project(self, *args, **kwargs):
         return Project(self, *args, **kwargs)
