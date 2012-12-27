@@ -3,21 +3,23 @@ from .jobq import JobQ
 from .activity import Activity
 from .collectionsrt import Collections
 from .resourcetype import ResourceType
+from .utils import urlpathjoin, xauth
 
 
 class Project(object):
 
     def __init__(self, client, projectid, auth=None):
-        assert len(str(projectid).split('/')) == 1, 'projectkey must be just one id: %s' % projectid
-        self.projectid = projectid
+        self.projectid = urlpathjoin(projectid)
+        assert len(self.projectid.split('/')) == 1, 'projectkey must be just one id: %s' % projectid
         self.client = client
-        self.jobs = Jobs(client, projectid, auth=auth)
-        self.items = Items(client, projectid, auth=auth)
-        self.logs = Logs(client, projectid, auth=auth)
-        self.samples = Samples(client, projectid, auth=auth)
-        self.jobq = JobQ(client, projectid, auth=auth)
-        self.activity = Activity(client, projectid, auth=auth)
-        self.collections = Collections(client, projectid, auth=auth)
+        self.auth = xauth(auth) or client.auth
+        self.jobs = Jobs(client, self.projectid, auth=auth)
+        self.items = Items(client, self.projectid, auth=auth)
+        self.logs = Logs(client, self.projectid, auth=auth)
+        self.samples = Samples(client, self.projectid, auth=auth)
+        self.jobq = JobQ(client, self.projectid, auth=auth)
+        self.activity = Activity(client, self.projectid, auth=auth)
+        self.collections = Collections(client, self.projectid, auth=auth)
 
     def get_job(self, _key, *args, **kwargs):
         return self.client.get_job((self.projectid, _key), *args, **kwargs)
