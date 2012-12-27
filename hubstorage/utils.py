@@ -13,6 +13,10 @@ def urlpathjoin(*parts):
     'http://storage.scrapinghub.com:8002/jobs/1/2/3/state'
     >>> urlpathjoin(_, None)
     'http://storage.scrapinghub.com:8002/jobs/1/2/3/state'
+    >>> urlpathjoin(78)
+    '78'
+    >>> urlpathjoin('78')
+    '78'
     >>> urlpathjoin('s', 78)
     's/78'
     >>> urlpathjoin('s', 78, 'foo')

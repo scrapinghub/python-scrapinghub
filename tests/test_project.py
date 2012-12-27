@@ -6,15 +6,12 @@ from hstestcase import HSTestCase
 
 class ProjectTest(HSTestCase):
 
-    def test_get_project_from_int_id(self):
-        projectid = int(self.projectid)
-        project = self.hsclient.get_project(projectid)
-        self.assertEqual(project.projectid, projectid)
-
-    def test_get_project_from_str_id(self):
-        projectid = str(self.projectid)
-        project = self.hsclient.get_project(projectid)
-        self.assertEqual(project.projectid, projectid)
+    def test_projectid(self):
+        p1 = self.hsclient.get_project(int(self.projectid))
+        p2 = self.hsclient.get_project(str(self.projectid))
+        self.assertEqual(p1.projectid, p2.projectid)
+        self.assertEqual(type(p1.projectid), str)
+        self.assertRaises(AssertionError, self.hsclient.get_project, '111/3')
 
     def test_jobs(self):
         project = self.hsclient.get_project(self.projectid)
