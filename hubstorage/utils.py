@@ -65,6 +65,12 @@ def xauth(auth):
 
 
 def millitime(*a, **kw):
+    """Epoch time in millisenconds
+
+    >>> e = millitime()
+    >>> type(e)
+    <type 'int'>
+    """
     return int(time.time(*a, **kw) * 1000)
 
 
@@ -72,15 +78,33 @@ class iterqueue(object):
     """Iterate a queue til a maximum number of messages are read or the queue is empty
 
     it exposes an attribute "count" with the number of messages read
+
+    >>> from Queue import Queue
+    >>> q = Queue()
+    >>> for x in xrange(10):
+    ...     q.put(x)
+    >>> qiter = iterqueue(q)
+    >>> list(qiter)
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    >>> qiter.count
+    10
+
+    >>> for x in xrange(10):
+    ...     q.put(x)
+    >>> qiter = iterqueue(q, maxcount=4)
+    >>> list(qiter)
+    [0, 1, 2, 3]
+    >>> qiter.count
+    4
     """
 
-    def __init__(self, queue, maxcount):
+    def __init__(self, queue, maxcount=None):
         self.queue = queue
         self.maxcount = maxcount
         self.count = 0
 
     def __iter__(self):
-        while not self.maxcount or self.count < self.maxcount:
+        while (self.maxcount is None) or (self.count < self.maxcount):
             try:
                 yield self.queue.get_nowait()
                 self.count += 1
