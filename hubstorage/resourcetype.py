@@ -14,7 +14,6 @@ class ResourceType(object):
         self.key = urlpathjoin(self.resource_type, key)
         self.auth = xauth(auth) or client.auth
         self.url = urlpathjoin(client.endpoint, self.key)
-        self._writer = None
 
     def apirequest(self, _path=None, **kwargs):
         kwargs['url'] = urlpathjoin(self.url, _path)
