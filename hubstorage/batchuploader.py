@@ -50,7 +50,8 @@ class BatchUploader(object):
 
     def _atexit(self):
         if not self.closed:
-            warnings.warn("%r not closed properly, some items may have been lost!" % self)
+            warnings.warn("%r not closed properly, some items may have been "
+                          "lost!: %r" % (self, self._writers))
 
     def __del__(self):
         if not self.closed:
@@ -167,6 +168,9 @@ class _BatchWriter(object):
         self.closed = True
         if block:
             self.itemsq.join()
+
+    def __str__(self):
+        return self.url
 
 
 def _encode_identity(iter):

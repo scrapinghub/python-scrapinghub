@@ -2,6 +2,7 @@ import logging
 from collections import MutableMapping
 from .resourcetype import ResourceType, ItemsResourceType
 from .utils import millitime, urlpathjoin
+from .jobq import JobQ
 
 
 class Job(object):
@@ -12,10 +13,20 @@ class Job(object):
         self._jobauth = jobauth
         # It can't use self.jobauth because metadata is not ready yet
         self.auth = jobauth or auth
-        self.metadata = JobMeta(client, self.key, self.auth)
+        self.metadata = JobMeta(client, self.key, self.auth, metadata=metadata)
         self.items = Items(client, self.key, self.auth)
         self.logs = Logs(client, self.key, self.auth)
         self.samples = Samples(client, self.key, self.auth)
+        self.jobq = JobQ(client, self.key.split('/')[0], auth)
+
+    def close_writers(self):
+        wl = [self.items, self.logs, self.samples]
+        # close all resources that use backwround writers
+        for w in wl:
+            w.close(block=False)
+        # now wait for all writers to close together
+        for w in wl:
+            w.close(block=True)
 
     @property
     def jobauth(self):
@@ -24,30 +35,35 @@ class Job(object):
             self._jobauth = (self.key, token)
         return self._jobauth
 
-    def _update(self, *args, **kwargs):
+    def _update_metadata(self, *args, **kwargs):
         kwargs.setdefault('updated_time', millitime())
         self.metadata.update(*args, **kwargs)
         self.metadata.save()
+        self.metadata.expire()
 
     def started(self):
-        self._update(state='running', started_time=millitime())
+        self._update_metadata(started_time=millitime())
+        self.jobq.start(self)
 
     def finished(self, close_reason=None):
-        data = {'state': 'finished'}
-        if 'close_reason' not in self.metadata:
-            data['close_reason'] = close_reason or 'no_reason'
-        self._update(data)
+        self.close_writers()
+        self.metadata.expire()
+        close_reason = close_reason or \
+            self.metadata.liveget('close_reason') or 'no_reason'
+        self._update_metadata(close_reason=close_reason)
+        self.jobq.finish(self)
 
-    def failed(self, reason, message=None):
+    def failed(self, reason='failed', message=None):
         if message:
             self.logs.error(message, appendmode=True)
         self.finished(reason)
 
     def purged(self):
-        self._update(state='purged')
+        self.jobq.delete(self)
+        self.metadata.expire()
 
     def stop(self):
-        self._update(stop_requested=True)
+        self._update_metadata(stop_requested=True)
 
 
 class JobMeta(ResourceType, MutableMapping):
@@ -56,9 +72,9 @@ class JobMeta(ResourceType, MutableMapping):
     _cached = None
 
     def __init__(self, *a, **kw):
-        super(JobMeta, self).__init__(*a, **kw)
-        self._cached = None
+        self._cached = kw.pop('metadata', None)
         self._deleted = set()
+        super(JobMeta, self).__init__(*a, **kw)
 
     @property
     def _data(self):
@@ -80,7 +96,7 @@ class JobMeta(ResourceType, MutableMapping):
         self._deleted.clear()
         if self._cached:
             data = dict((k, v) for k, v in self._data.iteritems()
-                        if k not in ('auth', '_key'))
+                        if k not in ('auth', '_key', 'state'))
             self.apipost(jl=data)
 
     def __getitem__(self, key):
@@ -100,11 +116,12 @@ class JobMeta(ResourceType, MutableMapping):
     def __len__(self):
         return len(self._data)
 
-    def summary(self):
-        return self.apiget('summary').next()
-
     def authtoken(self):
-        return self.apiget('auth').next()
+        return self.liveget('auth')
+
+    def liveget(self, key):
+        for o in self.apiget(key):
+            return o
 
 
 class Logs(ItemsResourceType):

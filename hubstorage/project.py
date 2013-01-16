@@ -20,6 +20,7 @@ class Project(object):
         self.jobq = JobQ(client, self.projectid, auth=auth)
         self.activity = Activity(client, self.projectid, auth=auth)
         self.collections = Collections(client, self.projectid, auth=auth)
+        self.ids = Ids(client, self.projectid, auth=auth)
 
     def get_job(self, _key, *args, **kwargs):
         key = urlpathjoin(_key)
@@ -37,13 +38,13 @@ class Project(object):
     def get_jobs(self, _key=None, **kwargs):
         for metadata in self.jobs.list(_key, meta='_key', **kwargs):
             key = metadata.pop('_key')
-            yield self.client.get_job(key, metadata=metadata)
+            yield self.get_job(key, metadata=metadata)
 
     def new_job(self, spidername, **jobparams):
         data = self.jobq.push(spidername, **jobparams)
         key = data['key']
-        auth = (key, data['auth'])
-        return Job(self.client, key, jobauth=auth)
+        jobauth = (key, data['auth'])
+        return Job(self.client, key, auth=self.auth, jobauth=jobauth)
 
 
 class Jobs(ResourceType):
@@ -79,3 +80,12 @@ class Samples(ResourceType):
 
     def list(self, _key=None, **params):
         return self.apiget(_key, params=params)
+
+
+class Ids(ResourceType):
+
+    resource_type = 'ids'
+
+    def spider(self, spidername, **params):
+        r = self.apiget(('spider', spidername), params=params)
+        return r.next()

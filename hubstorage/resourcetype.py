@@ -72,6 +72,10 @@ class ItemsResourceType(ResourceType):
         if self._writer is not None:
             self._writer.flush()
 
+    def close(self, block=True):
+        if self._writer is not None:
+            self._writer.close(block=block)
+
     def write(self, item):
         self.writer.write(item)
 

@@ -3,101 +3,72 @@ Test job metadata
 
 System tests for operations on stored job metadata
 """
-import random
 from hstestcase import HSTestCase
-import logging
 
 
-def _clean(metadata):
-    return dict((k, v) for k, v in metadata.items()
-                if k not in ('_key', 'auth', 'updated_time'))
+class JobsMetadataTest(HSTestCase):
 
+    def _assertMetadata(self, meta1, meta2):
+        def _clean(m):
+            return dict((k, v) for k, v in m.items() if k != 'updated_time')
 
-class JobsMetaTest(HSTestCase):
+        meta1 = _clean(meta1)
+        meta2 = _clean(meta2)
+        self.assertEqual(meta1, meta2)
 
-    spider_increment = random.randint(10, 1000)
-    meta1 = {'spider': 'groupon', 'spider_type': 'manual'}
-    meta2 = {'spider': 'google', 'spider_type': 'manual', 'started_time': 1309957061995}
+    def test_basic(self):
+        job = self.project.new_job(self.spidername)
+        self.assertTrue('auth' in job.metadata)
+        self.assertTrue('state' in job.metadata)
+        self.assertEqual(job.metadata['spider'], self.spidername)
 
-    @classmethod
-    def setUpClass(cls):
-        HSTestCase.setUpClass()
-        cls.job1 = cls.project.get_job((cls.spider_increment, 1))
-        cls.job1.metadata.update(cls.meta1)
-        cls.job1.metadata.save()
-        cls.job2 = cls.project.get_job((cls.spider_increment + 1, 1))
-        cls.job2.metadata.update(cls.meta2)
-        cls.job2.metadata.save()
+        # set some metadata and forget it
+        job.metadata['foo'] = 'bar'
+        self.assertEqual(job.metadata['foo'], 'bar')
+        job.metadata.expire()
+        self.assertTrue('foo' not in job.metadata)
 
-    @classmethod
-    def tearDownClass(cls):
-        for i in xrange(3):
-            for jobinfo in cls.project.jobs.list(cls.spider_increment + i, meta='_key'):
-                logging.info('%s', jobinfo)
-                jobkey = jobinfo.pop('_key')
-                job = cls.hsclient.get_job(jobkey)
-                for key in jobinfo:
-                    del job.metadata[key]
-                job.metadata.save()
+        # set it again and persist it
+        job.metadata['foo'] = 'bar'
+        self.assertEqual(job.metadata['foo'], 'bar')
+        job.metadata.save()
+        self.assertEqual(job.metadata['foo'], 'bar')
+        job.metadata.expire()
+        self.assertEqual(job.metadata['foo'], 'bar')
 
-        HSTestCase.tearDownClass()
+        # refetch the job and compare its metadata
+        job2 = self.hsclient.get_job(job.key)
+        self._assertMetadata(job2.metadata, job.metadata)
 
-    def test_get(self):
-        self.assertEqual(_clean(self.job1.metadata), self.meta1)
-        self.assertEqual(self.job1.metadata.get('spider'), 'groupon')
-        self.job1.metadata.expire()
-        self.assertEqual(self.job1.metadata.get('spider'), 'groupon')
+        # delete foo but do not persist it
+        del job.metadata['foo']
+        self.assertTrue('foo' not in job.metadata)
+        job.metadata.expire()
+        self.assertEqual(job.metadata.get('foo'), 'bar')
+        # persist it to be sure it is not removed
+        job.metadata.save()
+        self.assertEqual(job.metadata.get('foo'), 'bar')
+        # and finally delete again and persist it
+        del job.metadata['foo']
+        self.assertTrue('foo' not in job.metadata)
+        job.metadata.save()
+        self.assertTrue('foo' not in job.metadata)
+        job.metadata.expire()
+        self.assertTrue('foo' not in job.metadata)
 
-    def test_list(self):
-        metas = []
-        for job in self.project.get_jobs():
-            projectid, spiderid, jobid = job.key.split('/')
-            self.assertEqual(projectid, self.projectid)
-            if int(spiderid) in (self.spider_increment, self.spider_increment + 1):
-                metas.append(_clean(job.metadata))
-
-        self.assertEqual(len(metas), 2, metas)
-        self.assertEqual(metas[0], self.meta1)
-        self.assertEqual(metas[1], self.meta2)
-
-    def test_post_delete(self):
-        self.job1.metadata['foo'] = 'bar'
-        self.job1.metadata.save()
-        self.job1.metadata.expire()
-        refmeta = dict(self.meta1, foo='bar')
-        self.assertEqual(_clean(self.job1.metadata), refmeta)
-        del self.job1.metadata['foo']
-        self.job1.metadata.save()
-        self.job1.metadata.expire()
-        self.assertEqual(_clean(self.job1.metadata), self.meta1)
+        job2 = self.hsclient.get_job(job.key)
+        self._assertMetadata(job.metadata, job2.metadata)
 
     def test_jobauth(self):
-        job = self.project.new_job('spidey')
-        self.assertTrue(job.auth, job.jobauth)
+        job = self.project.new_job(self.spidername)
+        self.assertEqual(job.auth, job.jobauth)
         samejob = self.hsclient.get_job(job.key)
         self.assertEqual(samejob.jobauth, job.jobauth)
-        self.assertEqual(samejob.items.auth, self.hsclient.auth)
+        self.assertEqual(samejob.items.auth, self.project.auth)
 
     def test_authtoken(self):
-        self.job1.metadata.expire()
-        token = self.job1.metadata.apiget('auth').next()
-        self.assertEqual(len(token), 8)
-        token2 = self.job1.metadata.get('auth')
-        self.assertEqual(token2, token)
-        self.assertEqual(self.job1.jobauth, (self.job1.key, token))
-
-    def test_purge(self):
-        jobid = str(random.randint(1, 1000000))
-        job = self.project.get_job((self.spider_increment + 2, jobid))
-        # add samples
-        job.items.write({'foo': 'bar'})
-        job.logs.debug(message='hello')
-        job.logs.info(message='hello again')
-        job.items.flush()
-        job.logs.flush()
-        self.assertEqual(len(list(job.items.list())), 1)
-        self.assertEqual(len(list(job.logs.list())), 2)
-        # purge job and check its items/logs are removed
-        job.purged()
-        self.assertEqual(len(list(job.items.list())), 0)
-        self.assertEqual(len(list(job.logs.list())), 0)
+        job = self.project.new_job(self.spidername)
+        job.metadata.expire()
+        token = job.metadata.apiget('auth').next()
+        self.assertEqual(job.jobauth, (job.key, token))
+        self.assertEqual(job.metadata.get('auth'), token)
