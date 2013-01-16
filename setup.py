@@ -1,7 +1,13 @@
+from os.path import join, dirname
 from setuptools import setup, find_packages
 
+# We can't import hubstorage.__version__ because it imports "requests" and it
+# can not be available yet
+__version__ = open(join(dirname(__file__), 'hubstorage/VERSION')).read().strip()
+
+
 setup(name='hubstorage',
-      version='0.5',
+      version=__version__,
       license='BSD',
       description='Client interface for Scrapinghub HubStorage',
       author='Scrapinghub',
@@ -9,6 +15,7 @@ setup(name='hubstorage',
       url='http://scrapinghub.com',
       platforms=['Any'],
       packages=find_packages(),
+      package_data={'hubstorage': ['VERSION']},
       install_requires=['requests'],
       classifiers=['Development Status :: 4 - Beta',
                    'License :: OSI Approved :: BSD License',
