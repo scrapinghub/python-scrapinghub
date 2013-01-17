@@ -31,7 +31,6 @@ class SystemTest(HSTestCase):
         self.assertEqual(job.metadata.get('close_reason'), 'all-good')
 
     def test_succeed_without_close_reason(self):
-        return
         p = self.panelproject
         pushed = p.jobq.push(self.spidername)
         # check pending state
@@ -45,7 +44,6 @@ class SystemTest(HSTestCase):
         self.assertEqual(job.metadata.get('close_reason'), 'no_reason')
 
     def test_scraper_failure(self):
-        return
         p = self.panelproject
         pushed = p.jobq.push(self.spidername)
         # check pending state
