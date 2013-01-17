@@ -41,6 +41,16 @@ class HubstorageClient(object):
         project = self.get_project(projectid, auth=auth)
         return project.new_job(spidername, **jobparams)
 
+    def next_job(self, projectid, auth=None):
+        # XXX: jobq is restricted to projects at the moment
+        # but this will change
+        project = self.get_project(projectid, auth=auth)
+        data = project.jobq.poll()
+        if data:
+            jobkey = data['key']
+            jobauth = (jobkey, data['auth'])
+            return project.get_job(jobkey, jobauth=jobauth)
+
     def get_project(self, *args, **kwargs):
         return Project(self, *args, **kwargs)
 

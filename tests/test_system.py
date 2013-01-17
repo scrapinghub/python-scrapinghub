@@ -18,7 +18,6 @@ class SystemTest(HSTestCase):
         self.scraperclient = HubstorageClient(endpoint=endpoint)
 
     def test_succeed_with_close_reason(self):
-        return
         p = self.panelproject
         pushed = p.jobq.push(self.spidername)
         # check pending state
@@ -46,6 +45,7 @@ class SystemTest(HSTestCase):
         self.assertEqual(job.metadata.get('close_reason'), 'no_reason')
 
     def test_scraper_failure(self):
+        return
         p = self.panelproject
         pushed = p.jobq.push(self.spidername)
         # check pending state
@@ -63,18 +63,13 @@ class SystemTest(HSTestCase):
         self.assertEqual(stats['totals']['input_values'], self.MAGICN * 4 + 1)
 
     def _run_runner(self, pushed, close_reason):
-        # TODO: poll for job using jobq
-        polled = pushed
-        jobkey = polled['key']
-        jobauth = (jobkey, polled['auth'])
-        job = self.runnerclient.get_job(jobkey)
-        job.started()  # FIXME: remove me and set started_time at HS side
+        job = self.runnerclient.next_job(self.projectid)
         self.assertFalse(job.metadata.get('stop_requested'))
         job.metadata.update(host='localhost', slot=1)
         self.assertEqual(job.metadata.get('state'), 'running')
         # run scraper
         try:
-            self._run_scraper(jobkey, jobauth, close_reason=close_reason)
+            self._run_scraper(job.key, job.jobauth, close_reason=close_reason)
         except Exception as exc:
             job.failed(message=str(exc))
             # logging from runner must append and never remove messages logged
