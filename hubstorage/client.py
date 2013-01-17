@@ -1,7 +1,6 @@
 """
 High level Hubstorage client
 """
-import os
 import pkgutil
 from requests import session
 from .utils import xauth
@@ -20,8 +19,7 @@ class HubstorageClient(object):
 
     def __init__(self, auth=None, endpoint=None):
         self.auth = xauth(auth)
-        self.endpoint = endpoint or os.environ.get('SHUB_STORAGE') or \
-                self.DEFAULT_ENDPOINT
+        self.endpoint = endpoint or self.DEFAULT_ENDPOINT
         self.session = self._create_session()
         self._batchuploader = None
 
