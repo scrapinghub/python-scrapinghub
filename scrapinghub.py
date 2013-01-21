@@ -61,7 +61,7 @@ class Connection(object):
             'User-Agent': 'python-scrapinghub/{0}'.format(__version__),
         })
         # For python-requests >= 1.x
-        s.stream = False
+        s.stream = True
         # For python-requests < 1.x
         s.prefetch = False
         return s
