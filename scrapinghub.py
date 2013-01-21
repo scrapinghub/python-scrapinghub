@@ -14,6 +14,7 @@ __version__ = '1.1.1'
 
 logger = logging.getLogger('scrapinghub')
 
+
 class Connection(object):
     """Main class to access Scrapinghub API.
     """
@@ -47,10 +48,23 @@ class Connection(object):
         self.url = url
         self.username_or_apikey = username_or_apikey
         self.auth = (username_or_apikey, password)
-        self._request_headers = {'User-Agent': 'python-scrapinghub/{0}'.format(__version__)}
+        self._session = self._create_session()
 
     def __repr__(self):
         return "Connection(%r)" % self.username_or_apikey
+
+    def _create_session(self):
+        from requests import session
+        s = session()
+        s.auth = self.auth
+        s.headers.update({
+            'User-Agent': 'python-scrapinghub/{0}'.format(__version__),
+        })
+        # For python-requests >= 1.x
+        s.stream = False
+        # For python-requests < 1.x
+        s.prefetch = False
+        return s
 
     def _build_url(self, method, format):
         """Returns full url for given method and format"""
@@ -66,7 +80,7 @@ class Connection(object):
 
     def _get(self, method, format, params=None, headers=None, raw=False):
         """Performs GET request"""
-        from requests.models import urlencode
+        from requests.compat import urlencode
         url = self._build_url(method, format)
         if params:
             url = "{0}?{1}".format(url, urlencode(params, True))
@@ -87,21 +101,14 @@ class Connection(object):
 
         Raises APIError if json response have error status.
         """
-        import requests
         if format not in ('json', 'jl'):
             raise APIError("format must be either json or jl")
 
-        request_headers = self._request_headers.copy()
-        if headers:
-            request_headers.update(headers)
-
         if data is None and files is None:
-            response = requests.get(url, headers=request_headers,
-                                    auth=self.auth, prefetch=False)
+            response = self._session.get(url, headers=headers)
         else:
-            response = requests.post(url, headers=request_headers,
-                                     auth=self.auth, data=data,
-                                     files=files, prefetch=False)
+            response = self._session.post(url, headers=headers,
+                                          data=data, files=files)
         return self._decode_response(response, format, raw)
 
     def _decode_response(self, response, format, raw):
@@ -119,7 +126,7 @@ class Connection(object):
                     raise APIError("Unknown response status: {0[status]}".format(data))
             except KeyError:
                 raise APIError("JSON response does not contain status")
-        else: # jl
+        else:  # jl
             return (json.loads(line) for line in response.iter_lines())
 
     ##
@@ -326,4 +333,3 @@ class Job(RequestProxyMixin):
 
 class APIError(Exception):
     pass
-
