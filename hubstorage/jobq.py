@@ -6,10 +6,16 @@ class JobQ(ResourceType):
 
     resource_type = 'jobq'
 
+    PRIO_LOWEST = 0
+    PRIO_LOW = 1
+    PRIO_NORMAL = 2
+    PRIO_HIGH = 3
+    PRIO_HIGHEST = 4
+
     def push(self, spider, **jobparams):
         jobparams['spider'] = spider
-        r = self.apipost('push', jl=jobparams)
-        return r.next()
+        for o in self.apipost('push', jl=jobparams):
+            return o
 
     def poll(self):
         # XXX: This is completely unsafe call that simulates
@@ -24,6 +30,10 @@ class JobQ(ResourceType):
             auth = job.metadata.get('auth')
             self.start(jobkey)
             return {'key': jobkey, 'auth': auth}
+
+    def startjob(self):
+        for o in self.apipost('startjob'):
+            return o
 
     def summary(self, _queuename=None, spiderid=None):
         path = urlpathjoin(spiderid, 'summary', _queuename)

@@ -37,7 +37,7 @@ class JobqTest(HSTestCase):
 
     def test_push_with_priority(self):
         jobq = self.project.jobq
-        qjob = jobq.push(self.spidername, priority=20)
+        qjob = jobq.push(self.spidername, priority=jobq.PRIO_HIGHEST)
         self.assertTrue('key' in qjob, qjob)
         self.assertTrue('auth' in qjob, qjob)
 
@@ -48,27 +48,7 @@ class JobqTest(HSTestCase):
         job = self.hsclient.get_job(qjob['key'])
         self.assertEqual(job.metadata.get('state'), u'running')
 
-    def test_project_new_job(self):
-        job = self.project.new_job(self.spidername, state='running',
-                                   priority=10, foo=u'bar')
-        self.assertEqual(job.metadata.get('state'), u'running')
-        self.assertEqual(job.metadata.get('foo'), u'bar')
-        self.project.jobq.delete(job)
-        job.metadata.expire()
-        self.assertEqual(job.metadata.get('state'), u'deleted')
-        self.assertEqual(job.metadata.get('foo'), u'bar')
-
-    def test_client_new_job(self):
-        job = self.hsclient.new_job(self.projectid, self.spidername,
-                                    state='running', priority=5, foo='baz')
-        self.assertEqual(job.metadata.get('state'), u'running', self.hsclient.auth)
-        self.assertEqual(job.metadata.get('foo'), u'baz')
-        self.project.jobq.delete(job)
-        job.metadata.expire()
-        self.assertEqual(job.metadata.get('state'), u'deleted')
-        self.assertEqual(job.metadata.get('foo'), u'baz')
-
-    def test_project_summary(self):
+    def test_summary(self):
         jobq = self.project.jobq
         # push at least one job per state
         jobq.push(self.spidername)
@@ -109,11 +89,6 @@ class JobqTest(HSTestCase):
 
     def _assert_queue(self, qname, jobs):
         summary = self.project.jobq.summary(qname, spiderid=self.spiderid)
-        # FIXME: when a queue have not items HS does not return its summary
-        if summary is None:
-            self.assertEqual(len(jobs), 0)
-            return
-
         self.assertEqual(summary['name'], qname)
         # FIXME: HS returns the total count and not the spider count for the queue
         #self.assertEqual(summary['count'], len(jobs))
