@@ -31,10 +31,10 @@ class HSTestCase(unittest.TestCase):
         jobq = cls.project.jobq
         # Cleanup JobQ
         for queuename in ('pending', 'running', 'finished'):
-            info = -1
-            while info:
+            info = {'summary': [None]}  # poor-guy do...while
+            while info['summary']:
                 info = jobq.summary(queuename, spiderid=cls.spiderid)
-                for summary in (info and info['summary'] or ()):
+                for summary in info['summary']:
                     cls._remove_job(summary['key'])
 
         # Cleanup jobs created directly with jobsmeta instead of jobq
@@ -49,3 +49,13 @@ class HSTestCase(unittest.TestCase):
         assert jobkey.startswith(validprefix), jobkey
         keytail = jobkey.partition('/')[2]
         cls.project.jobs.apidelete(keytail)
+
+
+class NopTest(HSTestCase):
+
+    def test_nop(self):
+        pass  # hooray!
+
+
+if __name__ == '__main__':
+    unittest.main()

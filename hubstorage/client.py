@@ -6,6 +6,7 @@ from requests import session
 from .utils import xauth
 from .project import Project
 from .job import Job
+from .jobq import JobQ
 from .batchuploader import BatchUploader
 
 __all__ = ["HubstorageClient"]
@@ -22,6 +23,7 @@ class HubstorageClient(object):
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
         self.session = self._create_session()
         self._batchuploader = None
+        self.jobq = JobQ(self, None)
 
     def _create_session(self):
         s = session()

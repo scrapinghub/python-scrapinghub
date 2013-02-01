@@ -39,6 +39,17 @@ class ProjectTest(HSTestCase):
         r = list(p.get_jobs(self.spiderid))
         self.assertEqual([j.key for j in r], [j1.key, j2.key, j3.key])
 
+    def test_new_job(self):
+        job = self.project.new_job(self.spidername, state='running',
+                                   priority=self.project.jobq.PRIO_HIGH,
+                                   foo=u'bar')
+        self.assertEqual(job.metadata.get('state'), u'running')
+        self.assertEqual(job.metadata.get('foo'), u'bar')
+        self.project.jobq.delete(job)
+        job.metadata.expire()
+        self.assertEqual(job.metadata.get('state'), u'deleted')
+        self.assertEqual(job.metadata.get('foo'), u'bar')
+
     def test_auth(self):
         # client without global auth set
         hsc = HubstorageClient(endpoint=self.hsclient.endpoint)
