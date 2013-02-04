@@ -47,8 +47,7 @@ class HSTestCase(unittest.TestCase):
     def _remove_job(cls, jobkey):
         validprefix = '%s/%s' % (cls.projectid, cls.spiderid)
         assert jobkey.startswith(validprefix), jobkey
-        keytail = jobkey.partition('/')[2]
-        cls.project.jobs.apidelete(keytail)
+        cls.project.jobq.delete(jobkey)
 
 
 class NopTest(HSTestCase):
