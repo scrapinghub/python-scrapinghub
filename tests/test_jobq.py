@@ -90,8 +90,7 @@ class JobqTest(HSTestCase):
     def _assert_queue(self, qname, jobs):
         summary = self.project.jobq.summary(qname, spiderid=self.spiderid)
         self.assertEqual(summary['name'], qname)
-        # FIXME: HS returns the total count and not the spider count for the queue
-        #self.assertEqual(summary['count'], len(jobs))
+        self.assertEqual(summary['count'], len(jobs))
         self.assertEqual(len(summary['summary']), len(jobs))
         # Most recent jobs first
         self.assertEqual([s['key'] for s in summary['summary']],
