@@ -22,8 +22,8 @@ class HubstorageClient(object):
         self.auth = xauth(auth)
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
         self.session = self._create_session()
+        self.jobq = JobQ(self, None, auth=self.auth)
         self._batchuploader = None
-        self.jobq = JobQ(self, None)
 
     def _create_session(self):
         s = session()
@@ -44,14 +44,16 @@ class HubstorageClient(object):
         return project.new_job(spidername, **jobparams)
 
     def next_job(self, projectid, auth=None):
-        # XXX: jobq is restricted to projects at the moment
-        # but this will change
-        project = self.get_project(projectid, auth=auth)
-        data = project.jobq.poll()
-        if data:
-            jobkey = data['key']
-            jobauth = (jobkey, data['auth'])
-            return project.get_job(jobkey, jobauth=jobauth)
+        if projectid:
+            jobq = self.get_project(projectid, auth=auth).jobq
+        else:
+            jobq = self.jobq
+
+        jobdata = jobq.start()
+        if jobdata:
+            jobkey = jobdata['key']
+            jobauth = (jobkey, jobdata['auth'])
+            return self.get_job(jobkey, jobauth=jobauth)
 
     def get_project(self, *args, **kwargs):
         return Project(self, *args, **kwargs)
