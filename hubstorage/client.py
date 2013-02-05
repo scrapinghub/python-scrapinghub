@@ -39,11 +39,11 @@ class HubstorageClient(object):
     def get_job(self, *args, **kwargs):
         return Job(self, *args, **kwargs)
 
-    def new_job(self, projectid, spidername, auth=None, **jobparams):
+    def push_job(self, projectid, spidername, auth=None, **jobparams):
         project = self.get_project(projectid, auth=auth)
-        return project.new_job(spidername, **jobparams)
+        return project.push_job(spidername, **jobparams)
 
-    def next_job(self, projectid, auth=None):
+    def start_job(self, projectid, auth=None):
         if projectid:
             jobq = self.get_project(projectid, auth=auth).jobq
         else:

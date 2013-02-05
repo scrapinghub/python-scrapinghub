@@ -6,9 +6,9 @@ from hstestcase import HSTestCase
 
 class ClientTest(HSTestCase):
 
-    def test_new_job(self):
+    def test_push_job(self):
         c = self.hsclient
-        job = c.new_job(self.projectid, self.spidername,
+        job = c.push_job(self.projectid, self.spidername,
                         state='running',
                         priority=self.project.jobq.PRIO_LOW,
                         foo='baz')
