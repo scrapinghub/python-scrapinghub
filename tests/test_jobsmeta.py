@@ -17,7 +17,7 @@ class JobsMetadataTest(HSTestCase):
         self.assertEqual(meta1, meta2)
 
     def test_basic(self):
-        job = self.project.new_job(self.spidername)
+        job = self.project.push_job(self.spidername)
         self.assertTrue('auth' in job.metadata)
         self.assertTrue('state' in job.metadata)
         self.assertEqual(job.metadata['spider'], self.spidername)
@@ -60,14 +60,14 @@ class JobsMetadataTest(HSTestCase):
         self._assertMetadata(job.metadata, job2.metadata)
 
     def test_jobauth(self):
-        job = self.project.new_job(self.spidername)
+        job = self.project.push_job(self.spidername)
         self.assertEqual(job.auth, job.jobauth)
         samejob = self.hsclient.get_job(job.key)
         self.assertEqual(samejob.jobauth, job.jobauth)
         self.assertEqual(samejob.items.auth, self.project.auth)
 
     def test_authtoken(self):
-        job = self.project.new_job(self.spidername)
+        job = self.project.push_job(self.spidername)
         job.metadata.expire()
         token = job.metadata.apiget('auth').next()
         self.assertEqual(job.jobauth, (job.key, token))

@@ -40,7 +40,7 @@ class Project(object):
             key = metadata.pop('_key')
             yield self.get_job(key, metadata=metadata)
 
-    def new_job(self, spidername, **jobparams):
+    def push_job(self, spidername, **jobparams):
         data = self.jobq.push(spidername, **jobparams)
         key = data['key']
         jobauth = (key, data['auth'])

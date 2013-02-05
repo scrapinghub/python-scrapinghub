@@ -17,7 +17,7 @@ class ProjectTest(HSTestCase):
         self.assertRaises(AssertionError, self.hsclient.get_project, '111/3')
 
     def test_get_job_from_key(self):
-        job = self.project.new_job(self.spidername)
+        job = self.project.push_job(self.spidername)
         parts = tuple(job.key.split('/'))
         self.assertEqual(len(parts), 3)
         self.assertEqual(parts[:2], (self.projectid, self.spiderid))
@@ -30,17 +30,17 @@ class ProjectTest(HSTestCase):
 
     def test_get_jobs(self):
         p = self.project
-        j1 = p.new_job(self.spidername, testid=0)
-        j2 = p.new_job(self.spidername, testid=1)
-        j3 = p.new_job(self.spidername, testid=2)
+        j1 = p.push_job(self.spidername, testid=0)
+        j2 = p.push_job(self.spidername, testid=1)
+        j3 = p.push_job(self.spidername, testid=2)
         # global list must list at least one job
         self.assertTrue(list(p.get_jobs(count=1)))
         # List all jobs for test spider
         r = list(p.get_jobs(self.spiderid))
         self.assertEqual([j.key for j in r], [j1.key, j2.key, j3.key])
 
-    def test_new_job(self):
-        job = self.project.new_job(self.spidername, state='running',
+    def test_push_job(self):
+        job = self.project.push_job(self.spidername, state='running',
                                    priority=self.project.jobq.PRIO_HIGH,
                                    foo=u'bar')
         self.assertEqual(job.metadata.get('state'), u'running')
@@ -57,12 +57,12 @@ class ProjectTest(HSTestCase):
 
         # check no-auth access
         try:
-            hsc.new_job(self.projectid, self.spidername)
+            hsc.push_job(self.projectid, self.spidername)
         except HTTPError as exc:
             self.assertTrue(exc.response.status_code, 401)
 
         try:
-            hsc.get_project(self.projectid).new_job(self.spidername)
+            hsc.get_project(self.projectid).push_job(self.spidername)
         except HTTPError as exc:
             self.assertTrue(exc.response.status_code, 401)
 
@@ -80,14 +80,14 @@ class ProjectTest(HSTestCase):
         auth = self.hsclient.auth
         project = hsc.get_project(self.projectid, auth)
         self.assertEqual(project.auth, auth)
-        job = project.new_job(self.spidername)
+        job = project.push_job(self.spidername)
         samejob = project.get_job(job.key)
         self.assertEqual(samejob.key, job.key)
 
     def test_broad(self):
         project = self.hsclient.get_project(self.projectid)
         # populate project with at least one job
-        job = project.new_job(self.spidername)
+        job = project.push_job(self.spidername)
         self.assertEqual(job.metadata.get('state'), 'pending')
         job.started()
         self.assertEqual(job.metadata.get('state'), 'running')

@@ -61,7 +61,7 @@ class SystemTest(HSTestCase):
         self.assertEqual(stats['totals']['input_values'], self.MAGICN * 4 + 1)
 
     def _run_runner(self, pushed, close_reason):
-        job = self.runnerclient.next_job(self.projectid)
+        job = self.runnerclient.start_job(self.projectid)
         self.assertFalse(job.metadata.get('stop_requested'))
         job.metadata.update(host='localhost', slot=1)
         self.assertEqual(job.metadata.get('state'), 'running')
