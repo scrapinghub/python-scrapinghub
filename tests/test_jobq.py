@@ -48,6 +48,28 @@ class JobqTest(HSTestCase):
         job = self.hsclient.get_job(qjob['key'])
         self.assertEqual(job.metadata.get('state'), u'running')
 
+    def test_startjob(self):
+        jobq = self.project.jobq
+        qj = jobq.push(self.spidername)
+        nj = jobq.start()
+        self.assertTrue(nj.pop('pending_time', None), nj)
+        self.assertEqual(nj, {
+            u'auth': qj['auth'],
+            u'key': qj['key'],
+            u'priority': jobq.PRIO_NORMAL,
+            u'spider': self.spidername,
+            u'state': u'running',
+        })
+
+    def test_startjob_order(self):
+        jobq = self.project.jobq
+        q1 = jobq.push(self.spidername)
+        q2 = jobq.push(self.spidername)
+        q3 = jobq.push(self.spidername)
+        self.assertEqual(jobq.start()['key'], q1['key'])
+        self.assertEqual(jobq.start()['key'], q2['key'])
+        self.assertEqual(jobq.start()['key'], q3['key'])
+
     def test_summary(self):
         jobq = self.project.jobq
         # push at least one job per state
