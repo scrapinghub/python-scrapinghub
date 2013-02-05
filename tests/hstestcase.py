@@ -5,7 +5,7 @@ from hubstorage import HubstorageClient
 
 class HSTestCase(unittest.TestCase):
 
-    projectid = '1111111'
+    projectid = '2222222'
     spidername = 'hs-test-spider'
     endpoint = os.getenv('HS_ENDPOINT', 'http://localhost:8003')
     auth = os.getenv('HS_AUTH', 'useavalidkey')
@@ -33,20 +33,19 @@ class HSTestCase(unittest.TestCase):
         for queuename in ('pending', 'running', 'finished'):
             info = {'summary': [None]}  # poor-guy do...while
             while info['summary']:
-                info = jobq.summary(queuename, spiderid=cls.spiderid)
+                info = jobq.summary(queuename)
                 for summary in info['summary']:
                     cls._remove_job(summary['key'])
 
         # Cleanup jobs created directly with jobsmeta instead of jobq
-        for job in cls.project.get_jobs(cls.spiderid):
+        for job in cls.project.get_jobs():
             cls._remove_job(job.key)
 
         cls.hsclient.close()
 
     @classmethod
     def _remove_job(cls, jobkey):
-        validprefix = '%s/%s' % (cls.projectid, cls.spiderid)
-        assert jobkey.startswith(validprefix), jobkey
+        assert jobkey.startswith(cls.projectid), jobkey
         cls.project.jobq.delete(jobkey)
         cls.project.jobs.apidelete(jobkey.partition('/')[2])
 
