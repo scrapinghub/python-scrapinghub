@@ -48,6 +48,7 @@ class HSTestCase(unittest.TestCase):
         validprefix = '%s/%s' % (cls.projectid, cls.spiderid)
         assert jobkey.startswith(validprefix), jobkey
         cls.project.jobq.delete(jobkey)
+        cls.project.jobs.apidelete(jobkey.partition('/')[2])
 
 
 class NopTest(HSTestCase):
