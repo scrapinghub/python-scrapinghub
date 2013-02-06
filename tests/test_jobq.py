@@ -2,6 +2,7 @@
 Test JobQ
 """
 from hstestcase import HSTestCase
+from hubstorage.jobq import DuplicateJobError
 
 
 class JobqTest(HSTestCase):
@@ -47,6 +48,22 @@ class JobqTest(HSTestCase):
         self.assertTrue('auth' in qjob, qjob)
         job = self.hsclient.get_job(qjob['key'])
         self.assertEqual(job.metadata.get('state'), u'running')
+
+    def test_push_with_unique(self):
+        jobq = self.project.jobq
+        # no unique key
+        jobq.push(self.spidername)
+        jobq.push(self.spidername)
+        jobq.push(self.spidername, unique=None)
+        jobq.push(self.spidername, unique=None)
+
+        # unique key
+        q1 = jobq.push(self.spidername, unique='h1')
+        jobq.push(self.spidername, unique='h2')
+        self.assertRaises(DuplicateJobError, jobq.push, self.spidername, unique='h1')
+        jobq.finish(q1)
+        self.assertRaises(DuplicateJobError, jobq.push, self.spidername, unique='h2')
+        jobq.push(self.spidername, unique='h1')
 
     def test_startjob(self):
         jobq = self.project.jobq
