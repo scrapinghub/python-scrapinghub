@@ -1,5 +1,10 @@
+from requests.exceptions import HTTPError
 from .resourcetype import ResourceType
 from .utils import urlpathjoin
+
+
+class DuplicateJobError(Exception):
+    """Raised when a job with same unique is pushed"""
 
 
 class JobQ(ResourceType):
@@ -14,8 +19,13 @@ class JobQ(ResourceType):
 
     def push(self, spider, **jobparams):
         jobparams['spider'] = spider
-        for o in self.apipost('push', jl=jobparams):
-            return o
+        try:
+            for o in self.apipost('push', jl=jobparams):
+                return o
+        except HTTPError as exc:
+            if exc.response.status_code == 409:
+                raise DuplicateJobError()
+
 
     def summary(self, _queuename=None, spiderid=None):
         path = urlpathjoin(spiderid, 'summary', _queuename)
