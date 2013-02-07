@@ -25,6 +25,7 @@ class JobQ(ResourceType):
         except HTTPError as exc:
             if exc.response.status_code == 409:
                 raise DuplicateJobError()
+            raise
 
 
     def summary(self, _queuename=None, spiderid=None):
