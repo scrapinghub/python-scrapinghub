@@ -41,10 +41,6 @@ class Job(object):
         self.metadata.save()
         self.metadata.expire()
 
-    def started(self):
-        self._update_metadata(started_time=millitime())
-        self.jobq.start(self)
-
     def finished(self, close_reason=None):
         self.close_writers()
         self.metadata.expire()

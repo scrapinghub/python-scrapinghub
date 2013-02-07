@@ -89,7 +89,7 @@ class ProjectTest(HSTestCase):
         # populate project with at least one job
         job = project.push_job(self.spidername)
         self.assertEqual(job.metadata.get('state'), 'pending')
-        job.started()
+        job = project.start_job()
         self.assertEqual(job.metadata.get('state'), 'running')
         job.items.write({'title': 'bar'})
         job.logs.info('nice to meet you')
