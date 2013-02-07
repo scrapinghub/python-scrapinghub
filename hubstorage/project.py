@@ -46,6 +46,9 @@ class Project(object):
         jobauth = (key, data['auth'])
         return Job(self.client, key, auth=self.auth, jobauth=jobauth)
 
+    def start_job(self):
+        return self.client.start_job(projectid=self.projectid, auth=self.auth)
+
 
 class Jobs(ResourceType):
 
