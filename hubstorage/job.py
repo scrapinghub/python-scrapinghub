@@ -36,7 +36,6 @@ class Job(object):
         return self._jobauth
 
     def _update_metadata(self, *args, **kwargs):
-        kwargs.setdefault('updated_time', millitime())
         self.metadata.update(*args, **kwargs)
         self.metadata.save()
         self.metadata.expire()
