@@ -70,6 +70,7 @@ class JobqTest(HSTestCase):
         qj = jobq.push(self.spidername)
         nj = jobq.start()
         self.assertTrue(nj.pop('pending_time', None), nj)
+        nj.pop('running_time', None)
         self.assertEqual(nj, {
             u'auth': qj['auth'],
             u'key': qj['key'],
