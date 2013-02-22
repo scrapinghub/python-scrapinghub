@@ -284,25 +284,26 @@ class Job(RequestProxyMixin):
     def __repr__(self):
         return "Job({0.project!r}, {0.id})".format(self)
 
-    def items(self):
+    def items(self, count=None, offset=None):
+    
         import requests
-        offset = 0
+        from httplib import IncompleteRead
+    
+        internal_offset = 0
         for attempt in xrange(self.MAX_RETRIES):
             try:
-                for item in self._get('items', 'jl', params={'offset': offset}):
+                params = {}
+                if count is not None: params['count'] = count - internal_offset
+                if offset is not None: params['offset'] = offset + internal_offset
+                for item in self._get('items', 'jl', params=params):
                     yield item
-                    offset += 1
+                    internal_offset += 1
                 break
-            except requests.RequestException as exc:
+            except (requests.RequestException, IncompleteRead) as exc:
                 msg = "Error reading items.jl (retrying in %ds): project=%s job=%s offset=%d attempt=%d/%d error=%s"
                 args = (self.RETRY_INTERVAL, self.project, self._id, offset, attempt, self.MAX_RETRIES, exc)
                 logger.error(msg, *args)
                 time.sleep(self.RETRY_INTERVAL)
-
-    def update(self, **modifiers):
-        # XXX: only allow add_tag/remove_tag
-        result = self._post('jobs_update', 'json', modifiers)
-        return result['count']
 
     def delete(self):
         result = self._post('jobs_delete', 'json')
