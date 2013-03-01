@@ -7,6 +7,7 @@ import json
 import logging
 import time
 import warnings
+from httplib import IncompleteRead
 
 
 __all__ = ["APIError", "Connection"]
@@ -287,14 +288,15 @@ class Job(RequestProxyMixin):
     def items(self, count=None, offset=None):
     
         import requests
-        from httplib import IncompleteRead
     
         internal_offset = 0
         for attempt in xrange(self.MAX_RETRIES):
             try:
                 params = {}
-                if count is not None: params['count'] = count - internal_offset
-                if offset is not None: params['offset'] = offset + internal_offset
+                if count is not None:
+                    params['count'] = count - internal_offset
+                if offset is not None:
+                    params['offset'] = offset + internal_offset
                 for item in self._get('items', 'jl', params=params):
                     yield item
                     internal_offset += 1
@@ -304,6 +306,11 @@ class Job(RequestProxyMixin):
                 args = (self.RETRY_INTERVAL, self.project, self._id, offset, attempt, self.MAX_RETRIES, exc)
                 logger.error(msg, *args)
                 time.sleep(self.RETRY_INTERVAL)
+
+    def update(self, **modifiers):
+        # XXX: only allow add_tag/remove_tag
+        result = self._post('jobs_update', 'json', modifiers)
+        return result['count']
 
     def delete(self):
         result = self._post('jobs_delete', 'json')
