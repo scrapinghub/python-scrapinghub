@@ -17,10 +17,11 @@ class Job(object):
         self.items = Items(client, self.key, self.auth)
         self.logs = Logs(client, self.key, self.auth)
         self.samples = Samples(client, self.key, self.auth)
+        self.requests = Requests(client, self.key, self.auth)
         self.jobq = JobQ(client, self.key.split('/')[0], auth)
 
     def close_writers(self):
-        wl = [self.items, self.logs, self.samples]
+        wl = [self.items, self.logs, self.samples, self.requests]
         # close all resources that use backwround writers
         for w in wl:
             w.close(block=False)
@@ -156,3 +157,20 @@ class Samples(ItemsResourceType):
 
     def stats(self):
         raise NotImplementedError('Resource does not expose stats')
+
+
+class Requests(ItemsResourceType):
+
+    resource_type = 'requests'
+    batch_content_encoding = 'gzip'
+
+    def add(self, url, status, method, rs, parent, duration, ts):
+        return self.write({
+            'url': url,
+            'status': int(status),
+            'method': method.upper(),
+            'rs': int(rs),
+            'duration': int(duration),
+            'parent': int(parent),
+            'time': int(ts),
+        })
