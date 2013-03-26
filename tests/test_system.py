@@ -1,5 +1,7 @@
+import random
 from hstestcase import HSTestCase
 from hubstorage import HubstorageClient
+from hubstorage.utils import millitime
 
 
 class SystemTest(HSTestCase):
@@ -29,6 +31,9 @@ class SystemTest(HSTestCase):
         job = p.get_jobs(self.spiderid).next()
         self.assertEqual(job.metadata.get('state'), 'finished')
         self.assertEqual(job.metadata.get('close_reason'), 'all-good')
+        self.assertEqual(job.items.stats()['totals']['input_values'], self.MAGICN)
+        self.assertEqual(job.logs.stats()['totals']['input_values'], self.MAGICN * 4)
+        self.assertEqual(job.requests.stats()['totals']['input_values'], self.MAGICN)
 
     def test_succeed_without_close_reason(self):
         p = self.panelproject
@@ -42,6 +47,9 @@ class SystemTest(HSTestCase):
         job = p.get_jobs(self.spiderid).next()
         self.assertEqual(job.metadata.get('state'), 'finished')
         self.assertEqual(job.metadata.get('close_reason'), 'no_reason')
+        self.assertEqual(job.items.stats()['totals']['input_values'], self.MAGICN)
+        self.assertEqual(job.logs.stats()['totals']['input_values'], self.MAGICN * 4)
+        self.assertEqual(job.requests.stats()['totals']['input_values'], self.MAGICN)
 
     def test_scraper_failure(self):
         p = self.panelproject
@@ -79,6 +87,7 @@ class SystemTest(HSTestCase):
         self.runnerclient.close()
 
     def _run_scraper(self, jobkey, jobauth, close_reason=None):
+        httpmethods = 'GET PUT POST DELETE HEAD OPTIONS TRACE CONNECT'.split()
         job = self.scraperclient.get_job(jobkey, auth=jobauth)
         for idx in xrange(self.MAGICN):
             job.items.write({'uuid': idx})
@@ -87,6 +96,15 @@ class SystemTest(HSTestCase):
             job.logs.warn('log warn %s' % idx, idx=idx)
             job.logs.error('log error %s' % idx, idx=idx)
             job.samples.write([idx, idx, idx])
+            job.requests.add(
+                url='http://test.com/%d' % idx,
+                status=random.randint(100, 1000),
+                method=random.choice(httpmethods),
+                rs=random.randint(0, 100000),
+                duration=random.randint(0, 1000),
+                parent=random.randrange(0, idx + 1),
+                ts=millitime() + random.randint(100, 100000),
+            )
 
         if isinstance(close_reason, Exception):
             self.scraperclient.close()
