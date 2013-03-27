@@ -90,13 +90,13 @@ class SystemTest(HSTestCase):
         httpmethods = 'GET PUT POST DELETE HEAD OPTIONS TRACE CONNECT'.split()
         job = self.scraperclient.get_job(jobkey, auth=jobauth)
         for idx in xrange(self.MAGICN):
-            job.items.write({'uuid': idx})
+            iid = job.items.write({'uuid': idx})
             job.logs.debug('log debug %s' % idx, idx=idx)
             job.logs.info('log info %s' % idx, idx=idx)
             job.logs.warn('log warn %s' % idx, idx=idx)
             job.logs.error('log error %s' % idx, idx=idx)
-            job.samples.write([idx, idx, idx])
-            job.requests.add(
+            sid = job.samples.write([idx, idx, idx])
+            rid = job.requests.add(
                 url='http://test.com/%d' % idx,
                 status=random.randint(100, 1000),
                 method=random.choice(httpmethods),
@@ -105,6 +105,9 @@ class SystemTest(HSTestCase):
                 parent=random.randrange(0, idx + 1),
                 ts=millitime() + random.randint(100, 100000),
             )
+            self.assertEqual(iid, idx)
+            self.assertEqual(sid, idx)
+            self.assertEqual(rid, idx)
 
         if isinstance(close_reason, Exception):
             self.scraperclient.close()

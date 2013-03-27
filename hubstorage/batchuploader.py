@@ -146,6 +146,7 @@ class _BatchWriter(object):
                  content_encoding):
         self.url = url
         self.offset = start
+        self._nextid = count(start)
         self.auth = auth
         self.size = size
         self.interval = interval
@@ -158,6 +159,7 @@ class _BatchWriter(object):
     def write(self, item):
         assert not self.closed, 'attempting writes to a closed writer'
         self.itemsq.put(jsonencode(item))
+        return self._nextid.next()
 
     def flush(self):
         self.flushme = True
