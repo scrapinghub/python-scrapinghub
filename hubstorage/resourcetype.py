@@ -76,7 +76,7 @@ class ItemsResourceType(ResourceType):
             self._writer.close(block=block)
 
     def write(self, item):
-        self.writer.write(item)
+        return self.writer.write(item)
 
     def list(self, _key=None, **params):
         return self.apiget(_key, params=params)
