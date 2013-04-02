@@ -102,7 +102,7 @@ class SystemTest(HSTestCase):
                 method=random.choice(httpmethods),
                 rs=random.randint(0, 100000),
                 duration=random.randint(0, 1000),
-                parent=random.randrange(0, idx + 1),
+                parent=random.randrange(0, idx + 1) if idx > 10 else None,
                 ts=millitime() + random.randint(100, 100000),
             )
             self.assertEqual(iid, idx)
