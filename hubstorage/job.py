@@ -168,9 +168,9 @@ class Requests(ItemsResourceType):
         return self.write({
             'url': url,
             'status': int(status),
-            'method': method.upper(),
+            'method': method,
             'rs': int(rs),
             'duration': int(duration),
-            'parent': int(parent),
+            'parent': parent,
             'time': int(ts),
         })
