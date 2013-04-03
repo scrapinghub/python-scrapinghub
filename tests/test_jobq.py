@@ -145,7 +145,6 @@ class JobqTest(HSTestCase):
         q1 = jobq.push(self.spidername)
         q2 = jobq.push(self.spidername)
         self.assertEqual(jobq.start(), None)
+        self.assertEqual(jobq.start(botgroup='g3'), None)
         self.assertEqual(jobq.start(botgroup='g1')['key'], q1['key'])
         self.assertEqual(jobq.start(botgroup='g2')['key'], q2['key'])
-        q3 = jobq.push(self.spidername)
-        self.assertEqual(jobq.start(botgroup=['g1', 'g2'])['key'], q3['key'])

@@ -59,8 +59,10 @@ class ProjectTest(HSTestCase):
         p1 = self.project.push_job(self.spidername)
         j1 = self.project.start_job()
         self.assertEqual(j1, None, 'got %s, pushed job was %s' % (j1.key, p1.key))
-        j2 = self.project.start_job(botgroup='foo')
-        self.assertEqual(j2.key, p1.key)
+        j2 = self.project.start_job(botgroup='bar')
+        self.assertEqual(j2, None, 'got %s, pushed job was %s' % (j2.key, p1.key))
+        j3 = self.project.start_job(botgroup='foo')
+        self.assertEqual(j3.key, p1.key)
 
     def test_auth(self):
         # client without global auth set
