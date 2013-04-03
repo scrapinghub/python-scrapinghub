@@ -141,10 +141,22 @@ class JobqTest(HSTestCase):
     def test_botgroups(self):
         self.project.settings['botgroups'] = ['g1', 'g2']
         self.project.settings.save()
-        jobq = self.project.jobq
-        q1 = jobq.push(self.spidername)
-        q2 = jobq.push(self.spidername)
-        self.assertEqual(jobq.start(), None)
-        self.assertEqual(jobq.start(botgroup='g3'), None)
-        self.assertEqual(jobq.start(botgroup='g1')['key'], q1['key'])
-        self.assertEqual(jobq.start(botgroup='g2')['key'], q2['key'])
+        pq = self.project.jobq
+        hq = self.project.jobq
+        q1 = pq.push(self.spidername)
+        q2 = pq.push(self.spidername)
+        q3 = pq.push(self.spidername)
+        self.assertEqual(hq.start(), None)
+        self.assertEqual(hq.start(botgroup='g3'), None)
+        self.assertEqual(hq.start(botgroup='g1')['key'], q1['key'])
+        self.assertEqual(hq.start(botgroup='g2')['key'], q2['key'])
+
+        # cleanup project botgroups, q3 must be polled only by generic bots
+        del self.project.settings['botgroups']
+        self.project.settings.save()
+        q4 = pq.push(self.spidername)
+        self.assertEqual(hq.start(botgroup='g1'), None)
+        self.assertEqual(hq.start(botgroup='g2'), None)
+        self.assertEqual(hq.start(botgroup='g3'), None)
+        self.assertEqual(hq.start()['key'], q3['key'])
+        self.assertEqual(hq.start()['key'], q4['key'])
