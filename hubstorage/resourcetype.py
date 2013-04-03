@@ -1,4 +1,5 @@
 import logging
+from collections import MutableMapping
 from .utils import urlpathjoin, xauth
 from .serialization import jlencode, jldecode
 
@@ -8,10 +9,11 @@ logger = logging.getLogger('hubstorage.resourcetype')
 class ResourceType(object):
 
     resource_type = None
+    key_suffix = None
 
     def __init__(self, client, key, auth=None):
         self.client = client
-        self.key = urlpathjoin(self.resource_type, key)
+        self.key = urlpathjoin(self.resource_type, key, self.key_suffix)
         self.auth = xauth(auth) or client.auth
         self.url = urlpathjoin(client.endpoint, self.key)
 
@@ -88,3 +90,60 @@ class ItemsResourceType(ResourceType):
 
     def stats(self):
         return self.apiget('stats').next()
+
+
+class MappingResourceType(ResourceType, MutableMapping):
+
+    _cached = None
+    ignore_fields = ()
+
+    def __init__(self, *a, **kw):
+        self._cached = kw.pop('cached', None)
+        self._deleted = set()
+        super(MappingResourceType, self).__init__(*a, **kw)
+
+    @property
+    def _data(self):
+        if self._cached is None:
+            r = self.apiget()
+            try:
+                self._cached = r.next()
+            except StopIteration:
+                self._cached = {}
+
+        return self._cached
+
+    def expire(self):
+        self._cached = None
+
+    def save(self):
+        for key in self._deleted:
+            self.apidelete(key)
+        self._deleted.clear()
+        if self._cached:
+            if not self.ignore_fields:
+                self.apipost(jl=self._data)
+            else:
+                self.apipost(jl=dict((k, v) for k, v in self._data.iteritems()
+                                     if k not in self.ignore_fields))
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __setitem__(self, key, value):
+        self._data[key] = value
+        self._deleted.discard(key)
+
+    def __delitem__(self, key):
+        del self._data[key]
+        self._deleted.add(key)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
+
+    def liveget(self, key):
+        for o in self.apiget(key):
+            return o

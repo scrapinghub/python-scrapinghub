@@ -28,8 +28,13 @@ class HSTestCase(unittest.TestCase):
 
     @classmethod
     def _remove_all_jobs(cls):
-        jobq = cls.project.jobq
+        project = cls.project
+        for k in project.settings.keys():
+            del project.settings[k]
+        project.settings.save()
+
         # Cleanup JobQ
+        jobq = project.jobq
         for queuename in ('pending', 'running', 'finished'):
             info = {'summary': [None]}  # poor-guy do...while
             while info['summary']:
@@ -38,7 +43,7 @@ class HSTestCase(unittest.TestCase):
                     cls._remove_job(summary['key'])
 
         # Cleanup jobs created directly with jobsmeta instead of jobq
-        for job in cls.project.get_jobs():
+        for job in project.get_jobs():
             cls._remove_job(job.key)
 
         cls.hsclient.close()

@@ -1,6 +1,5 @@
 import logging
-from collections import MutableMapping
-from .resourcetype import ResourceType, ItemsResourceType
+from .resourcetype import ResourceType, ItemsResourceType, MappingResourceType
 from .utils import millitime, urlpathjoin
 from .jobq import JobQ
 
@@ -13,7 +12,7 @@ class Job(object):
         self._jobauth = jobauth
         # It can't use self.jobauth because metadata is not ready yet
         self.auth = jobauth or auth
-        self.metadata = JobMeta(client, self.key, self.auth, metadata=metadata)
+        self.metadata = JobMeta(client, self.key, self.auth, cached=metadata)
         self.items = Items(client, self.key, self.auth)
         self.logs = Logs(client, self.key, self.auth)
         self.samples = Samples(client, self.key, self.auth)
@@ -22,7 +21,7 @@ class Job(object):
 
     def close_writers(self):
         wl = [self.items, self.logs, self.samples, self.requests]
-        # close all resources that use backwround writers
+        # close all resources that use background writers
         for w in wl:
             w.close(block=False)
         # now wait for all writers to close together
@@ -62,62 +61,13 @@ class Job(object):
         self._update_metadata(stop_requested=True)
 
 
-class JobMeta(ResourceType, MutableMapping):
+class JobMeta(MappingResourceType):
 
     resource_type = 'jobs'
-    _cached = None
-
-    def __init__(self, *a, **kw):
-        self._cached = kw.pop('metadata', None)
-        self._deleted = set()
-        super(JobMeta, self).__init__(*a, **kw)
-
-    @property
-    def _data(self):
-        if self._cached is None:
-            r = self.apiget()
-            try:
-                self._cached = r.next()
-            except StopIteration:
-                self._cached = {}
-
-        return self._cached
-
-    def expire(self):
-        self._cached = None
-
-    def save(self):
-        for key in self._deleted:
-            self.apidelete(key)
-        self._deleted.clear()
-        if self._cached:
-            data = dict((k, v) for k, v in self._data.iteritems()
-                        if k not in ('auth', '_key', 'state'))
-            self.apipost(jl=data)
-
-    def __getitem__(self, key):
-        return self._data[key]
-
-    def __setitem__(self, key, value):
-        self._data[key] = value
-        self._deleted.discard(key)
-
-    def __delitem__(self, key):
-        del self._data[key]
-        self._deleted.add(key)
-
-    def __iter__(self):
-        return iter(self._data)
-
-    def __len__(self):
-        return len(self._data)
+    ignore_fields = set(('auth', '_key', 'state'))
 
     def authtoken(self):
         return self.liveget('auth')
-
-    def liveget(self, key):
-        for o in self.apiget(key):
-            return o
 
 
 class Logs(ItemsResourceType):

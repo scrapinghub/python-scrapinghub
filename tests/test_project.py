@@ -1,9 +1,11 @@
 """
 Test Project
 """
-from hstestcase import HSTestCase
-from hubstorage import HubstorageClient
+import unittest
 from requests.exceptions import HTTPError
+from hubstorage import HubstorageClient
+from hubstorage.utils import millitime
+from hstestcase import HSTestCase
 
 
 class ProjectTest(HSTestCase):
@@ -49,6 +51,16 @@ class ProjectTest(HSTestCase):
         job.metadata.expire()
         self.assertEqual(job.metadata.get('state'), u'deleted')
         self.assertEqual(job.metadata.get('foo'), u'bar')
+
+    @unittest.expectedFailure
+    def test_botgroup(self):
+        self.project.settings.update(botgroups=['foo'], created=millitime())
+        self.project.settings.save()
+        p1 = self.project.push_job(self.spidername)
+        j1 = self.project.start_job()
+        self.assertEqual(j1, None, 'got %s, pushed job was %s' % (j1.key, p1.key))
+        j2 = self.project.start_job(botgroup='foo')
+        self.assertEqual(j2.key, p1.key)
 
     def test_auth(self):
         # client without global auth set
@@ -108,3 +120,17 @@ class ProjectTest(HSTestCase):
 
         job = project.client.get_job(jobid, jobauth=jobauth)
         job.purged()
+
+    def test_settings(self):
+        project = self.hsclient.get_project(self.projectid)
+        self.assertEqual(dict(project.settings), {})
+        project.settings['created'] = created = millitime()
+        project.settings['botgroups'] = ['g1', 'g2']
+        project.settings.save()
+        self.assertEqual(project.settings.liveget('created'), created)
+        self.assertEqual(project.settings.liveget('botgroups'), ['g1', 'g2'])
+        project.settings.expire()
+        self.assertEqual(dict(project.settings), {
+            'created': created,
+            'botgroups': ['g1', 'g2'],
+        })
