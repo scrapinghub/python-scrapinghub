@@ -80,11 +80,11 @@ class ProjectTest(HSTestCase):
             self.assertTrue(False, '401 not raised')
 
         try:
-            hsc.get_project(self.projectid).get_job((self.projectid, 1, 1))
+            hsc.get_project(self.projectid).get_job((self.projectid, 1, 1)).items.list()
         except HTTPError as exc:
             self.assertTrue(exc.response.status_code, 401)
         else:
-            self.assertTrue(False, '401 not raised').items.list()
+            self.assertTrue(False, '401 not raised')
 
         # create project with auth
         auth = self.hsclient.auth
