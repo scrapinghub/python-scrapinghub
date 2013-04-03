@@ -32,12 +32,15 @@ class JobQ(ResourceType):
         r = list(self.apiget(path))
         return (r and r[0] or None) if _queuename else r
 
-    def start(self, job=None):
-        if job is None:
-            for o in self.apipost('startjob'):
-                return o
-        else:
+    def start(self, job=None, botgroup=None):
+        if job:
             return self._set_state(job, 'running')
+
+        params = {}
+        if botgroup:
+            params['botgroup'] = botgroup
+        for o in self.apipost('startjob', params=params):
+            return o
 
     def finish(self, job):
         return self._set_state(job, 'finished')

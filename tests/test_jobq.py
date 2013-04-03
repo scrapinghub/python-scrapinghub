@@ -1,6 +1,7 @@
 """
 Test JobQ
 """
+import unittest
 from hstestcase import HSTestCase
 from hubstorage.jobq import DuplicateJobError
 
@@ -135,3 +136,16 @@ class JobqTest(HSTestCase):
         # Most recent jobs first
         self.assertEqual([s['key'] for s in summary['summary']],
                          [j['key'] for j in jobs])
+
+    @unittest.expectedFailure
+    def test_botgroups(self):
+        self.project.settings['botgroups'] = ['g1', 'g2']
+        self.project.settings.save()
+        jobq = self.project.jobq
+        q1 = jobq.push(self.spidername)
+        q2 = jobq.push(self.spidername)
+        self.assertEqual(jobq.start(), None)
+        self.assertEqual(jobq.start(botgroup='g1')['key'], q1['key'])
+        self.assertEqual(jobq.start(botgroup='g2')['key'], q2['key'])
+        q3 = jobq.push(self.spidername)
+        self.assertEqual(jobq.start(botgroup=['g1', 'g2'])['key'], q3['key'])

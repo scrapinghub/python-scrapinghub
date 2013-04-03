@@ -2,7 +2,7 @@ from .job import Job
 from .jobq import JobQ
 from .activity import Activity
 from .collectionsrt import Collections
-from .resourcetype import ResourceType
+from .resourcetype import ResourceType, MappingResourceType
 from .utils import urlpathjoin, xauth
 
 
@@ -11,7 +11,8 @@ class Project(object):
     def __init__(self, client, projectid, auth=None):
         self.client = client
         self.projectid = urlpathjoin(projectid)
-        assert len(self.projectid.split('/')) == 1, 'projectkey must be just one id: %s' % projectid
+        assert len(self.projectid.split('/')) == 1, \
+                'projectkey must be just one id: %s' % projectid
         self.auth = xauth(auth) or client.auth
         self.jobs = Jobs(client, self.projectid, auth=auth)
         self.items = Items(client, self.projectid, auth=auth)
@@ -21,6 +22,7 @@ class Project(object):
         self.activity = Activity(client, self.projectid, auth=auth)
         self.collections = Collections(client, self.projectid, auth=auth)
         self.ids = Ids(client, self.projectid, auth=auth)
+        self.settings = Settings(client, self.projectid, auth=auth)
 
     def get_job(self, _key, *args, **kwargs):
         key = urlpathjoin(_key)
@@ -30,7 +32,8 @@ class Project(object):
         elif len(parts) == 3 and parts[0] == self.projectid:
             pass
         else:
-            raise ValueError('Invalid jobkey %s for project %s' % (key, self.projectid))
+            raise ValueError('Invalid jobkey %s for project %s'
+                             % (key, self.projectid))
 
         kwargs.setdefault('auth', self.auth)
         return self.client.get_job(key, *args, **kwargs)
@@ -92,3 +95,9 @@ class Ids(ResourceType):
     def spider(self, spidername, **params):
         r = self.apiget(('spider', spidername), params=params)
         return r.next()
+
+
+class Settings(MappingResourceType):
+
+    resource_type = 'projects'
+    key_suffix = 'settings'
