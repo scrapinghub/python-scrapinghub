@@ -27,9 +27,9 @@ class JobQ(ResourceType):
                 raise DuplicateJobError()
             raise
 
-    def summary(self, _queuename=None, spiderid=None):
+    def summary(self, _queuename=None, spiderid=None, count=None, start=None):
         path = urlpathjoin(spiderid, 'summary', _queuename)
-        r = list(self.apiget(path))
+        r = list(self.apiget(path, params={'count': count, 'start': start}))
         return (r and r[0] or None) if _queuename else r
 
     def start(self, job=None, botgroup=None):
