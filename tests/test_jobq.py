@@ -100,6 +100,25 @@ class JobqTest(HSTestCase):
         self.assertTrue(jobq.summary('running'))
         self.assertTrue(jobq.summary('finished'))
 
+    def test_summary_countstart(self):
+        # push more than 5 jobs into same queue
+        N = 20
+        jobq = self.project.jobq
+        for state in ('pending', 'running', 'finished'):
+            for idx in xrange(N):
+                jobq.push(self.spidername, state=state, idx=idx)
+
+            s1 = jobq.summary(state)
+            self.assertEqual(s1['count'], N)
+            self.assertEqual(len(s1['summary']), 5)
+
+            s2 = jobq.summary(state, count=N)
+            self.assertEqual(len(s2['summary']), N)
+
+            s3 = jobq.summary(state, start=N - 6, count=3)
+            self.assertEqual([o['key'] for o in s3['summary']],
+                             [o['key'] for o in s2['summary'][-6:-3]])
+
     def test_summaries_and_state_changes(self):
         jobq = self.project.jobq
         j1 = jobq.push(self.spidername)
