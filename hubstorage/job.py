@@ -40,6 +40,9 @@ class Job(object):
         self.metadata.save()
         self.metadata.expire()
 
+    def request_cancel(self):
+        self.jobq.request_cancel(self)
+
     def finished(self, close_reason=None):
         self.close_writers()
         self.metadata.expire()
