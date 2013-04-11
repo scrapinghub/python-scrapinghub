@@ -43,13 +43,13 @@ class HubstorageClient(object):
         project = self.get_project(projectid, auth=auth)
         return project.push_job(spidername, **jobparams)
 
-    def start_job(self, projectid=None, auth=None, botgroup=None):
+    def start_job(self, projectid=None, auth=None, **startparams):
         if projectid:
             jobq = self.get_project(projectid, auth=auth).jobq
         else:
             jobq = self.jobq
 
-        jobdata = jobq.start(botgroup=botgroup)
+        jobdata = jobq.start(**startparams)
         if jobdata:
             jobkey = jobdata['key']
             jobauth = (jobkey, jobdata['auth'])
