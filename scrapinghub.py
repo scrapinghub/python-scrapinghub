@@ -25,6 +25,7 @@ class Connection(object):
         'jobs_count': 'jobs/count',
         'jobs_list': 'jobs/list',
         'jobs_update': 'jobs/update',
+        'jobs_stop': 'jobs/stop',
         'jobs_delete': 'jobs/delete',
         'eggs_add': 'eggs/add',
         'eggs_delete': 'eggs/delete',
@@ -235,6 +236,10 @@ class JobSet(RequestProxyMixin):
         result = self._post('jobs_update', 'json', params)
         return result['count']
 
+    def stop(self):
+        for job in self:
+            job.stop()
+
     def delete(self):
         for job in self:
             job.delete()
@@ -303,6 +308,10 @@ class Job(RequestProxyMixin):
         # XXX: only allow add_tag/remove_tag
         result = self._post('jobs_update', 'json', modifiers)
         return result['count']
+
+    def stop(self):
+        result = self._post('jobs_stop', 'json')
+        return result['status'] == 'ok'
 
     def delete(self):
         result = self._post('jobs_delete', 'json')
