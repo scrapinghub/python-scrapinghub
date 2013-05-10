@@ -136,6 +136,7 @@ class BatchUploader(object):
                                     url=batch['url'],
                                     data=batch['data'],
                                     auth=batch['auth'],
+                                    timeout=self.client.connection_timeout,
                                     params=params,
                                     headers=headers)
 
