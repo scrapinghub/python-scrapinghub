@@ -17,10 +17,12 @@ class HubstorageClient(object):
 
     DEFAULT_ENDPOINT = 'http://storage.scrapinghub.com:8002'
     USERAGENT = 'python-hubstorage/{0}'.format(__version__)
+    DEFAULT_TIMEOUT = 60.0
 
-    def __init__(self, auth=None, endpoint=None):
+    def __init__(self, auth=None, endpoint=None, connection_timeout=None):
         self.auth = xauth(auth)
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
+        self.connection_timeout = connection_timeout or self.DEFAULT_TIMEOUT
         self.session = self._create_session()
         self.jobq = JobQ(self, None, auth=self.auth)
         self._batchuploader = None

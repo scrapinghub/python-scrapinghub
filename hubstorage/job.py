@@ -1,5 +1,5 @@
 import logging
-from .resourcetype import ResourceType, ItemsResourceType, MappingResourceType
+from .resourcetype import ItemsResourceType, MappingResourceType
 from .utils import millitime, urlpathjoin
 from .jobq import JobQ
 
