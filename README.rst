@@ -34,7 +34,7 @@ And select a particular project to work with::
     >>> project = conn['123']
     >>> project
     Project(Connection('APIKEY'), '123')
-    >>> project.name
+    >>> project.id
     '123'
 
 To schedule a spider run (it returns the job id)::
