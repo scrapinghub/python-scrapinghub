@@ -23,6 +23,7 @@ class Project(object):
         self.collections = Collections(client, self.projectid, auth=auth)
         self.ids = Ids(client, self.projectid, auth=auth)
         self.settings = Settings(client, self.projectid, auth=auth)
+        self.reports = Reports(client, self.projectid, auth=auth)
 
     def get_job(self, _key, *args, **kwargs):
         key = urlpathjoin(_key)
@@ -102,3 +103,13 @@ class Settings(MappingResourceType):
 
     resource_type = 'projects'
     key_suffix = 'settings'
+
+
+class Reports(ResourceType):
+
+    resource_type = 'projects'
+    key_suffix = 'reports'
+
+    def usagestats(self, **params):
+        r = self.apiget('usagestats', params=params)
+        return r.next()
