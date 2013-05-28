@@ -9,6 +9,8 @@ class HSTestCase(unittest.TestCase):
     spidername = 'hs-test-spider'
     endpoint = os.getenv('HS_ENDPOINT', 'http://localhost:8003')
     auth = os.getenv('HS_AUTH', 'useavalidkey')
+    frontier = 'test'
+    slot = 'site.com'
 
     @classmethod
     def setUpClass(cls):
