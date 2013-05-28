@@ -101,5 +101,13 @@ class FrontierTest(HSTestCase):
         self.assertEqual(urls, expected_urls)
 
     def test_add_extra_params(self):
-        pass
+        frontier = self.project.frontier
+
+        qdata = {"a": 1, "b": 2, "c": 3}
+        fps = [{'fp': '/', "qdata": qdata}]
+        frontier.add(self.frontier, self.slot, fps)
+
+        expected_request = [[u'/', {u'a': 1, u'c': 3, u'b': 2}]]
+        request = batches[0]['requests']
+        self.assertEqual(request, expected_request)
 
