@@ -31,10 +31,11 @@ class FrontierTest(HSTestCase):
         frontier.add(self.frontier, self.slot, fps)
         fps = [{'fp': '/index.html'}, {'fp': '/index2.html'}]
         frontier.add(self.frontier, self.slot, fps)
+        frontier.flush()
 
         urls = [self._get_urls(batch) for batch
                 in frontier.read(self.frontier, self.slot)]
-        expected_urls = [[u'/'], [u'/index.html', u'/index2.html']]
+        expected_urls = [[u'/', u'/index.html', u'/index2.html']]
         self.assertEqual(urls, expected_urls)
 
     def test_add_multiple_chunks(self):
@@ -49,12 +50,12 @@ class FrontierTest(HSTestCase):
 
         fps3 = [{'fp': '/index_%s.html' % fp} for fp in range(batch_size * 2, batch_size * 3)]
         frontier.add(self.frontier, self.slot, fps3)
+        frontier.flush()
 
         # get first 100
         batches = list(frontier.read(self.frontier, self.slot))
         urls = [self._get_urls(batch) for batch in batches]
-        expected_urls = [[fp['fp'] for fp in fps1],
-                         [fp['fp'] for fp in fps2]]
+        expected_urls = [[fp['fp'] for fp in fps1 + fps2]]
         self.assertEqual(urls, expected_urls)
 
         # delete first 100
@@ -73,6 +74,7 @@ class FrontierTest(HSTestCase):
         batch_size = 300
         fps1 = [{'fp': '/index_%s.html' % fp} for fp in range(0, batch_size)]
         frontier.add(self.frontier, self.slot, fps1)
+        frontier.flush()
 
         # get first 100
         batches = list(frontier.read(self.frontier, self.slot))
@@ -106,6 +108,7 @@ class FrontierTest(HSTestCase):
         qdata = {"a": 1, "b": 2, "c": 3}
         fps = [{'fp': '/', "qdata": qdata}]
         frontier.add(self.frontier, self.slot, fps)
+        frontier.flush()
 
         expected_request = [[u'/', {u'a': 1, u'c': 3, u'b': 2}]]
         batches = list(frontier.read(self.frontier, self.slot))
