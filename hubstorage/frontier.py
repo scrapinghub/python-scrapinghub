@@ -14,10 +14,10 @@ class Frontier(ResourceType):
     batch_append = False
     batch_content_encoding = 'identity'
 
-    _writers = {}  # dict of writers indexed by frontier+slot
+    _writers = {}  # dict of writers indexed by (frontier, slot)
 
     def _get_writer(self, frontier, slot):
-        key = frontier + slot
+        key = (frontier, slot)
         writer = self._writers.get(key)
         if not writer:
             writer = self.client.batchuploader.create_writer(
