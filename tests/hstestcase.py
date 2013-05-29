@@ -26,6 +26,7 @@ class HSTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.project.frontier.close()
         cls._remove_all_jobs()
 
     @classmethod
