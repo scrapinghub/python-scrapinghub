@@ -1,6 +1,6 @@
 from requests.exceptions import HTTPError
 from .resourcetype import ResourceType
-from .utils import urlpathjoin, chunks
+from .utils import urlpathjoin
 
 
 class Frontier(ResourceType):
