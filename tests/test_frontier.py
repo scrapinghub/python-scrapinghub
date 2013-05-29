@@ -108,6 +108,7 @@ class FrontierTest(HSTestCase):
         frontier.add(self.frontier, self.slot, fps)
 
         expected_request = [[u'/', {u'a': 1, u'c': 3, u'b': 2}]]
+        batches = list(frontier.read(self.frontier, self.slot))
         request = batches[0]['requests']
         self.assertEqual(request, expected_request)
 
