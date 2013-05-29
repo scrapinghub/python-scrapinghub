@@ -36,11 +36,14 @@ class Frontier(ResourceType):
         for writer in self._writers.values():
             writer.close(block=block)
 
+    def flush(self):
+        for writer in self._writers.values():
+            writer.flush()
+
     def add(self, frontier, slot, fps):
         writer = self._get_writer(frontier, slot)
         for fp in fps:
             writer.write(fp)
-        writer.flush()
 
     def read(self, frontier, slot):
         path = urlpathjoin(frontier, 's', slot, 'q')
