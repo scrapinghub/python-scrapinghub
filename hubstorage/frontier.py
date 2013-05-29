@@ -14,7 +14,9 @@ class Frontier(ResourceType):
     batch_append = False
     batch_content_encoding = 'identity'
 
-    _writers = {}  # dict of writers indexed by (frontier, slot)
+    def __init__(self, *a, **kw):
+        self._writers = {}  # dict of writers indexed by (frontier, slot)
+        super(Frontier, self).__init__(*a, **kw)
 
     def _get_writer(self, frontier, slot):
         key = (frontier, slot)
