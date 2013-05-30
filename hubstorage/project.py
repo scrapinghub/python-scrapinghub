@@ -2,6 +2,7 @@ from .job import Job
 from .jobq import JobQ
 from .activity import Activity
 from .collectionsrt import Collections
+from .frontier import Frontier
 from .resourcetype import ResourceType, MappingResourceType
 from .utils import urlpathjoin, xauth
 
@@ -21,6 +22,7 @@ class Project(object):
         self.jobq = JobQ(client, self.projectid, auth=auth)
         self.activity = Activity(client, self.projectid, auth=auth)
         self.collections = Collections(client, self.projectid, auth=auth)
+        self.frontier = Frontier(client, self.projectid, auth=auth)
         self.ids = Ids(client, self.projectid, auth=auth)
         self.settings = Settings(client, self.projectid, auth=auth)
         self.reports = Reports(client, self.projectid, auth=auth)

@@ -9,6 +9,8 @@ class HSTestCase(unittest.TestCase):
     spidername = 'hs-test-spider'
     endpoint = os.getenv('HS_ENDPOINT', 'http://localhost:8003')
     auth = os.getenv('HS_AUTH', 'useavalidkey')
+    frontier = 'test'
+    slot = 'site.com'
 
     @classmethod
     def setUpClass(cls):
@@ -24,6 +26,7 @@ class HSTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        cls.project.frontier.close()
         cls._remove_all_jobs()
 
     @classmethod
