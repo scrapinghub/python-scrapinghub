@@ -9,7 +9,7 @@ import requests
 from requests.compat import StringIO
 from collections import deque
 from Queue import Queue
-from threading import Thread
+from threading import Thread, Event
 from .utils import xauth, iterqueue
 from .serialization import jsonencode
 
@@ -24,6 +24,7 @@ class BatchUploader(object):
     def __init__(self, client):
         self.client = client
         self.closed = False
+        self._wait_event = Event()
         self._writers = deque()
         self._thread = Thread(target=self._worker)
         self._thread.daemon = True
@@ -40,13 +41,18 @@ class BatchUploader(object):
                          start=start,
                          interval=interval,
                          qsize=qsize,
-                         content_encoding=content_encoding)
+                         content_encoding=content_encoding,
+                         uploader=self)
         self._writers.append(w)
         return w
 
     def close(self, timeout=None):
         self.closed = True
+        self.interrupt()
         self._thread.join(timeout)
+
+    def interrupt(self):
+        self._wait_event.set()
 
     def _atexit(self):
         if not self.closed:
@@ -57,6 +63,10 @@ class BatchUploader(object):
         if not self.closed:
             self.close()
 
+    def _interruptable_sleep(self):
+        self._wait_event.wait(self.worker_loop_delay)
+        self._wait_event.clear()
+
     def _worker(self):
         ctr = count()
         while True:
@@ -64,12 +74,12 @@ class BatchUploader(object):
                 # Stop thread if closed and idle, but if open wait for writers
                 if self.closed:
                     break
-                time.sleep(self.worker_loop_delay)
+                self._interruptable_sleep()
                 continue
 
             # Delay once all writers are processed
-            if ctr.next() % len(self._writers) == 0:
-                time.sleep(self.worker_loop_delay)
+            if (ctr.next() % len(self._writers) == 0) and not self.closed:
+                self._interruptable_sleep()
 
             # Get next writer to process
             w = self._writers.popleft()
@@ -144,7 +154,7 @@ class BatchUploader(object):
 class _BatchWriter(object):
 
     def __init__(self, url, start, auth, size, interval, qsize,
-                 content_encoding):
+                 content_encoding, uploader):
         self.url = url
         self.offset = start
         self._nextid = count(start)
@@ -156,21 +166,28 @@ class _BatchWriter(object):
         self.itemsq = Queue(size * 2 if qsize is None else qsize)
         self.closed = False
         self.flushme = False
+        self.uploader = uploader
 
     def write(self, item):
         assert not self.closed, 'attempting writes to a closed writer'
         self.itemsq.put(jsonencode(item))
+        if self.itemsq.full():
+            self.uploader.interrupt()
         return self._nextid.next()
 
     def flush(self):
         self.flushme = True
-        self.itemsq.join()
+        self._waitforq()
         self.flushme = False
 
     def close(self, block=True):
         self.closed = True
         if block:
-            self.itemsq.join()
+            self._waitforq()
+
+    def _waitforq(self):
+        self.uploader.interrupt()
+        self.itemsq.join()
 
     def __str__(self):
         return self.url
@@ -179,7 +196,8 @@ class _BatchWriter(object):
 def _encode_identity(iter):
     data = StringIO()
     for item in iter:
-        data.write(item + '\n')
+        data.write(item)
+        data.write('\n')
     return data.getvalue()
 
 
@@ -187,5 +205,6 @@ def _encode_gzip(iter):
     data = StringIO()
     with GzipFile(fileobj=data, mode='w') as gzo:
         for item in iter:
-            gzo.write(item + '\n')
+            gzo.write(item)
+            gzo.write('\n')
     return data.getvalue()
