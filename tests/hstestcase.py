@@ -16,6 +16,8 @@ class HSTestCase(unittest.TestCase):
     def setUpClass(cls):
         cls.hsclient = HubstorageClient(auth=cls.auth, endpoint=cls.endpoint)
         cls.project = cls.hsclient.get_project(cls.projectid)
+        cls.project.settings['botgroups'] = ['python-hubstorage-test']
+        cls.project.settings.save()
         cls.spiderid = str(cls.project.ids.spider(cls.spidername, create=1))
 
     def setUp(self):
@@ -47,14 +49,18 @@ class HSTestCase(unittest.TestCase):
 
         # Cleanup jobs created directly with jobsmeta instead of jobq
         for job in project.get_jobs():
-            cls._remove_job(job.key)
+            cls._delete_job(job.key)
 
         cls.hsclient.close()
 
     @classmethod
     def _remove_job(cls, jobkey):
-        assert jobkey.startswith(cls.projectid), jobkey
         cls.project.jobq.delete(jobkey)
+        cls._delete_job(jobkey)
+
+    @classmethod
+    def _delete_job(cls, jobkey):
+        assert jobkey.startswith(cls.projectid), jobkey
         cls.project.jobs.apidelete(jobkey.partition('/')[2])
 
 
