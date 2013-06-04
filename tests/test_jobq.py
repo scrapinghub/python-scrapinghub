@@ -198,3 +198,19 @@ class JobqTest(HSTestCase):
 
         self.project.settings['botgroups'] = ['python-hubstorage-test']
         self.project.settings.save()
+
+    def test_spider_updates(self):
+        jobq = self.project.jobq
+        spiderkey = '%s/%s' % (self.projectid, self.spiderid)
+        q1 = jobq.push(self.spidername)
+        q2 = jobq.push(self.spidername, state='running')
+        q3 = jobq.push(self.spidername, state='finished')
+        q4 = jobq.push(self.spidername, state='deleted')
+        r = dict((x['key'], x['prevstate']) for x in jobq.delete(spiderkey))
+        self.assertEqual(r.get(q1['key']), 'pending', r)
+        self.assertEqual(r.get(q2['key']), 'running', r)
+        self.assertEqual(r.get(q3['key']), 'finished', r)
+        self.assertTrue(q4['key'] not in r)
+
+        # Empty result set
+        self.assertFalse(list(jobq.delete(spiderkey)))
