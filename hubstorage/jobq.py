@@ -66,6 +66,4 @@ class JobQ(ResourceType):
             key = job
         extra_args['key'] = key
         extra_args['state'] = state
-        r = self.apipost('update', jl=extra_args)
-        for i in r:
-            return i
+        return self.apipost('update', jl=extra_args)
