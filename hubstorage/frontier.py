@@ -6,10 +6,10 @@ class Frontier(ResourceType):
 
     resource_type = 'hcf'
 
-    batch_size = 100  # max upload batch size supported by hubstorage
-    batch_qsize = None  # defaults to twice batch_size if None
+    batch_size = 5000
+    batch_qsize = 6000  # defaults to twice batch_size if None
     batch_start = 0
-    batch_interval = 15.0
+    batch_interval = 60.0
     batch_append = False
     batch_content_encoding = 'identity'
 
