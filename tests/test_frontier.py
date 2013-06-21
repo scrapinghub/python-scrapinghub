@@ -53,7 +53,7 @@ class FrontierTest(HSTestCase):
         frontier.flush()
 
         # get first 100
-        batches = list(frontier.read(self.frontier, self.slot))
+        batches = list(frontier.read(self.frontier, self.slot, mincount=100))
         urls = [self._get_urls(batch) for batch in batches]
         expected_urls = [[fp['fp'] for fp in fps1 + fps2]]
         self.assertEqual(urls, expected_urls)
@@ -77,7 +77,7 @@ class FrontierTest(HSTestCase):
         frontier.flush()
 
         # get first 100
-        batches = list(frontier.read(self.frontier, self.slot))
+        batches = list(frontier.read(self.frontier, self.slot, mincount=100))
         urls = [self._get_urls(batch) for batch in batches]
         expected_urls = [[fp['fp'] for fp in fps1[:100]]]
         self.assertEqual(urls, expected_urls)
@@ -87,7 +87,7 @@ class FrontierTest(HSTestCase):
         frontier.delete(self.frontier, self.slot, ids)
 
         # get next 100
-        batches = list(frontier.read(self.frontier, self.slot))
+        batches = list(frontier.read(self.frontier, self.slot, mincount=100))
         urls = [self._get_urls(batch) for batch in batches]
         expected_urls = [[fp['fp'] for fp in fps1[100:200]]]
         self.assertEqual(urls, expected_urls)
@@ -97,7 +97,7 @@ class FrontierTest(HSTestCase):
         frontier.delete(self.frontier, self.slot, ids)
 
         # get next 100
-        batches = list(frontier.read(self.frontier, self.slot))
+        batches = list(frontier.read(self.frontier, self.slot, mincount=100))
         urls = [self._get_urls(batch) for batch in batches]
         expected_urls = [[fp['fp'] for fp in fps1[200:300]]]
         self.assertEqual(urls, expected_urls)

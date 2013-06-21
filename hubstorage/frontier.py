@@ -1,4 +1,3 @@
-from requests.exceptions import HTTPError
 from .resourcetype import ResourceType
 from .utils import urlpathjoin
 
@@ -47,8 +46,9 @@ class Frontier(ResourceType):
         for fp in fps:
             writer.write(fp)
 
-    def read(self, frontier, slot):
-        path = urlpathjoin(frontier, 's', slot, 'q')
+    def read(self, frontier, slot, mincount=None):
+        resource = 'q' if mincount is None else "q?mincount=%d" % mincount
+        path = urlpathjoin(frontier, 's', slot, resource)
         return self.apiget(path)
 
     def delete(self, frontier, slot, ids):
