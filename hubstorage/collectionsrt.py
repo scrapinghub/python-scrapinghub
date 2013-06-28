@@ -1,6 +1,5 @@
 from requests.exceptions import HTTPError
 from .resourcetype import ResourceType
-from .utils import urlpathjoin
 
 
 class Collections(ResourceType):
@@ -8,9 +7,8 @@ class Collections(ResourceType):
     resource_type = 'collections'
 
     def get(self, _type, _name, _key=None, **params):
-        path = urlpathjoin(_type, _name, _key)
         try:
-            r = self.apiget(path, params=params)
+            r = self.apiget((_type, _name, _key), params=params)
             return r if _key is None else r.next()
         except HTTPError as exc:
             if exc.response.status_code == 404:
@@ -21,9 +19,8 @@ class Collections(ResourceType):
                 raise
 
     def set(self, _type, _name, _values):
-        path = urlpathjoin(_type, _name)
         try:
-            return self.apipost(path, jl=_values)
+            return self.apipost((_type, _name), jl=_values)
         except HTTPError as exc:
             if exc.response.status_code in (400, 413):
                 raise ValueError(exc.response.text)
@@ -31,8 +28,7 @@ class Collections(ResourceType):
                 raise
 
     def delete(self, _type, _name, _keys):
-        path = urlpathjoin(_type, _name, 'deleted')
-        return self.apipost(path, jl=_keys)
+        return self.apipost((_type, _name, 'deleted'), jl=_keys)
 
     def new_collection(self, coltype, colname):
         return Collection(coltype, colname, self)
