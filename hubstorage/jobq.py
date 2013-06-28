@@ -1,6 +1,5 @@
 from requests.exceptions import HTTPError
 from .resourcetype import ResourceType
-from .utils import urlpathjoin
 
 
 class DuplicateJobError(Exception):
@@ -28,8 +27,8 @@ class JobQ(ResourceType):
             raise
 
     def summary(self, _queuename=None, spiderid=None, count=None, start=None):
-        path = urlpathjoin(spiderid, 'summary', _queuename)
-        r = list(self.apiget(path, params={'count': count, 'start': start}))
+        r = list(self.apiget((spiderid, 'summary', _queuename),
+                             params={'count': count, 'start': start}))
         return (r and r[0] or None) if _queuename else r
 
     def start(self, job=None, **start_params):
