@@ -47,14 +47,13 @@ class Frontier(ResourceType):
             writer.write(fp)
 
     def read(self, frontier, slot, mincount=None):
-        resource = 'q' if mincount is None else "q?mincount=%d" % mincount
-        path = urlpathjoin(frontier, 's', slot, resource)
-        return self.apiget(path)
+        params = {}
+        if mincount is not None:
+            params['mincount'] = mincount
+        return self.apiget((frontier, 's', slot, 'q'), params=params)
 
     def delete(self, frontier, slot, ids):
-        path = urlpathjoin(frontier, 's', slot, 'q', 'deleted')
-        self.apipost(path, jl=ids)
+        self.apipost((frontier, 's', slot, 'q/deleted'), jl=ids)
 
     def delete_slot(self, frontier, slot):
-        path = urlpathjoin(frontier, 's', slot)
-        self.apidelete(path)
+        self.apidelete((frontier, 's', slot))
