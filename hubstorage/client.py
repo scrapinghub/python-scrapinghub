@@ -8,6 +8,7 @@ from .project import Project
 from .job import Job
 from .jobq import JobQ
 from .batchuploader import BatchUploader
+from .spider import Spider
 
 __all__ = ["HubstorageClient"]
 __version__ = pkgutil.get_data('hubstorage', 'VERSION').strip()
@@ -59,6 +60,9 @@ class HubstorageClient(object):
 
     def get_project(self, *args, **kwargs):
         return Project(self, *args, **kwargs)
+
+    def get_spider(self, *args, **kwargs):
+        return Spider(self, *args, **kwargs)
 
     def close(self, timeout=None):
         if self._batchuploader is not None:
