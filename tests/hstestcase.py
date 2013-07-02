@@ -29,6 +29,7 @@ class HSTestCase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.project.frontier.close()
+        cls.hsclient.close()
         cls._remove_all_jobs()
 
     @classmethod
@@ -50,8 +51,6 @@ class HSTestCase(unittest.TestCase):
         # Cleanup jobs created directly with jobsmeta instead of jobq
         for job in project.get_jobs():
             cls._delete_job(job.key)
-
-        cls.hsclient.close()
 
     @classmethod
     def _remove_job(cls, jobkey):

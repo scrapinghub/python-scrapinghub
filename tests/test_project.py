@@ -132,3 +132,34 @@ class ProjectTest(HSTestCase):
             'created': created,
             'botgroups': ['g1', 'g2'],
         })
+
+    def test_requests(self):
+        ts = millitime()
+        job = self.project.push_job(self.spidername, state='running')
+        # top parent
+        r1 = job.requests.add(url='http://test.com/', status=200, method='GET',
+                              rs=1337, duration=5, parent=None, ts=ts)
+        # first child
+        r2 = job.requests.add(url='http://test.com/2', status=400, method='POST',
+                              rs=0, duration=1, parent=r1, ts=ts + 1)
+        # another child with fingerprint set
+        r3 = job.requests.add(url='http://test.com/3', status=400, method='PUT',
+                              rs=0, duration=1, parent=r1, ts=ts + 2, fp='1234')
+
+        job.close_writers()
+        rr = job.requests.list()
+        self.assertEqual(rr.next(),
+                         {u'status': 200, u'rs': 1337,
+                          u'url': u'http://test.com/', u'time': ts,
+                          u'duration': 5, u'method': u'GET'})
+        self.assertEqual(rr.next(),
+                         {u'status': 400, u'parent': 0, u'rs': 0,
+                          u'url': u'http://test.com/2', u'time': ts + 1,
+                          u'duration': 1, u'method': u'POST'})
+        self.assertEqual(rr.next(),
+                         {u'status': 400, u'fp': u'1234', u'parent': 0,
+                          u'rs': 0, u'url': u'http://test.com/3',
+                          u'time': ts + 2, u'duration': 1,
+                          u'method': u'PUT'})
+
+        self.assertRaises(StopIteration, rr.next)
