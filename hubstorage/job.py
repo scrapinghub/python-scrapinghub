@@ -117,7 +117,7 @@ class Requests(ItemsResourceType):
     resource_type = 'requests'
     batch_content_encoding = 'gzip'
 
-    def add(self, url, status, method, rs, parent, duration, ts):
+    def add(self, url, status, method, rs, parent, duration, ts, fp=None):
         return self.write({
             'url': url,
             'status': int(status),
@@ -126,4 +126,5 @@ class Requests(ItemsResourceType):
             'duration': int(duration),
             'parent': parent,
             'time': int(ts),
+            'fp': fp,
         })
