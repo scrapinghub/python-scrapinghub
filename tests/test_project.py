@@ -2,6 +2,8 @@
 Test Project
 """
 import unittest
+import time
+from random import randint, random
 from requests.exceptions import HTTPError
 from hubstorage import HubstorageClient
 from hubstorage.utils import millitime
@@ -163,3 +165,33 @@ class ProjectTest(HSTestCase):
                           u'method': u'PUT'})
 
         self.assertRaises(StopIteration, rr.next)
+
+    def test_samples(self):
+        # no samples stored
+        j1 = self.project.push_job(self.spidername, state='running')
+        self.assertEqual(list(j1.samples.list()), [])
+        # simple fill
+        ts = millitime()
+        j1.samples.write([ts, 1, 2, 3])
+        j1.samples.write([ts + 1, 5, 9, 4])
+        j1.samples.flush()
+        o = list(j1.samples.list())
+        self.assertEqual(len(o), 2)
+        self.assertEqual(o[0], [ts, 1, 2 ,3])
+        self.assertEqual(o[1], [ts + 1, 5, 9, 4])
+
+        # random fill
+        j2 = self.project.push_job(self.spidername, state='running')
+        samples = []
+        ts = millitime()
+        count = int(j2.samples.batch_size * (random() + randint(1, 5)))
+        for _ in xrange(count):
+            ts += randint(0, 2**16)
+            row = [ts] + list(randint(0, 2**16) for _ in xrange(randint(0, 100)))
+            samples.append(row)
+            j2.samples.write(row)
+        j2.samples.flush()
+        o = list(j2.samples.list())
+        self.assertEqual(len(o), count)
+        for r1, r2 in zip(samples, o):
+            self.assertEqual(r1, r2)
