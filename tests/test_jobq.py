@@ -104,6 +104,19 @@ class JobqTest(HSTestCase):
         self.assertTrue(jobq.summary('running'))
         self.assertTrue(jobq.summary('finished'))
 
+    def test_summary_jobmeta(self):
+        jobq = self.project.jobq
+        jobq.push(self.spidername, foo='bar', caz='fuu')
+        pendings = jobq.summary('pending', jobmeta='foo')['summary']
+        p1 = pendings[0]
+        self.assertEqual(p1.get('foo'), 'bar')
+        self.assertFalse('caz' in p1)
+
+        pendings = jobq.summary('pending', jobmeta=['foo', 'caz'])['summary']
+        p1 = pendings[0]
+        self.assertEqual(p1.get('foo'), 'bar')
+        self.assertEqual(p1.get('caz'), 'fuu')
+
     def test_summary_countstart(self):
         # push more than 5 jobs into same queue
         N = 20

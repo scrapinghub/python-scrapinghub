@@ -26,9 +26,16 @@ class JobQ(ResourceType):
                 raise DuplicateJobError()
             raise
 
-    def summary(self, _queuename=None, spiderid=None, count=None, start=None):
-        r = list(self.apiget((spiderid, 'summary', _queuename),
-                             params={'count': count, 'start': start}))
+    def summary(self, _queuename=None, spiderid=None, count=None, start=None, jobmeta=None):
+        params = {}
+        if count is not None:
+            params['count'] = count
+        if start is not None:
+            params['start'] = start
+        if jobmeta is not None:
+            params['jobmeta'] = jobmeta
+
+        r = list(self.apiget((spiderid, 'summary', _queuename), params=params))
         return (r and r[0] or None) if _queuename else r
 
     def start(self, job=None, **start_params):
