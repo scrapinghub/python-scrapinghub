@@ -65,13 +65,15 @@ def xauth(auth):
 
 
 def millitime(*a, **kw):
-    """Epoch time in millisenconds
+    """The difference, measured in milliseconds, between the current time
+    and midnight, January 1, 1970 UTC.
 
     >>> e = millitime()
     >>> type(e)
     <type 'int'>
     """
-    return int(time.time(*a, **kw) * 1000)
+    ts = time.time(*a, **kw) + time.timezone
+    return int(ts * 1000)
 
 
 class iterqueue(object):
