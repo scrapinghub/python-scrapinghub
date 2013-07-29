@@ -16,7 +16,7 @@ __version__ = pkgutil.get_data('hubstorage', 'VERSION').strip()
 
 class HubstorageClient(object):
 
-    DEFAULT_ENDPOINT = 'http://storage.scrapinghub.com:8002'
+    DEFAULT_ENDPOINT = 'http://storage.scrapinghub.com/'
     USERAGENT = 'python-hubstorage/{0}'.format(__version__)
     DEFAULT_TIMEOUT = 60.0
 
