@@ -64,10 +64,6 @@ class Jobs(ResourceType):
     def list(self, _key=None, **params):
         return self.apiget(_key, params=params)
 
-    def summary(self):
-        return self.apiget('summary').next()
-
-
 class Items(ResourceType):
 
     resource_type = 'items'
