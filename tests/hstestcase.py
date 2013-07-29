@@ -11,12 +11,13 @@ class HSTestCase(unittest.TestCase):
     auth = os.getenv('HS_AUTH', 'useavalidkey')
     frontier = 'test'
     slot = 'site.com'
+    testbotgroups = ('python-hubstorage-test',)
 
     @classmethod
     def setUpClass(cls):
         cls.hsclient = HubstorageClient(auth=cls.auth, endpoint=cls.endpoint)
         cls.project = cls.hsclient.get_project(cls.projectid)
-        cls.project.settings['botgroups'] = ['python-hubstorage-test']
+        cls.project.settings['botgroups'] = cls.testbotgroups
         cls.project.settings.save()
         cls.spiderid = str(cls.project.ids.spider(cls.spidername, create=1))
 
