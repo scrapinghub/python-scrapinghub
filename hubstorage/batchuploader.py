@@ -179,7 +179,7 @@ class _BatchWriter(object):
         assert not self.closed, 'attempting writes to a closed writer'
         serialized = jsonencode(item)
         if len(serialized) > self.maxitemsize:
-            raise ValueTooLarge('item exceeds max serialized size of {}'\
+            raise ValueTooLarge('value exceeds max serialized size of {}'\
                                 .format(self.maxitemsize))
 
         self.itemsq.put(jsonencode(item))
