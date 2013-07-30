@@ -11,9 +11,9 @@ class ClientTest(HSTestCase):
     def test_push_job(self):
         c = self.hsclient
         job = c.push_job(self.projectid, self.spidername,
-                        state='running',
-                        priority=self.project.jobq.PRIO_LOW,
-                        foo='baz')
+                         state='running',
+                         priority=self.project.jobq.PRIO_LOW,
+                         foo='baz')
         m = job.metadata
         self.assertEqual(m.get('state'), u'running', c.auth)
         self.assertEqual(m.get('foo'), u'baz')
@@ -35,10 +35,24 @@ class ClientTest(HSTestCase):
         self.assertEqual(j3.key, q1.key)
 
     def test_start_job(self):
+        # Pending queue is empty
         job = self.hsclient.start_job(botgroups=self.testbotgroups)
         self.assertEqual(job, None)
-        jp = self.hsclient.push_job(self.projectid, self.spidername)
-        self.assertEqual(jp.metadata.get('state'), 'pending')
-        time.sleep(1)  # give time to process jobq
-        jr = self.hsclient.start_job(botgroups=self.testbotgroups)
-        self.assertEqual(jr.metadata.get('state'), 'running')
+        # Push a new job into pending queue
+        j0 = self.hsclient.push_job(self.projectid, self.spidername)
+        # Assert it is pending
+        self.assertEqual(j0.metadata.get('state'), 'pending')
+        # Poll for the pending job
+        j1 = None
+        for _ in xrange(5):
+            j1 = self.hsclient.start_job(botgroups=self.testbotgroups)
+            if j1 is not None:
+                break
+            time.sleep(1)
+        # Assert started job does not need an extra request to fetch its metadata
+        self.assertTrue(j1.metadata._cached is not None)
+        # Assert started job is in running queue
+        self.assertEqual(j1.metadata.get('state'), 'running')
+        # Started job metadata must match metadata retrieved directly from /jobs/
+        j2 = self.hsclient.get_job(j1.key)
+        self.assertEqual(dict(j1.metadata), dict(j2.metadata))
