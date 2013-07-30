@@ -153,7 +153,7 @@ class BatchUploader(object):
                                     headers=headers)
 
 
-class ItemTooLarge(ValueError):
+class ValueTooLarge(ValueError):
     """Raised when a serialized item is greater than 1MB"""
 
 
@@ -179,8 +179,8 @@ class _BatchWriter(object):
         assert not self.closed, 'attempting writes to a closed writer'
         serialized = jsonencode(item)
         if len(serialized) > self.maxitemsize:
-            raise ItemTooLarge('item exceeds max serialized size of {}'\
-                               .format(self.maxitemsize))
+            raise ValueTooLarge('item exceeds max serialized size of {}'\
+                                .format(self.maxitemsize))
 
         self.itemsq.put(jsonencode(item))
         if self.itemsq.full():

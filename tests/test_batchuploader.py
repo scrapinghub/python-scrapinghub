@@ -4,7 +4,7 @@ Test Project
 import time
 from collections import defaultdict
 from hstestcase import HSTestCase
-from hubstorage import ItemTooLarge
+from hubstorage import ValueTooLarge
 
 
 class BatchUploaderTest(HSTestCase):
@@ -31,9 +31,9 @@ class BatchUploaderTest(HSTestCase):
     def test_writer_maxitemsize(self):
         job, w = self._job_and_writer()
         m = w.maxitemsize
-        self.assertRaises(ItemTooLarge, w.write, {'b': 'x' * m})
-        self.assertRaises(ItemTooLarge, w.write, {'b'*m: 'x'})
-        self.assertRaises(ItemTooLarge, w.write, {'b'*(m/2): 'x'*(m/2)})
+        self.assertRaises(ValueTooLarge, w.write, {'b': 'x' * m})
+        self.assertRaises(ValueTooLarge, w.write, {'b'*m: 'x'})
+        self.assertRaises(ValueTooLarge, w.write, {'b'*(m/2): 'x'*(m/2)})
 
     def test_writer_contentencoding(self):
         for ce in ('identity', 'gzip'):
