@@ -32,7 +32,8 @@ class BatchUploader(object):
         atexit.register(self._atexit)
 
     def create_writer(self, url, start=0, auth=None, size=1000, interval=15,
-                      qsize=None, content_encoding='identity'):
+                      qsize=None, content_encoding='identity',
+                      maxitemsize=1024 ** 2):
         assert not self.closed, 'Can not create new writers when closed'
         auth = xauth(auth) or self.client.auth
         w = _BatchWriter(url=url,
@@ -41,6 +42,7 @@ class BatchUploader(object):
                          start=start,
                          interval=interval,
                          qsize=qsize,
+                         maxitemsize=maxitemsize,
                          content_encoding=content_encoding,
                          uploader=self)
         self._writers.append(w)
@@ -151,16 +153,21 @@ class BatchUploader(object):
                                     headers=headers)
 
 
+class ItemTooLarge(ValueError):
+    """Raised when a serialized item is greater than 1MB"""
+
+
 class _BatchWriter(object):
 
     def __init__(self, url, start, auth, size, interval, qsize,
-                 content_encoding, uploader):
+                 maxitemsize, content_encoding, uploader):
         self.url = url
         self.offset = start
         self._nextid = count(start)
         self.auth = auth
         self.size = size
         self.interval = interval
+        self.maxitemsize = maxitemsize
         self.content_encoding = content_encoding
         self.checkpoint = time.time()
         self.itemsq = Queue(size * 2 if qsize is None else qsize)
@@ -170,6 +177,11 @@ class _BatchWriter(object):
 
     def write(self, item):
         assert not self.closed, 'attempting writes to a closed writer'
+        serialized = jsonencode(item)
+        if len(serialized) > self.maxitemsize:
+            raise ItemTooLarge('item exceeds max serialized size of {}'\
+                               .format(self.maxitemsize))
+
         self.itemsq.put(jsonencode(item))
         if self.itemsq.full():
             self.uploader.interrupt()
