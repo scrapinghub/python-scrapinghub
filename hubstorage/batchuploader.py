@@ -177,12 +177,12 @@ class _BatchWriter(object):
 
     def write(self, item):
         assert not self.closed, 'attempting writes to a closed writer'
-        serialized = jsonencode(item)
-        if len(serialized) > self.maxitemsize:
-            raise ValueTooLarge('value exceeds max serialized size of {}'\
+        data = jsonencode(item)
+        if len(data) > self.maxitemsize:
+            raise ValueTooLarge('value exceeds max encoded size of {}'\
                                 .format(self.maxitemsize))
 
-        self.itemsq.put(jsonencode(item))
+        self.itemsq.put(data)
         if self.itemsq.full():
             self.uploader.interrupt()
         return self._nextid.next()
