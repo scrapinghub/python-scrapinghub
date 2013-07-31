@@ -72,7 +72,7 @@ class JobqTest(HSTestCase):
     def test_startjob(self):
         jobq = self.project.jobq
         qj = jobq.push(self.spidername)
-        nj = jobq.start()
+        nj = jobq.start(foo='bar', fux={'arg': 1})
         self.assertTrue(nj.pop('pending_time', None), nj)
         nj.pop('running_time', None)
         self.assertEqual(nj, {
@@ -81,6 +81,8 @@ class JobqTest(HSTestCase):
             u'priority': jobq.PRIO_NORMAL,
             u'spider': self.spidername,
             u'state': u'running',
+            u'foo': u'bar',
+            u'fux': {'arg': 1},
         })
 
     def test_startjob_order(self):
