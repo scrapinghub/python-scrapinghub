@@ -72,7 +72,7 @@ class JobqTest(HSTestCase):
     def test_startjob(self):
         jobq = self.project.jobq
         qj = jobq.push(self.spidername)
-        nj = jobq.start(foo='bar', fux={'arg': 1})
+        nj = jobq.start()
         self.assertTrue(nj.pop('pending_time', None), nj)
         nj.pop('running_time', None)
         self.assertEqual(nj, {
@@ -81,9 +81,30 @@ class JobqTest(HSTestCase):
             u'priority': jobq.PRIO_NORMAL,
             u'spider': self.spidername,
             u'state': u'running',
-            u'foo': u'bar',
-            u'fux': {'arg': 1},
         })
+
+    def test_startjob_with_extras(self):
+        jobq = self.project.jobq
+        pushextras = {
+            'string': 'foo',
+            'integer': 1,
+            'float': 3.2,
+            'mixedarray': ['b', 1, None, True, False, {'k': 'c'}],
+            'emptyarray': [],
+            'mapping': {'alpha': 5, 'b': 'B', 'cama': []},
+            'emptymapping': {},
+            'true': True,
+            'false': False,
+            'nil': None,
+        }
+        qj = jobq.push(self.spidername, **pushextras)
+        startextras = dict(('s_' + k, v) for k, v in pushextras.iteritems())
+        nj = jobq.start(**startextras)
+        for k, v in dict(pushextras, **startextras).iteritems():
+            if type(v) is float:
+                self.assertAlmostEqual(nj.get(k), v)
+            else:
+                self.assertEqual(nj.get(k), v)
 
     def test_startjob_order(self):
         jobq = self.project.jobq
