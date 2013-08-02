@@ -1,5 +1,4 @@
 import time
-import atexit
 import socket
 import logging
 import warnings
@@ -29,7 +28,6 @@ class BatchUploader(object):
         self._thread = Thread(target=self._worker)
         self._thread.daemon = True
         self._thread.start()
-        atexit.register(self._atexit)
 
     def create_writer(self, url, start=0, auth=None, size=1000, interval=15,
                       qsize=None, content_encoding='identity',
@@ -56,14 +54,10 @@ class BatchUploader(object):
     def interrupt(self):
         self._wait_event.set()
 
-    def _atexit(self):
-        if not self.closed:
-            warnings.warn("%r not closed properly, some items may have been "
-                          "lost!: %r" % (self, self._writers))
-
     def __del__(self):
         if not self.closed:
-            self.close()
+            warnings.warn("%r not closed properly, some items may have been "
+                          "lost!: %r" % (self.__class__.__name__, self._writers))
 
     def _interruptable_sleep(self):
         self._wait_event.wait(self.worker_loop_delay)
