@@ -123,7 +123,9 @@ class ProjectTest(HSTestCase):
 
     def test_settings(self):
         project = self.hsclient.get_project(self.projectid)
-        self.assertEqual(dict(project.settings), {})
+        settings = dict(project.settings)
+        settings.pop('botgroups', None)  # ignore testsuite botgroups
+        self.assertEqual(settings, {})
         project.settings['created'] = created = millitime()
         project.settings['botgroups'] = ['g1', 'g2']
         project.settings.save()
