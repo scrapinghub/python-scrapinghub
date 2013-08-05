@@ -11,17 +11,17 @@ class HSTestCase(unittest.TestCase):
     auth = os.getenv('HS_AUTH', 'useavalidkey')
     frontier = 'test'
     slot = 'site.com'
-    testbotgroups = ('python-hubstorage-test',)
+    testbotgroup = 'python-hubstorage-test'
 
     @classmethod
     def setUpClass(cls):
         cls.hsclient = HubstorageClient(auth=cls.auth, endpoint=cls.endpoint)
         cls.project = cls.hsclient.get_project(cls.projectid)
-        cls.project.settings['botgroups'] = cls.testbotgroups
-        cls.project.settings.save()
         cls.spiderid = str(cls.project.ids.spider(cls.spidername, create=1))
+        cls._set_testbotgroup()
 
     def setUp(self):
+        self._set_testbotgroup()
         self._remove_all_jobs()
 
     def tearDown(self):
@@ -32,12 +32,14 @@ class HSTestCase(unittest.TestCase):
         cls.project.frontier.close()
         cls.hsclient.close()
         cls._remove_all_jobs()
+        cls._unset_testbotgroup()
 
     @classmethod
     def _remove_all_jobs(cls):
         project = cls.project
         for k in project.settings.keys():
-            del project.settings[k]
+            if k != 'botgroups':
+                del project.settings[k]
         project.settings.save()
 
         # Cleanup JobQ
@@ -62,6 +64,16 @@ class HSTestCase(unittest.TestCase):
     def _delete_job(cls, jobkey):
         assert jobkey.startswith(cls.projectid), jobkey
         cls.project.jobs.apidelete(jobkey.partition('/')[2])
+
+    @classmethod
+    def _set_testbotgroup(cls):
+        cls.project.settings.apipost(jl={'botgroups': [cls.testbotgroup]})
+        cls.project.settings.expire()
+
+    @classmethod
+    def _unset_testbotgroup(cls):
+        cls.project.settings.apidelete('botgroups')
+        cls.project.settings.expire()
 
 
 class NopTest(HSTestCase):

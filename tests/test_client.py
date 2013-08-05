@@ -36,19 +36,14 @@ class ClientTest(HSTestCase):
 
     def test_start_job(self):
         # Pending queue is empty
-        job = self.hsclient.start_job(botgroups=self.testbotgroups)
+        job = self.hsclient.start_job(botgroup=self.testbotgroup)
         self.assertEqual(job, None)
         # Push a new job into pending queue
         j0 = self.hsclient.push_job(self.projectid, self.spidername)
         # Assert it is pending
         self.assertEqual(j0.metadata.get('state'), 'pending')
         # Poll for the pending job
-        j1 = None
-        for _ in xrange(5):
-            j1 = self.hsclient.start_job(botgroups=self.testbotgroups)
-            if j1 is not None:
-                break
-            time.sleep(1)
+        j1 = self.hsclient.start_job(botgroup=self.testbotgroup)
         # Assert started job does not need an extra request to fetch its metadata
         #self.assertTrue(j1.metadata._cached is not None)
         # Assert started job is in running queue
