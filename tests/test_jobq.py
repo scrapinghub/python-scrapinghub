@@ -83,6 +83,29 @@ class JobqTest(HSTestCase):
             u'state': u'running',
         })
 
+    def test_startjob_with_extras(self):
+        jobq = self.project.jobq
+        pushextras = {
+            'string': 'foo',
+            'integer': 1,
+            'float': 3.2,
+            'mixedarray': ['b', 1, None, True, False, {'k': 'c'}],
+            'emptyarray': [],
+            'mapping': {'alpha': 5, 'b': 'B', 'cama': []},
+            'emptymapping': {},
+            'true': True,
+            'false': False,
+            'nil': None,
+        }
+        qj = jobq.push(self.spidername, **pushextras)
+        startextras = dict(('s_' + k, v) for k, v in pushextras.iteritems())
+        nj = jobq.start(**startextras)
+        for k, v in dict(pushextras, **startextras).iteritems():
+            if type(v) is float:
+                self.assertAlmostEqual(nj.get(k), v)
+            else:
+                self.assertEqual(nj.get(k), v)
+
     def test_startjob_order(self):
         jobq = self.project.jobq
         q1 = jobq.push(self.spidername)
