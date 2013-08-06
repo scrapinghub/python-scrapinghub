@@ -44,11 +44,11 @@ class Job(object):
         self.jobq.request_cancel(self)
 
     def finished(self, close_reason=None):
-        self.close_writers()
         self.metadata.expire()
         close_reason = close_reason or \
             self.metadata.liveget('close_reason') or 'no_reason'
         self._update_metadata(close_reason=close_reason)
+        self.close_writers()
         self.jobq.finish(self)
 
     def failed(self, reason='failed', message=None):
