@@ -10,7 +10,7 @@ import warnings
 
 
 __all__ = ["APIError", "Connection"]
-__version__ = '1.1.1'
+__version__ = '1.2.0'
 
 logger = logging.getLogger('scrapinghub')
 
@@ -18,6 +18,8 @@ logger = logging.getLogger('scrapinghub')
 class Connection(object):
     """Main class to access Scrapinghub API.
     """
+
+    DEFAULT_ENDPOINT = 'http://dash.scrapinghub.com/api/'
 
     API_METHODS = {
         'addversion': 'scrapyd/addversion',
@@ -38,26 +40,34 @@ class Connection(object):
         'reports_add': 'reports/add',
     }
 
-    def __init__(self, username_or_apikey=None, password='', _old_passwd='', url='http://panel.scrapinghub.com/api/'):
-        if username_or_apikey is None:
-            username_or_apikey = os.environ.get('SH_APIKEY')
-            if username_or_apikey is None:
+    def __init__(self, apikey=None, password='', _old_passwd='', url=None):
+        if apikey is None:
+            apikey = os.environ.get('SH_APIKEY')
+            if apikey is None:
                 raise RuntimeError("No API key provided and SH_APIKEY environment variable not set")
-        if username_or_apikey.startswith('http://'):
-            warnings.warn("Instantiating scrapinghub.Connection with url as first argument is deprecated", stacklevel=2)
-            url, username_or_apikey, password = username_or_apikey, password, _old_passwd
-        self.url = url
-        self.username_or_apikey = username_or_apikey
-        self.auth = (username_or_apikey, password)
+
+        assert not apikey.startswith('http://'), \
+                "Instantiating scrapinghub.Connection with url as first argument is not supported"
+        assert not password, \
+                "Authentication with user:pass is not supported, use your apikey instead"
+
+        self.apikey = apikey
+        self.url = url or self.DEFAULT_ENDPOINT
         self._session = self._create_session()
 
     def __repr__(self):
-        return "Connection(%r)" % self.username_or_apikey
+        return "Connection(%r)" % self.apikey
+
+    @property
+    def auth(self):
+        warnings.warn("'auth' connection attribute is deprecated, "
+                      "use 'apikey' attribute instead", stacklevel=2)
+        return (self.apikey, '')
 
     def _create_session(self):
         from requests import session
         s = session()
-        s.auth = self.auth
+        s.auth = (self.apikey, '')
         s.headers.update({
             'User-Agent': 'python-scrapinghub/{0}'.format(__version__),
         })
