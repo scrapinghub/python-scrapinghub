@@ -330,7 +330,7 @@ class Job(RequestProxyMixin):
     def add_report(self, key, content, content_type='text/plain'):
         from requests.compat import StringIO
         params = {
-            'project': self.project.name,
+            'project': self.project.id,
             'job': self.id,
             'key': key,
             'content_type': content_type,
