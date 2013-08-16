@@ -8,6 +8,7 @@ import logging
 import time
 import warnings
 from httplib import IncompleteRead
+from socket import error
 
 
 __all__ = ["APIError", "Connection"]
@@ -301,7 +302,7 @@ class Job(RequestProxyMixin):
                     yield item
                     internal_offset += 1
                 break
-            except (requests.RequestException, IncompleteRead) as exc:
+            except (requests.RequestException, IncompleteRead, error) as exc:
                 msg = "Error reading items.jl (retrying in %ds): project=%s job=%s offset=%d attempt=%d/%d error=%s"
                 args = (self.RETRY_INTERVAL, self.project, self._id, offset, attempt, self.MAX_RETRIES, exc)
                 logger.error(msg, *args)
