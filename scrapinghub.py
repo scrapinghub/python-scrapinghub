@@ -5,6 +5,7 @@ Scrapinghub API Client Library
 import os
 import json
 import logging
+import socket
 import time
 import warnings
 
@@ -308,7 +309,7 @@ class Job(RequestProxyMixin):
                     yield item
                     offset += 1
                 break
-            except requests.RequestException as exc:
+            except (ValueError, socket.error, requests.RequestException) as exc:
                 msg = "Error reading items.jl (retrying in %ds): project=%s job=%s offset=%d attempt=%d/%d error=%s"
                 args = (self.RETRY_INTERVAL, self.project, self._id, offset, attempt, self.MAX_RETRIES, exc)
                 logger.error(msg, *args)
