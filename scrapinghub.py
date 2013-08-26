@@ -11,7 +11,7 @@ import warnings
 
 
 __all__ = ["APIError", "Connection"]
-__version__ = '1.2.1'
+__version__ = '1.3.0'
 
 logger = logging.getLogger('scrapinghub')
 
@@ -300,12 +300,16 @@ class Job(RequestProxyMixin):
     def __repr__(self):
         return "Job({0.project!r}, {0.id})".format(self)
 
-    def items(self):
+    def items(self, offset=0, meta=None):
         import requests
-        offset = 0
+        params = {}
+        if meta is not None:
+            params['meta'] = meta
+
         for attempt in xrange(self.MAX_RETRIES):
+            params['offset'] = offset
             try:
-                for item in self._get('items', 'jl', params={'offset': offset}):
+                for item in self._get('items', 'jl', params=params):
                     yield item
                     offset += 1
                 break
