@@ -26,6 +26,7 @@ class Project(object):
         self.ids = Ids(client, self.projectid, auth=auth)
         self.settings = Settings(client, self.projectid, auth=auth)
         self.reports = Reports(client, self.projectid, auth=auth)
+        self.spiders = Spiders(client, self.projectid, auth=auth)
 
     def get_job(self, _key, *args, **kwargs):
         key = urlpathjoin(_key)
@@ -111,3 +112,11 @@ class Reports(ResourceType):
     def usagestats(self, **params):
         r = self.apiget('usagestats', params=params)
         return r.next()
+
+
+class Spiders(ResourceType):
+
+    resource_type = 'spiders'
+
+    def lastjobsummary(self, spiderid=None, **params):
+        return self.apiget((spiderid, 'lastjobsummary'), params=params)
