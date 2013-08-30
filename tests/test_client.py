@@ -51,3 +51,9 @@ class ClientTest(HSTestCase):
         # Started job metadata must match metadata retrieved directly from /jobs/
         j2 = self.hsclient.get_job(j1.key)
         self.assertEqual(dict(j1.metadata), dict(j2.metadata))
+
+    def test_jobsummaries(self):
+        hsc = self.hsclient
+        jss = hsc.projects.jobsummaries()
+        mjss = dict((str(js['project']), js) for js in jss)
+        self.assertTrue(self.projectid in mjss)

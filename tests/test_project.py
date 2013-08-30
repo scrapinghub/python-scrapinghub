@@ -197,3 +197,10 @@ class ProjectTest(HSTestCase):
         self.assertEqual(len(o), count)
         for r1, r2 in zip(samples, o):
             self.assertEqual(r1, r2)
+
+    def test_jobsummary(self):
+        js = self.project.jobsummary()
+        self.assertEqual(js.get('project'), int(self.project.projectid), js)
+        self.assertEqual(js.get('has_capacity'), True, js)
+        self.assertTrue('pending' in js, js)
+        self.assertTrue('running' in js, js)
