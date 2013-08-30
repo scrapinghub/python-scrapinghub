@@ -8,6 +8,7 @@ from .project import Project
 from .job import Job
 from .jobq import JobQ
 from .batchuploader import BatchUploader
+from .resourcetype import ResourceType
 
 __all__ = ["HubstorageClient"]
 __version__ = pkgutil.get_data('hubstorage', 'VERSION').strip()
@@ -24,7 +25,9 @@ class HubstorageClient(object):
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
         self.connection_timeout = connection_timeout or self.DEFAULT_TIMEOUT
         self.session = self._create_session()
-        self.jobq = JobQ(self, None, auth=self.auth)
+        self.jobq = JobQ(self, None)
+        self.projects = Projects(self, None)
+        self.root = ResourceType(self, None)
         self._batchuploader = None
 
     def _create_session(self):
@@ -42,12 +45,12 @@ class HubstorageClient(object):
         return Job(self, *args, **kwargs)
 
     def push_job(self, projectid, spidername, auth=None, **jobparams):
-        project = self.get_project(projectid, auth=auth)
+        project = self.projects.get(projectid, auth=auth)
         return project.push_job(spidername, **jobparams)
 
     def start_job(self, projectid=None, auth=None, **startparams):
         if projectid:
-            jobq = self.get_project(projectid, auth=auth).jobq
+            jobq = self.projects.get(projectid, auth=auth).jobq
         else:
             jobq = self.jobq
 
@@ -58,9 +61,20 @@ class HubstorageClient(object):
             return self.get_job(jobkey, jobauth=jobauth, metadata=jobdata)
 
     def get_project(self, *args, **kwargs):
-        return Project(self, *args, **kwargs)
-
+        return self.projects.get(*args, **kwargs)
 
     def close(self, timeout=None):
         if self._batchuploader is not None:
             self.batchuploader.close(timeout)
+
+
+class Projects(ResourceType):
+
+    resource_type = 'projects'
+
+    def get(self, *args, **kwargs):
+        return Project(self.client, *args, **kwargs)
+
+    def jobsummaries(self, auth=None, **params):
+        auth = xauth(auth) or self.auth
+        return next(self.apiget('jobsummaries', params=params, auth=auth))

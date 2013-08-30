@@ -57,6 +57,10 @@ class Project(object):
         return self.client.start_job(projectid=self.projectid, auth=self.auth,
             **startparams)
 
+    def jobsummary(self, **params):
+        uri = ('projects', self.projectid, 'jobsummary')
+        return next(self.client.root.apiget(uri, auth=self.auth, params=params))
+
 
 class Jobs(ResourceType):
 
