@@ -11,7 +11,7 @@ import warnings
 
 
 __all__ = ["APIError", "Connection"]
-__version__ = '1.3.0'
+__version__ = '1.4.0'
 
 logger = logging.getLogger('scrapinghub')
 
@@ -33,7 +33,8 @@ class Connection(object):
         'eggs_add': 'eggs/add',
         'eggs_delete': 'eggs/delete',
         'eggs_list': 'eggs/list',
-        'as_extract': 'as/extract',
+        'as_project_slybot': 'as/project-slybot',
+        'as_spider_properties': 'as/spider-properties',
         'schedule': 'schedule',
         'items': 'items',
         'log': 'log',
@@ -113,7 +114,7 @@ class Connection(object):
 
         Raises APIError if json response have error status.
         """
-        if format not in ('json', 'jl'):
+        if format not in ('json', 'jl') and not raw:
             raise APIError("format must be either json or jl")
 
         if data is None and files is None:
@@ -216,6 +217,21 @@ class Project(RequestProxyMixin):
         # force project param
         params.update(project=self.id)
         return params
+
+    def autoscraping_project_slybot(self, spiders=(), outputfile=None):
+        from shutil import copyfileobj
+        params = {}
+        if spiders:
+            params['spider'] = spiders
+        r = self._get('as_project_slybot', 'zip', params, raw=True)
+        return r if outputfile is None else copyfileobj(r, outputfile)
+
+    def autoscraping_spider_properties(self, spider, start_urls=None):
+        params = {'spider': spider}
+        if start_urls:
+            params['start_url'] = start_urls
+            return self._post('as_spider_properties', 'json', params)
+        return self._get('as_spider_properties', 'json', params)
 
 
 class JobSet(RequestProxyMixin):
