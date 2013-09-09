@@ -20,8 +20,10 @@ class BatchUploaderTest(HSTestCase):
         job, w = self._job_and_writer(size=10)
         for x in xrange(111):
             w.write({'x': x})
-
         w.close()
+        # this works only for small batches (previous size=10 and small data)
+        # as internally HS may commit a single large request as many smaller
+        # commits, each with different timestamps
         groups = defaultdict(int)
         for doc in job.items.list(meta=['_ts']):
             groups[doc['_ts']] += 1

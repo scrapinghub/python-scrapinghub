@@ -112,3 +112,22 @@ class iterqueue(object):
                 self.count += 1
             except Empty:
                 break
+
+
+def apipoll(endpoint, *args, **kwargs):
+    """Poll an api endpoint until there is a result that is not None
+
+    poll_wait and max_poll can be specified in kwargs to set the polling
+    interval and max wait time in seconds.
+    """
+    result = endpoint(*args, **kwargs)
+    if result is not None:
+        return result
+    start = time.time()
+    while True:
+        poll_wait = kwargs.get('poll_wait', 1)
+        max_poll = kwargs.get('max_poll', 60)
+        time.sleep(poll_wait)
+        result = endpoint(*args, **kwargs)
+        if result is not None or (time.time() - start) > max_poll:
+            return result

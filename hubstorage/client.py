@@ -49,11 +49,16 @@ class HubstorageClient(object):
         return project.push_job(spidername, **jobparams)
 
     def start_job(self, projectid=None, auth=None, **startparams):
+        """Start a new job
+
+        It may take up to a second for a previously added job to be available
+        here if no project id is specified.
+
+        """
         if projectid:
             jobq = self.projects.get(projectid, auth=auth).jobq
         else:
             jobq = self.jobq
-
         jobdata = jobq.start(**startparams)
         if jobdata:
             jobkey = jobdata.pop('key')
