@@ -4,6 +4,7 @@ Test JobQ
 import os, unittest
 from hstestcase import HSTestCase
 from hubstorage.jobq import DuplicateJobError
+from hubstorage.utils import apipoll
 
 
 EXCLUSIVE = os.environ.get('EXCLUSIVE_STORAGE')
@@ -203,8 +204,8 @@ class JobqTest(HSTestCase):
         q1 = pq.push(self.spidername)
         q2 = pq.push(self.spidername)
         self.assertEqual(hq.start(botgroup='g3'), None)
-        self.assertEqual(hq.start(botgroup='g1')['key'], q1['key'])
-        self.assertEqual(hq.start(botgroup='g2')['key'], q2['key'])
+        self.assertEqual(apipoll(hq.start, botgroup='g1')['key'], q1['key'])
+        self.assertEqual(apipoll(hq.start, botgroup='g2')['key'], q2['key'])
 
     @unittest.skipUnless(EXCLUSIVE, "test requires exclusive"
         " (without any active bots) access to HS. Set EXCLUSIVE_STORAGE"
@@ -219,8 +220,8 @@ class JobqTest(HSTestCase):
         q3 = pq.push(self.spidername)
         self.assertEqual(hq.start(), None)
         self.assertEqual(hq.start(botgroup='g3'), None)
-        self.assertEqual(hq.start(botgroup='g1')['key'], q1['key'])
-        self.assertEqual(hq.start(botgroup='g2')['key'], q2['key'])
+        self.assertEqual(apipoll(hq.start, botgroup='g1')['key'], q1['key'])
+        self.assertEqual(apipoll(hq.start, botgroup='g2')['key'], q2['key'])
 
         # cleanup project botgroups, q3 must be polled only by generic bots
         del self.project.settings['botgroups']

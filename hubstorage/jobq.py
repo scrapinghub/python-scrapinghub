@@ -47,6 +47,8 @@ class JobQ(ResourceType):
 
         If a 'botgroup' parameter is present in start_params, only jobs from
         that botgroup will be started.
+
+        It may take up to a second for a previously added job to be available.
         """
         if job:
             return self._set_state(job, 'running', **start_params)

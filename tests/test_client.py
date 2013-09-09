@@ -1,9 +1,8 @@
 """
 Test Client
 """
-import time
 from hstestcase import HSTestCase
-from hubstorage.utils import millitime
+from hubstorage.utils import millitime, apipoll
 
 
 class ClientTest(HSTestCase):
@@ -31,7 +30,7 @@ class ClientTest(HSTestCase):
         self.assertEqual(j1, None, 'got %s, pushed job was %s' % (j1, q1))
         j2 = c.start_job(botgroup='bar')
         self.assertEqual(j2, None, 'got %s, pushed job was %s' % (j2, q1))
-        j3 = c.start_job(botgroup='foo')
+        j3 = apipoll(self.hsclient.start_job, botgroup='foo')
         self.assertEqual(j3.key, q1.key)
 
     def test_start_job(self):
@@ -43,7 +42,7 @@ class ClientTest(HSTestCase):
         # Assert it is pending
         self.assertEqual(j0.metadata.get('state'), 'pending')
         # Poll for the pending job
-        j1 = self.hsclient.start_job(botgroup=self.testbotgroup)
+        j1 = apipoll(self.hsclient.start_job, botgroup=self.testbotgroup)
         # Assert started job does not need an extra request to fetch its metadata
         self.assertTrue(j1.metadata._cached is not None)
         # Assert started job is in running queue
@@ -54,6 +53,12 @@ class ClientTest(HSTestCase):
 
     def test_jobsummaries(self):
         hsc = self.hsclient
-        jss = hsc.projects.jobsummaries()
-        mjss = dict((str(js['project']), js) for js in jss)
-        self.assertTrue(self.projectid in mjss)
+        # add at least one running or pending job to ensure summary is returned
+        hsc.push_job(self.projectid, self.spidername, state='running')
+
+        def _get_summary():
+            jss = hsc.projects.jobsummaries()
+            mjss = dict((str(js['project']), js) for js in jss)
+            return mjss.get(self.projectid)
+        summary = apipoll(_get_summary)
+        self.assertIsNotNone(summary)

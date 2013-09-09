@@ -1,8 +1,6 @@
 """
 Test Project
 """
-import unittest
-import time
 from random import randint, random
 from requests.exceptions import HTTPError
 from hubstorage import HubstorageClient
@@ -179,7 +177,7 @@ class ProjectTest(HSTestCase):
         j1.samples.flush()
         o = list(j1.samples.list())
         self.assertEqual(len(o), 2)
-        self.assertEqual(o[0], [ts, 1, 2 ,3])
+        self.assertEqual(o[0], [ts, 1, 2, 3])
         self.assertEqual(o[1], [ts + 1, 5, 9, 4])
 
         # random fill
