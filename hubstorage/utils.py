@@ -72,7 +72,7 @@ def millitime(*a, **kw):
     >>> type(e)
     <type 'int'>
     """
-    ts = time.time(*a, **kw) + time.timezone
+    ts = time.time(*a, **kw)
     return int(ts * 1000)
 
 
