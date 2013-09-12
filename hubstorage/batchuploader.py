@@ -1,5 +1,6 @@
 import time
 import socket
+import random
 import logging
 import warnings
 from gzip import GzipFile
@@ -17,8 +18,14 @@ logger = logging.getLogger('hubstorage.batchuploader')
 
 class BatchUploader(object):
 
-    retry_wait_time = 5.0
+    # Wait time between all batches status checks
     worker_loop_delay = 1.0
+    # Max number of retries attempts before giving up,
+    # Using 10 minutes max interval it accounts for 30hs total wait time
+    worker_max_retries = 200
+    # Max wait time between retries in seconds
+    # it can be 50% greater due to randomization
+    worker_max_interval = 600
 
     def __init__(self, client):
         self.client = client
@@ -121,30 +128,56 @@ class BatchUploader(object):
             raise ValueError('Writer using unknown content encoding: %s' % ce)
 
     def _tryupload(self, batch):
-        # TODO: Implements exponential backoff and a global timeout limit
-        while True:
+        """Retry uploads in case of server failures
+
+        Use polinomial backoff with 10 minutes maximum interval that accounts
+        for ~30 hours of total retry time.
+
+        >>> sum(min(x**2, 600) for x in xrange(200)) / 3600
+        30
+        """
+        url = batch['url']
+        offset = batch['offset']
+        for retryn in xrange(self.worker_max_retries):
+            emsg = ''
             try:
-                self._upload(batch)
+                r = self._upload(batch)
+                if 200 <= r.status_code < 300:
+                    break
+                elif 500 <= r.status_code < 600:
+                    r.raise_for_status()
+                else:
+                    logger.warning('Discarding write to url=%s offset=%s: '
+                                   '[HTTP error %s] %s\n%s', url, offset,
+                                   r.status_code, r.reason, r.text.rstrip())
                 break
             except (socket.error, requests.RequestException) as e:
                 if isinstance(e, requests.HTTPError):
-                    r = e.response
-                    msg = "[HTTP error %d] %s" % (r.status_code, r.text.rstrip())
+                    emsg = "[HTTP error {0}] {1}".format(e.response.status_code,
+                                                         e.response.text.rstrip())
                 else:
-                    msg = str(e)
-                logger.warning("Failed writing data %s: %s", batch['url'], msg)
-                time.sleep(self.retry_wait_time)
+                    emsg = str(e)
+                logger.info("Retrying url=%s offset=%s: %s", url, offset, emsg)
+            except Exception:
+                logger.exception('Non retryable failure on url=%s offset=%s',
+                                 url, offset)
+                break
+
+            backoff = min(retryn ** 2, self.worker_max_interval)
+            time.sleep(backoff * 0.5 * random.random())
 
     def _upload(self, batch):
         params = {'start': batch['offset']}
         headers = {'content-encoding': batch['content-encoding']}
-        self.client.session.request(method='POST',
-                                    url=batch['url'],
-                                    data=batch['data'],
-                                    auth=batch['auth'],
-                                    timeout=self.client.connection_timeout,
-                                    params=params,
-                                    headers=headers)
+        return self.client.session.request(
+            method='POST',
+            url=batch['url'],
+            data=batch['data'],
+            auth=batch['auth'],
+            timeout=self.client.connection_timeout,
+            params=params,
+            headers=headers,
+        )
 
 
 class ValueTooLarge(ValueError):
