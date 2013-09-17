@@ -142,11 +142,8 @@ class BatchUploader(object):
             emsg = ''
             try:
                 r = self._upload(batch)
-                if 200 <= r.status_code < 300:
-                    break
-                elif 500 <= r.status_code < 600 or r.status_code in (408,):
-                    r.raise_for_status()
-                else:
+                r.raise_for_status()
+                if not (200 <= r.status_code < 300):
                     logger.warning('Discarding write to url=%s offset=%s: '
                                    '[HTTP error %s] %s\n%s', url, offset,
                                    r.status_code, r.reason, r.text.rstrip())
