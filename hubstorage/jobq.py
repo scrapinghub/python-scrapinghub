@@ -65,13 +65,18 @@ class JobQ(ResourceType):
     def delete(self, job):
         return self._set_state(job, 'deleted')
 
-    def _set_state(self, job, state, **extra_args):
-        if isinstance(job, dict):
-            key = job['key']
+    def _jobkeys(self, job):
+        if isinstance(job, list):
+            for x in job:
+                for k in self._jobkeys(x):
+                    yield k
+        elif isinstance(job, dict):
+            yield job['key']
         elif hasattr(job, 'key'):
-            key = job.key
+            yield job.key
         else:
-            key = job
-        extra_args['key'] = key
-        extra_args['state'] = state
-        return self.apipost('update', jl=extra_args)
+            yield job
+
+    def _set_state(self, job, state, **extra_args):
+        data = [dict(extra_args, key=k, state=state) for k in self._jobkeys(job)]
+        return self.apipost('update', jl=data)
