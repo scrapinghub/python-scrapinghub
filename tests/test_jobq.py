@@ -251,3 +251,16 @@ class JobqTest(HSTestCase):
 
         # Empty result set
         self.assertFalse(list(jobq.delete(spiderkey)))
+
+    def test_multiple_job_update(self):
+        jobq = self.project.jobq
+        q1 = jobq.push(self.spidername)
+        q2 = jobq.push(self.spidername)
+        q3 = jobq.push(self.spidername)
+        ids = [q1, q2['key'], self.project.get_job(q3['key'])]
+        self.assertTrue([x['prevstate'] for x in jobq.start(ids)],
+                        ['pending', 'pending', 'pending'])
+        self.assertTrue([x['prevstate'] for x in jobq.finish(ids)],
+                        ['running', 'running', 'running'])
+        self.assertTrue([x['prevstate'] for x in jobq.delete(ids)],
+                        ['finished', 'finished', 'finished'])
