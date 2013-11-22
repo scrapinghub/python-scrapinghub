@@ -38,7 +38,7 @@ class BatchUploader(object):
 
     def create_writer(self, url, start=0, auth=None, size=1000, interval=15,
                       qsize=None, content_encoding='identity',
-                      maxitemsize=1024 ** 2):
+                      maxitemsize=1024 ** 2, callback=None):
         assert not self.closed, 'Can not create new writers when closed'
         auth = xauth(auth) or self.client.auth
         w = _BatchWriter(url=url,
@@ -49,7 +49,8 @@ class BatchUploader(object):
                          qsize=qsize,
                          maxitemsize=maxitemsize,
                          content_encoding=content_encoding,
-                         uploader=self)
+                         uploader=self,
+                         callback=callback)
         self._writers.append(w)
         return w
 
@@ -107,7 +108,7 @@ class BatchUploader(object):
         qiter = iterqueue(q, w.size)
         data = self._content_encode(qiter, w)
         if qiter.count > 0:
-            self._tryupload({
+            response = self._tryupload({
                 'url': w.url,
                 'offset': w.offset,
                 'data': data,
@@ -117,6 +118,11 @@ class BatchUploader(object):
             w.offset += qiter.count
             for _ in xrange(qiter.count):
                 q.task_done()
+            if w.callback is not None:
+                try:
+                    w.callback(response)
+                except Exception, e:
+                    logger.exception("Callback for %s failed", w.url)
 
     def _content_encode(self, qiter, w):
         ce = w.content_encoding
@@ -147,7 +153,7 @@ class BatchUploader(object):
                     logger.warning('Discarding write to url=%s offset=%s: '
                                    '[HTTP error %s] %s\n%s', url, offset,
                                    r.status_code, r.reason, r.text.rstrip())
-                break
+                return r
             except (socket.error, requests.RequestException) as e:
                 if isinstance(e, requests.HTTPError):
                     emsg = "[HTTP error {0}] {1}".format(e.response.status_code,
@@ -176,7 +182,6 @@ class BatchUploader(object):
             headers=headers,
         )
 
-
 class ValueTooLarge(ValueError):
     """Raised when a serialized item is greater than 1MB"""
 
@@ -184,7 +189,7 @@ class ValueTooLarge(ValueError):
 class _BatchWriter(object):
 
     def __init__(self, url, start, auth, size, interval, qsize,
-                 maxitemsize, content_encoding, uploader):
+                 maxitemsize, content_encoding, uploader, callback=None):
         self.url = url
         self.offset = start
         self._nextid = count(start)
@@ -198,6 +203,7 @@ class _BatchWriter(object):
         self.closed = False
         self.flushme = False
         self.uploader = uploader
+        self.callback = callback
 
     def write(self, item):
         assert not self.closed, 'attempting writes to a closed writer'
