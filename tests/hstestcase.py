@@ -1,11 +1,12 @@
 import os
 import unittest
+import random
 from hubstorage import HubstorageClient
 
 
 class HSTestCase(unittest.TestCase):
 
-    projectid = '2222222'
+    projectid = random.randint(2222000, 2223000)
     spidername = 'hs-test-spider'
     endpoint = os.getenv('HS_ENDPOINT', 'http://localhost:8003')
     auth = os.getenv('HS_AUTH', 'useavalidkey')
