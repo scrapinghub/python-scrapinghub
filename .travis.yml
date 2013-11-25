@@ -11,7 +11,6 @@ matrix:
   allow_failures:
   - env: TOXENV=py33
 install:
-- ./.travis-workarounds.sh
 - pip install -M tox
 script: tox
 deploy:
