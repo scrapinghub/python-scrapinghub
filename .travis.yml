@@ -14,7 +14,6 @@ deploy:
   on:
     tags: true
     repo: scrapinghub/python-scrapinghub
-    condition: "$TOXENV = py27"
   user:
     secure: YNW0BX45v3mVQ5SHAtcZ1ss6In0f6omWVaZT2gS1IFg+/25c9y2Tn3i022NRkc8ObZrO+AO5D7ZQcn+koFCVVVAL+YNTQQNefPjAbrLIIO8qXLBacbMGOZ+MA4XHOB+l1bs+hIDkiRcCyFIU3eHA4Q5rSTM2LIkHaMp7i6vedIQ=
   password:
