@@ -1,0 +1,15 @@
+language: python
+python: 2.7
+env:
+    global:
+        - secure: "VhSfVnpuAeOqaQ/T8mIZBsFFpGtYmBGQTsZ7puX0vlvaLhEZ4w5vGFqFnlQp8cP6ubwszRoMrsQa8KtLptkQoqSM1Q8O6NY1oeoqM2uGzhVX/0Pgf47Tq83miMEZqq9xXePWJqdzcDSTIzJZr+AUCajl2j33RlaDM8VsTu75Wsk="
+    matrix:
+        - TOXENV=py27
+        - TOXENV=pypy
+        - TOXENV=py33
+
+install:
+    - ./.travis-workarounds.sh
+    - pip install -M tox
+
+script: tox
