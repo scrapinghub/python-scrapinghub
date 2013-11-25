@@ -5,7 +5,8 @@ env:
   - TOXENV=py27
   - TOXENV=pypy
 install:
-  - pip install -M tox
+- ./.travis-workarounds.sh
+- pip install -M tox
 script: tox
 deploy:
   provider: pypi
