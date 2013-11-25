@@ -11,7 +11,7 @@ import warnings
 
 
 __all__ = ["APIError", "Connection"]
-__version__ = '1.4.2'
+__version__ = '1.4.3'
 
 logger = logging.getLogger('scrapinghub')
 
