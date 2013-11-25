@@ -15,10 +15,9 @@ install:
 script: tox
 deploy:
   provider: pypi
-  user:
-    secure: HLedzYU5PCEVE8xC/gOVPJK1fRf9Mo2azOPmTg47/iQqnorVahv8L/kI0BIM+20A+5AT+e54eLtziMPGK+vH8FxWOSnUkoVnwKB/NQwFd524uzDh0RIJQhDIOu7K7ac4XEjm+AQi5WSpNGqAMPvpjMME60ctlDLzb9CzIW/PVJs=
+  user: scrapinghub
   password:
-    secure: SXQmSxQt5bYYeG0QQLQszOPv/YLB3hN6ncAxLU1SN7iJgZ7aYKtU+M7Cs/SObXfRiQlBzysMIQV5AYVnOEZKtghmVkui5CUOVQwrxSaKIWZhk6o7po48JcdqZ9+VjauOZI43QVMGWkP0HT4ISsXla0k+ijnisYv7wh7dGoakYYo=
+    secure: Pp3ar+DLDDGJ217nE90xj1EoW2BBjxcjmMbvQs01MZ/Be+ovefrx13OnLALN6mDr/b4FCpPSjKVPWrDiIuSR+HUP8Wn1iY3IwFr9fdS1ZeNkkLy/ZHd6osiRN0kDqgYbLpLp4tJVQ2NSWrGVfNmYcMgJvvqq+nd3uEx4Taje0cQ=
   on:
     tags: true
     repo: scrapinghub/python-hubstorage
