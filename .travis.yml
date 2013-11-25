@@ -1,19 +1,25 @@
 language: python
 python: 2.7
 env:
-    global:
-        - secure: "VhSfVnpuAeOqaQ/T8mIZBsFFpGtYmBGQTsZ7puX0vlvaLhEZ4w5vGFqFnlQp8cP6ubwszRoMrsQa8KtLptkQoqSM1Q8O6NY1oeoqM2uGzhVX/0Pgf47Tq83miMEZqq9xXePWJqdzcDSTIzJZr+AUCajl2j33RlaDM8VsTu75Wsk="
-    matrix:
-        - TOXENV=py27
-        - TOXENV=pypy
-        - TOXENV=py33
-
+  global:
+  - secure: VhSfVnpuAeOqaQ/T8mIZBsFFpGtYmBGQTsZ7puX0vlvaLhEZ4w5vGFqFnlQp8cP6ubwszRoMrsQa8KtLptkQoqSM1Q8O6NY1oeoqM2uGzhVX/0Pgf47Tq83miMEZqq9xXePWJqdzcDSTIzJZr+AUCajl2j33RlaDM8VsTu75Wsk=
+  matrix:
+  - TOXENV=py27
+  - TOXENV=pypy
+  - TOXENV=py33
 matrix:
-    allow_failures:
-        - env: TOXENV=py33
-
+  allow_failures:
+  - env: TOXENV=py33
 install:
-    - ./.travis-workarounds.sh
-    - pip install -M tox
-
+- ./.travis-workarounds.sh
+- pip install -M tox
 script: tox
+deploy:
+  provider: pypi
+  user:
+    secure: HLedzYU5PCEVE8xC/gOVPJK1fRf9Mo2azOPmTg47/iQqnorVahv8L/kI0BIM+20A+5AT+e54eLtziMPGK+vH8FxWOSnUkoVnwKB/NQwFd524uzDh0RIJQhDIOu7K7ac4XEjm+AQi5WSpNGqAMPvpjMME60ctlDLzb9CzIW/PVJs=
+  password:
+    secure: SXQmSxQt5bYYeG0QQLQszOPv/YLB3hN6ncAxLU1SN7iJgZ7aYKtU+M7Cs/SObXfRiQlBzysMIQV5AYVnOEZKtghmVkui5CUOVQwrxSaKIWZhk6o7po48JcdqZ9+VjauOZI43QVMGWkP0HT4ISsXla0k+ijnisYv7wh7dGoakYYo=
+  on:
+    tags: true
+    repo: scrapinghub/python-hubstorage
