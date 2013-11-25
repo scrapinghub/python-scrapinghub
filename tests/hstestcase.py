@@ -6,7 +6,7 @@ from hubstorage import HubstorageClient
 
 class HSTestCase(unittest.TestCase):
 
-    projectid = random.randint(2222000, 2223000)
+    projectid = str(random.randint(2222000, 2223000))
     spidername = 'hs-test-spider'
     endpoint = os.getenv('HS_ENDPOINT', 'http://localhost:8003')
     auth = os.getenv('HS_AUTH', 'useavalidkey')
