@@ -1,6 +1,18 @@
 language: python
-python:
-    - 2.6
-    - 2.7
-    - 3.2
-script: nosetests --with-doctest scrapinghub
+python: 2.7
+env:
+  matrix:
+  - TOXENV=py27
+  - TOXENV=pypy
+install:
+  - pip install -M tox
+script: tox
+deploy:
+  provider: pypi
+  on:
+    tags: true
+    repo: scrapinghub/python-scrapinghub
+  user:
+    secure: YNW0BX45v3mVQ5SHAtcZ1ss6In0f6omWVaZT2gS1IFg+/25c9y2Tn3i022NRkc8ObZrO+AO5D7ZQcn+koFCVVVAL+YNTQQNefPjAbrLIIO8qXLBacbMGOZ+MA4XHOB+l1bs+hIDkiRcCyFIU3eHA4Q5rSTM2LIkHaMp7i6vedIQ=
+  password:
+    secure: CzCSji9Ds4imTX18Rdgz4wbzgBf+DWsAR0qAq6f2Qlce5EjsmotOFVX5wsrGezQd1XJd/Yj+tFiDtiC9jlAdXi7A6XGc33Gnh+x+wQkEhydkRD0iZI8bK911IuKwiNkZLkmmlOmSwg16gdCxdga5FwBZ6A9Xafz4qYphJqG5j4M=
