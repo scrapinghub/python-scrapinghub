@@ -40,6 +40,7 @@ class FrontierTest(HSTestCase):
 
     def test_add_multiple_chunks(self):
         frontier = self.project.frontier
+        old_count = frontier.newcount
 
         batch_size = 50
         fps1 = [{'fp': '/index_%s.html' % fp} for fp in range(0, batch_size)]
@@ -51,6 +52,16 @@ class FrontierTest(HSTestCase):
         fps3 = [{'fp': '/index_%s.html' % fp} for fp in range(batch_size * 2, batch_size * 3)]
         frontier.add(self.frontier, self.slot, fps3)
         frontier.flush()
+
+        self.assertEqual(frontier.newcount, 150 + old_count)
+
+        # insert repeated fingerprints
+        fps4 = [{'fp': '/index_%s.html' % fp} for fp in range(0, batch_size)]
+        frontier.add(self.frontier, self.slot, fps3)
+        frontier.flush()
+
+        # new count is the same
+        self.assertEqual(frontier.newcount, 150 + old_count)
 
         # get first 100
         batches = list(frontier.read(self.frontier, self.slot, mincount=100))
