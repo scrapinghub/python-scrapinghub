@@ -1,8 +1,18 @@
-Hub Storage client library
-==========================
+=================================
+HubStorage service client library
+=================================
+
+.. image:: https://badge.fury.io/py/hubstorage.png
+   :target: http://badge.fury.io/py/hubstorage
+
+.. image:: https://secure.travis-ci.org/scrapinghub/python-hubstorage.png?branch=master
+   :target: http://travis-ci.org/scrapinghub/python-hubstorage
 
 .. note:: This module is experimental and its API may change without previous
    notice.
+
+Overview
+========
 
 This is the HubStorage client library, which contains:
 
