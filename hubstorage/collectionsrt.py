@@ -86,6 +86,9 @@ class Collection(object):
     def set(self, *args, **kwargs):
         return self._collections.set(self.coltype, self.colname, *args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        return self._collections.delete(self.coltype, self.colname, *args, **kwargs)
+
     def delete_all(self, *args, **kwargs):
         return self._collections.delete_all(self.coltype, self.colname, *args, **kwargs)
 
