@@ -209,7 +209,7 @@ class _BatchWriter(object):
         assert not self.closed, 'attempting writes to a closed writer'
         data = jsonencode(item)
         if len(data) > self.maxitemsize:
-            raise ValueTooLarge('value exceeds max encoded size of {}'\
+            raise ValueTooLarge('value exceeds max encoded size of {} bytes'\
                                 .format(self.maxitemsize))
 
         self.itemsq.put(data)
