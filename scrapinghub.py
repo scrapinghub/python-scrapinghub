@@ -322,6 +322,7 @@ class Job(RequestProxyMixin):
         if meta is not None:
             params['meta'] = meta
 
+        lastexc = None
         for attempt in xrange(self.MAX_RETRIES):
             params['offset'] = offset
             try:
@@ -330,10 +331,14 @@ class Job(RequestProxyMixin):
                     offset += 1
                 break
             except (ValueError, socket.error, requests.RequestException) as exc:
-                msg = "Error reading items.jl (retrying in %ds): project=%s job=%s offset=%d attempt=%d/%d error=%s"
+                lastexc = exc
+                msg = "Retrying read of items.jl in %ds: project=%s job=%s offset=%d attempt=%d/%d error=%s"
                 args = (self.RETRY_INTERVAL, self.project, self._id, offset, attempt, self.MAX_RETRIES, exc)
-                logger.error(msg, *args)
+                logger.debug(msg, *args)
                 time.sleep(self.RETRY_INTERVAL)
+        else:
+            logger.error('Failed %d times reading items from %s, last error was: %s', self.MAX_RETRIES, self._id, lastexc)
+
 
     def update(self, **modifiers):
         # XXX: only allow add_tag/remove_tag
