@@ -2,7 +2,7 @@
 High level Hubstorage client
 """
 import pkgutil
-from requests import session
+from requests import session, adapters
 from .utils import xauth, urlpathjoin
 from .project import Project
 from .job import Job
@@ -20,18 +20,23 @@ class HubstorageClient(object):
     USERAGENT = 'python-hubstorage/{0}'.format(__version__)
     DEFAULT_TIMEOUT = 60.0
 
-    def __init__(self, auth=None, endpoint=None, connection_timeout=None):
+    def __init__(self, auth=None, endpoint=None, connection_timeout=None,
+            max_retries=0):
         self.auth = xauth(auth)
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
         self.connection_timeout = connection_timeout or self.DEFAULT_TIMEOUT
-        self.session = self._create_session()
+        self.session = self._create_session(max_retries)
         self.jobq = JobQ(self, None)
         self.projects = Projects(self, None)
         self.root = ResourceType(self, None)
         self._batchuploader = None
 
-    def _create_session(self):
+    def _create_session(self, max_retries):
         s = session()
+        if max_retries > 0:
+            a = adapters.HTTPAdapter(max_retries=max_retries)
+            s.mount('http://', a)
+            s.mount('https://', a)
         s.headers.update({'User-Agent': self.USERAGENT})
         return s
 
