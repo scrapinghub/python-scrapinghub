@@ -3,7 +3,7 @@ High level Hubstorage client
 """
 import pkgutil
 from requests import session
-from .utils import xauth
+from .utils import xauth, urlpathjoin
 from .project import Project
 from .job import Job
 from .jobq import JobQ
@@ -67,6 +67,10 @@ class HubstorageClient(object):
 
     def get_project(self, *args, **kwargs):
         return self.projects.get(*args, **kwargs)
+
+    def server_timestamp(self):
+        tsurl = urlpathjoin(self.endpoint, 'system/ts')
+        return self.session.get(tsurl).json()
 
     def close(self, timeout=None):
         if self._batchuploader is not None:

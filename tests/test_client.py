@@ -62,3 +62,9 @@ class ClientTest(HSTestCase):
             return mjss.get(self.projectid)
         summary = apipoll(_get_summary)
         self.assertIsNotNone(summary)
+
+    def test_timestamp(self):
+        ts1 = self.hsclient.server_timestamp()
+        ts2 = self.hsclient.server_timestamp()
+        self.assertGreater(ts1, 0)
+        self.assertLessEqual(ts1, ts2)
