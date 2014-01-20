@@ -67,10 +67,10 @@ class DownloadableResource(ResourceType):
         """
         return jldecode(self.iter_json(*args, **kwargs))
 
-    def iter_json(self, _path=None, apiparams=None, **requests_params):
+    def iter_json(self, _path=None, requests_params=None, **apiparams):
         """Reliably iterate through all data as json strings"""
-        apiparams = {} if apiparams is None else dict(apiparams)
-        requests_params['method'] = 'GET'
+        requests_params = dict(requests_params or {})
+        requests_params.setdefault('method', 'GET')
         lastexc = None
         line = None
         offset = 0

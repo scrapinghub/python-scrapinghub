@@ -92,8 +92,7 @@ class CollectionsTest(HSTestCase):
                 items.append(test_item)
 
         # check parameters are passed correctly
-        apiparams = dict(prefix='test_data_download1')
-        downloaded = list(col.iter_values(apiparams=apiparams))
+        downloaded = list(col.iter_values(prefix='test_data_download1'))
         self.assertEqual(len(downloaded), 11)
 
         # simulate network timeouts and download data
