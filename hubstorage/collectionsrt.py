@@ -1,5 +1,6 @@
 from requests.exceptions import HTTPError
 from .resourcetype import ResourceType
+from .utils import urlpathjoin
 
 
 class Collections(ResourceType):
@@ -29,6 +30,14 @@ class Collections(ResourceType):
 
     def delete(self, _type, _name, _keys):
         return self.apipost((_type, _name, 'deleted'), jl=_keys)
+
+    def create_writer(self, coltype, colname, **writer_kwargs):
+        kwargs = dict(writer_kwargs)
+        kwargs.setdefault('content_encoding', 'gzip')
+        kwargs.setdefault('auth', self.auth)
+        url = urlpathjoin(self.url, coltype, colname)
+        return self.client.batchuploader.create_writer(url,
+            **kwargs)
 
     def new_collection(self, coltype, colname):
         return Collection(coltype, colname, self)
@@ -79,6 +88,15 @@ class Collection(object):
         self.coltype = coltype
         self.colname = colname
         self._collections = collections
+
+    def create_writer(self, **kwargs):
+        """Create a writer for async writing of bulk data
+
+        kwargs are passed to batchuploader.create_writer, but auth and gzip
+        content encoding are specified if not provided
+        """
+        return self._collections.create_writer(self.coltype, self.colname,
+            **kwargs)
 
     def get(self, *args, **kwargs):
         return self._collections.get(self.coltype, self.colname, *args, **kwargs)
