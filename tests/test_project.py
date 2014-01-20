@@ -186,7 +186,7 @@ class ProjectTest(HSTestCase):
         ts = millitime()
         count = int(j2.samples.batch_size * (random() + randint(1, 5)))
         for _ in xrange(count):
-            ts += randint(0, 2**16)
+            ts += randint(1, 2**16)
             row = [ts] + list(randint(0, 2**16) for _ in xrange(randint(0, 100)))
             samples.append(row)
             j2.samples.write(row)
