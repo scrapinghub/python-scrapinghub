@@ -46,29 +46,28 @@ class ItemsResourceType(ResourceType):
     batch_qsize = None  # defaults to twice batch_size if None
     batch_start = 0
     batch_interval = 15.0
-    batch_append = False
     batch_content_encoding = 'identity'
 
     # batch writer reference in case of used
     _writer = None
 
+    def batch_write_start(self):
+        """Override to set a start parameter when commencing writing"""
+        return 0
+
     @property
     def writer(self):
         if self._writer is None:
-            start = self._get_itemcount() if self.batch_append else self.batch_start
             self._writer = self.client.batchuploader.create_writer(
                 url=self.url,
                 auth=self.auth,
                 size=self.batch_size,
-                start=start,
+                start=self.batch_write_start(),
                 interval=self.batch_interval,
                 qsize=self.batch_qsize,
                 content_encoding=self.batch_content_encoding
             )
         return self._writer
-
-    def _get_itemcount(self):
-        return self.stats().get('totals', {}).get('input_values', 0)
 
     def flush(self):
         if self._writer is not None:
