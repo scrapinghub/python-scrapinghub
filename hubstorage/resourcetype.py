@@ -59,6 +59,8 @@ class DownloadableResource(ResourceType):
         if lastline is not None:
             lastvalue = json.loads(lastline)
             params['startafter'] = lastvalue['_key']
+            if 'start' in params:
+                del params['start']
 
     def iter_values(self, *args, **kwargs):
         """Reliably iterate through all data as python objects

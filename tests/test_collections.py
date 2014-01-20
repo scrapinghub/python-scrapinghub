@@ -97,5 +97,5 @@ class CollectionsTest(HSTestCase):
 
         # simulate network timeouts and download data
         with failing_downloader(self.project.collections):
-            downloaded = list(col.iter_values())
-            self.assertEqual(len(downloaded), 20)
+            downloaded = list(col.iter_values(start='test_data_download1'))
+            self.assertEqual(len(downloaded), 19)
