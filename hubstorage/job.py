@@ -78,10 +78,21 @@ class Logs(ItemsResourceType):
     resource_type = 'logs'
     batch_content_encoding = 'gzip'
 
-    def log(self, message, level=logging.INFO, ts=None, appendmode=False, **other):
+    def __init__(self, client, key, auth=None, appendmode=False):
+        ItemsResourceType.__init__(self, client, key, auth)
+        self.batch_append = appendmode
+
+    def batch_write_start(self):
+        if self.batch_append:
+            return self.stats().get('totals', {}).get('input_values', 0)
+        return 0
+
+    def log(self, message, level=logging.INFO, ts=None, **other):
         other.update(message=message, level=level, time=ts or millitime())
-        if self._writer is None:
-            self.batch_append = appendmode
+        # legacy support for an appendmode argument. This should be set at
+        # object initialization time.
+        if self._writer is None and other.get('appendmode'):
+            self.batch_append = True
         self.write(other)
 
     def debug(self, message, **other):
