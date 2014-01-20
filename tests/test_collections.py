@@ -2,6 +2,7 @@
 Test Collections
 """
 import random
+from contextlib import closing
 from hstestcase import HSTestCase
 
 
@@ -42,10 +43,11 @@ class CollectionsTest(HSTestCase):
         # populate with 20 items
         test_item = _mkitem()
         last_key = None
-        for i in xrange(20):
-            test_item['_key'] = last_key = "post_scan_test%d" % i
-            test_item['counter'] = i
-            col.set(test_item)
+        with closing(col.create_writer()) as writer:
+            for i in xrange(20):
+                test_item['_key'] = last_key = "post_scan_test%d" % i
+                test_item['counter'] = i
+                writer.write(test_item)
 
         # check last value is as expected
         returned_item = col.get(last_key)
