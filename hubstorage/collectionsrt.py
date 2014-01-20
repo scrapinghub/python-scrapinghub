@@ -1,9 +1,9 @@
 from requests.exceptions import HTTPError
-from .resourcetype import ResourceType
+from .resourcetype import DownloadableResource
 from .utils import urlpathjoin
 
 
-class Collections(ResourceType):
+class Collections(DownloadableResource):
 
     resource_type = 'collections'
 
@@ -30,6 +30,10 @@ class Collections(ResourceType):
 
     def delete(self, _type, _name, _keys):
         return self.apipost((_type, _name, 'deleted'), jl=_keys)
+
+    def iter_json(self, _type, _name, apiparams=None, **requests_params):
+        return DownloadableResource.iter_json(self, (_type, _name),
+            apiparams, **requests_params)
 
     def create_writer(self, coltype, colname, **writer_kwargs):
         kwargs = dict(writer_kwargs)
@@ -112,3 +116,11 @@ class Collection(object):
 
     def count(self, *args, **kwargs):
         return self._collections.count(self.coltype, self.colname, *args, **kwargs)
+
+    def iter_json(self, apiparams=None, **requests_params):
+        return self._collections.iter_json(self.coltype, self.colname,
+            apiparams=apiparams, **requests_params)
+
+    def iter_values(self, apiparams=None, **requests_params):
+        return self._collections.iter_values(self.coltype, self.colname,
+            apiparams=apiparams, **requests_params)

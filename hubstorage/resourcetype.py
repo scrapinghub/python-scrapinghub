@@ -1,5 +1,6 @@
-import logging
+import logging, time, json, socket
 from collections import MutableMapping
+import requests.exceptions as rexc
 from .utils import urlpathjoin, xauth
 from .serialization import jlencode, jldecode
 
@@ -17,18 +18,20 @@ class ResourceType(object):
         self.auth = xauth(auth) or client.auth
         self.url = urlpathjoin(client.endpoint, self.key)
 
-    def apirequest(self, _path=None, **kwargs):
+    def _iter_lines(self, _path, **kwargs):
         kwargs['url'] = urlpathjoin(self.url, _path)
         kwargs.setdefault('auth', self.auth)
         kwargs.setdefault('timeout', self.client.connection_timeout)
         if 'jl' in kwargs:
             kwargs['data'] = jlencode(kwargs.pop('jl'))
-
         r = self.client.session.request(**kwargs)
         if not r.ok:
             logger.debug('%s: %s', r, r.content)
         r.raise_for_status()
-        return jldecode(r.iter_lines())
+        return r.iter_lines()
+
+    def apirequest(self, _path=None, **kwargs):
+        return jldecode(self._iter_lines(_path, **kwargs))
 
     def apipost(self, _path=None, **kwargs):
         return self.apirequest(_path, method='POST', **kwargs)
@@ -38,6 +41,61 @@ class ResourceType(object):
 
     def apidelete(self, _path=None, **kwargs):
         return self.apirequest(_path, method='DELETE', **kwargs)
+
+
+class DownloadableResource(ResourceType):
+    MAX_RETRIES = 180
+    RETRY_INTERVAL = 60
+
+    def _add_resume_param(self, lastline, offset, params):
+        """Adds a startafter=LASTKEY parameter if there was
+        a lastvalue. It also adds meta=_key to ensure a key is returned
+        """
+        meta = params.get('meta', [])
+        if '_key' not in meta:
+            meta = list(meta)
+            meta.append('_key')
+            params['meta'] = meta
+        if lastline is not None:
+            lastvalue = json.loads(lastline)
+            params['startafter'] = lastvalue['_key']
+
+    def iter_values(self, *args, **kwargs):
+        """Reliably iterate through all data as python objects
+
+        calls iter_json, decoding the results
+        """
+        return jldecode(self.iter_json(*args, **kwargs))
+
+    def iter_json(self, _path=None, apiparams=None, **requests_params):
+        """Reliably iterate through all data as json strings"""
+        apiparams = {} if apiparams is None else dict(apiparams)
+        requests_params['method'] = 'GET'
+        lastexc = None
+        line = None
+        offset = 0
+        for attempt in xrange(self.MAX_RETRIES):
+            self._add_resume_param(line, offset, apiparams)
+            try:
+                for line in self._iter_lines(_path=_path, params=apiparams,
+                        **requests_params):
+                    yield line
+                    offset += 1
+                break
+            except (ValueError, socket.error, rexc.RequestException) as exc:
+                # catch requests exceptions other than HTTPError
+                if isinstance(exc, rexc.HTTPError):
+                    raise
+                lastexc = exc
+                url = urlpathjoin(self.url, _path)
+                msg = "Retrying read of %s in %ds: attempt=%d/%d error=%s"
+                args = url, self.RETRY_INTERVAL, attempt, self.MAX_RETRIES, exc
+                logger.debug(msg, *args)
+                time.sleep(self.RETRY_INTERVAL)
+        else:
+            url = urlpathjoin(self.url, _path)
+            logger.error("Failed %d times reading items from %s, params %s, "
+                "last error was: %s", self.MAX_RETRIES, url, apiparams, lastexc)
 
 
 class ItemsResourceType(ResourceType):
@@ -50,6 +108,9 @@ class ItemsResourceType(ResourceType):
 
     # batch writer reference in case of used
     _writer = None
+
+    # TODO override _add_resume_param - can avoid requestomg _key by
+    # deriving from project, spider, job and offset
 
     def batch_write_start(self):
         """Override to set a start parameter when commencing writing"""
