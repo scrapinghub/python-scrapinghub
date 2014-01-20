@@ -6,6 +6,7 @@ from requests.exceptions import HTTPError
 from hubstorage import HubstorageClient
 from hubstorage.utils import millitime
 from hstestcase import HSTestCase
+from testutil import failing_downloader
 
 
 class ProjectTest(HSTestCase):
@@ -202,3 +203,19 @@ class ProjectTest(HSTestCase):
         self.assertEqual(js.get('has_capacity'), True, js)
         self.assertTrue('pending' in js, js)
         self.assertTrue('running' in js, js)
+
+    def test_bulkdata(self):
+        j = self.project.push_job(self.spidername, state='running')
+        for i in xrange(20):
+            j.logs.info("log line %d" % i)
+            j.items.write(dict(field1="item%d" % i))
+            j.requests.add("http://test.com/%d" % i,
+                200, 'GET', 10, None, 10, 120)
+        for resourcename in ('logs', 'items', 'requests'):
+            resource = getattr(j, resourcename)
+            resource.flush()
+
+            # downloading resource, with simulated failures
+            with failing_downloader(resource):
+                downloaded = list(resource.iter_values())
+                self.assertEqual(len(downloaded), 20)

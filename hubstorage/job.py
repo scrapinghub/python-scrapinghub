@@ -1,5 +1,6 @@
 import logging
-from .resourcetype import ItemsResourceType, MappingResourceType
+from .resourcetype import (ItemsResourceType, DownloadableResource,
+    MappingResourceType)
 from .utils import millitime, urlpathjoin
 from .jobq import JobQ
 
@@ -73,7 +74,7 @@ class JobMeta(MappingResourceType):
         return self.liveget('auth')
 
 
-class Logs(ItemsResourceType):
+class Logs(ItemsResourceType, DownloadableResource):
 
     resource_type = 'logs'
     batch_content_encoding = 'gzip'
@@ -109,7 +110,7 @@ class Logs(ItemsResourceType):
         self.log(message, level=logging.ERROR, **other)
 
 
-class Items(ItemsResourceType):
+class Items(ItemsResourceType, DownloadableResource):
 
     resource_type = 'items'
     batch_content_encoding = 'gzip'
@@ -123,7 +124,7 @@ class Samples(ItemsResourceType):
         raise NotImplementedError('Resource does not expose stats')
 
 
-class Requests(ItemsResourceType):
+class Requests(ItemsResourceType, DownloadableResource):
 
     resource_type = 'requests'
     batch_content_encoding = 'gzip'

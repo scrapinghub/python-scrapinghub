@@ -4,6 +4,7 @@ Test Collections
 import random
 from contextlib import closing
 from hstestcase import HSTestCase
+from testutil import failing_downloader
 
 
 def _mkitem():
@@ -76,4 +77,26 @@ class CollectionsTest(HSTestCase):
         self.assertRaises(KeyError, col.get, 'does_not_exist')
         self.assertRaises(ValueError, col.set, {'foo': 42})
         self.assertRaises(ValueError, col.set, {'_key': []})
-        self.assertRaises(ValueError, col.set, {'_key': 'large_test', 'value': 'x' * 1024 ** 2})
+        self.assertRaises(ValueError, col.set,
+            {'_key': 'large_test', 'value': 'x' * 1024 ** 2})
+
+    def test_data_download(self):
+        col = self.project.collections.new_store(self.test_collection_name)
+        items = []
+        with closing(col.create_writer()) as writer:
+            for i in xrange(20):
+                test_item = _mkitem()
+                test_item['_key'] = "test_data_download%d" % i
+                test_item['counter'] = i
+                writer.write(test_item)
+                items.append(test_item)
+
+        # check parameters are passed correctly
+        apiparams = dict(prefix='test_data_download1')
+        downloaded = list(col.iter_values(apiparams=apiparams))
+        self.assertEqual(len(downloaded), 11)
+
+        # simulate network timeouts and download data
+        with failing_downloader(self.project.collections):
+            downloaded = list(col.iter_values())
+            self.assertEqual(len(downloaded), 20)
