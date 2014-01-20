@@ -71,6 +71,7 @@ class DownloadableResource(ResourceType):
         """Reliably iterate through all data as json strings"""
         requests_params = dict(requests_params or {})
         requests_params.setdefault('method', 'GET')
+        requests_params.setdefault('stream', True)
         lastexc = None
         line = None
         offset = 0
