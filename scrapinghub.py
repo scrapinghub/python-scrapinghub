@@ -20,7 +20,7 @@ class Connection(object):
     """Main class to access Scrapinghub API.
     """
 
-    DEFAULT_ENDPOINT = 'http://dash.scrapinghub.com/api/'
+    DEFAULT_ENDPOINT = 'https://dash.scrapinghub.com/api/'
 
     API_METHODS = {
         'addversion': 'scrapyd/addversion',
