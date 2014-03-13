@@ -319,13 +319,19 @@ class Job(RequestProxyMixin):
     def items(self, offset=0, count=None, meta=None):
         import requests
         params = {}
+        offset_original = offset
+        count_original = count
         if meta is not None:
             params['meta'] = meta
-        if count is not None:
-            params['count'] = count
         lastexc = None
         for attempt in xrange(self.MAX_RETRIES):
             params['offset'] = offset
+            if count_original is not None:
+                count = count_original - (offset - offset_original)
+                if count > 0:
+                    params['count'] = count
+                else:
+                    break
             try:
                 for item in self._get('items', 'jl', params=params):
                     yield item
@@ -333,13 +339,12 @@ class Job(RequestProxyMixin):
                 break
             except (ValueError, socket.error, requests.RequestException) as exc:
                 lastexc = exc
-                msg = "Retrying read of items.jl in %ds: project=%s job=%s offset=%d attempt=%d/%d error=%s"
-                args = (self.RETRY_INTERVAL, self.project, self._id, offset, attempt, self.MAX_RETRIES, exc)
+                msg = "Retrying read of items.jl in %ds: project=%s job=%s offset=%d count=%d attempt=%d/%d error=%s"
+                args = (self.RETRY_INTERVAL, self.project, self._id, offset, count, attempt, self.MAX_RETRIES, exc)
                 logger.debug(msg, *args)
                 time.sleep(self.RETRY_INTERVAL)
         else:
             logger.error('Failed %d times reading items from %s, last error was: %s', self.MAX_RETRIES, self._id, lastexc)
-
 
     def update(self, **modifiers):
         # XXX: only allow add_tag/remove_tag
