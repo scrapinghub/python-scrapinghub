@@ -339,7 +339,7 @@ class Job(RequestProxyMixin):
                 break
             except (ValueError, socket.error, requests.RequestException) as exc:
                 lastexc = exc
-                msg = "Retrying read of items.jl in %ds: project=%s job=%s offset=%d count=%d attempt=%d/%d error=%s"
+                msg = "Retrying read of items.jl in %ds: project=%s job=%s offset=%d count=%s attempt=%d/%d error=%s"
                 args = (self.RETRY_INTERVAL, self.project, self._id, offset, count, attempt, self.MAX_RETRIES, exc)
                 logger.debug(msg, *args)
                 time.sleep(self.RETRY_INTERVAL)
