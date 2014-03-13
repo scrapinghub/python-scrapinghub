@@ -316,12 +316,13 @@ class Job(RequestProxyMixin):
     def __repr__(self):
         return "Job({0.project!r}, {0.id})".format(self)
 
-    def items(self, offset=0, meta=None):
+    def items(self, offset=0, count=None, meta=None):
         import requests
         params = {}
         if meta is not None:
             params['meta'] = meta
-
+        if count is not None:
+            params['count'] = count
         lastexc = None
         for attempt in xrange(self.MAX_RETRIES):
             params['offset'] = offset
