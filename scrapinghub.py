@@ -316,29 +316,35 @@ class Job(RequestProxyMixin):
     def __repr__(self):
         return "Job({0.project!r}, {0.id})".format(self)
 
-    def items(self, offset=0, meta=None):
+    def items(self, offset=0, count=None, meta=None):
         import requests
-        params = {}
+        params = {'offset': offset}
         if meta is not None:
             params['meta'] = meta
+        if count is not None:
+            params['count'] = count
 
         lastexc = None
         for attempt in xrange(self.MAX_RETRIES):
-            params['offset'] = offset
+            retrieved = 0
             try:
                 for item in self._get('items', 'jl', params=params):
                     yield item
-                    offset += 1
+                    retrieved += 1
                 break
             except (ValueError, socket.error, requests.RequestException) as exc:
                 lastexc = exc
-                msg = "Retrying read of items.jl in %ds: project=%s job=%s offset=%d attempt=%d/%d error=%s"
-                args = (self.RETRY_INTERVAL, self.project, self._id, offset, attempt, self.MAX_RETRIES, exc)
-                logger.debug(msg, *args)
+                params['offset'] += retrieved
+                if 'count' in params:
+                    params['count'] -= retrieved
+                logger.debug("Retrying read of items.jl in %ds: job=%s offset=%d count=%d"
+                             "attempt=%d/%d error=%s",
+                             self.RETRY_INTERVAL, self._id, params['offset'],
+                             params.get('count'), attempt, self.MAX_RETRIES, exc)
                 time.sleep(self.RETRY_INTERVAL)
         else:
-            logger.error('Failed %d times reading items from %s, last error was: %s', self.MAX_RETRIES, self._id, lastexc)
-
+            logger.error('Failed %d times reading items from %s, last error was: %s',
+                         self.MAX_RETRIES, self._id, lastexc)
 
     def update(self, **modifiers):
         # XXX: only allow add_tag/remove_tag
