@@ -319,15 +319,12 @@ class Job(RequestProxyMixin):
     def items(self, offset=0, count=None, meta=None):
         import requests
         params = {}
-        offset_original = offset
-        count_original = count
         if meta is not None:
             params['meta'] = meta
         lastexc = None
         for attempt in xrange(self.MAX_RETRIES):
             params['offset'] = offset
-            if count_original is not None:
-                count = count_original - (offset - offset_original)
+            if count is not None:
                 if count > 0:
                     params['count'] = count
                 else:
@@ -336,6 +333,8 @@ class Job(RequestProxyMixin):
                 for item in self._get('items', 'jl', params=params):
                     yield item
                     offset += 1
+                    if count is not None:
+                        count -= 1
                 break
             except (ValueError, socket.error, requests.RequestException) as exc:
                 lastexc = exc
