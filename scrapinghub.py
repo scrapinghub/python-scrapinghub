@@ -361,12 +361,13 @@ class Job(RequestProxyMixin):
 
     def add_report(self, key, content, content_type='text/plain'):
         from requests.compat import StringIO
+
         params = {
             'project': self.project.id,
-            'job': self.id,
             'key': key,
             'content_type': content_type,
         }
+
         files = {'content': ('report', StringIO(content))}
         self._post('reports_add', 'json', params, files=files)
 
@@ -378,7 +379,7 @@ class Job(RequestProxyMixin):
         return self.project
 
     def _add_params(self, params):
-        params['job'] = self.id
+        params['job'] = "%s/%s" % ( self.project.id, self.id)
         return params
 
 
