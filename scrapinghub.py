@@ -200,10 +200,8 @@ class Project(RequestProxyMixin):
         return JobSet(self, **params)
 
     def job(self, id):
-        try:
-            return iter(self.jobs(job=id, count=1)).next()
-        except StopIteration:
-            return None
+        for x in self.jobs(job=id, count=1):
+            return x
 
     def spiders(self, **params):
         result = self._get('spiders', 'json', params)
