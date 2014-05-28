@@ -1,5 +1,4 @@
 from .resourcetype import ResourceType
-from .utils import millitime
 
 # TODO: remove backwards compatible methods
 
@@ -17,7 +16,4 @@ class Activity(ResourceType):
 
     def add(self, *args, **kwargs):
         entry = dict(*args, **kwargs)
-        if not entry.get('timestamp'):
-            entry['timestamp'] = millitime()
-
         return self.post(entry)
