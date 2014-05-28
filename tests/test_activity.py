@@ -8,7 +8,7 @@ class ActivityTest(HSTestCase):
 
     def test_post_and_reverse_get(self):
         # make some sample data
-        orig_data = [dict(foo=42, counter=i) for i in xrange(20)]
+        orig_data = [{u'foo': 42, u'counter': i} for i in xrange(20)]
         data1 = orig_data[:10]
         data2 = orig_data[10:]
 
@@ -16,19 +16,18 @@ class ActivityTest(HSTestCase):
         self.project.activity.post(data1)
         self.project.activity.post(data2)
 
-        # read them back - activity should be second request first (reverse chronological order)
+        # read them back in reverse chronological order
         result = list(self.project.activity.list(count=20))
         self.assertEqual(len(result), 20)
-        reconstructed = result[10:] + result[:10]
-        self.assertEqual(orig_data, reconstructed)
+        self.assertEqual(orig_data[::-1], result)
 
     def test_filters(self):
         self.project.activity.post({'c': i} for i in xrange(10))
         r = list(self.project.activity.list(filter='["c", ">", [5]]', count=2))
-        self.assertEqual(r, [{'c': 6}, {'c': 7}])
+        self.assertEqual(r, [{'c': 9}, {'c': 8}])
 
     def test_timestamp(self):
         self.project.activity.add({'foo': 'bar'}, baz='qux')
-        entry = self.project.activity.list(count=1).next()
-        self.assertTrue(entry.pop('timestamp', None))
+        entry = self.project.activity.list(count=1, meta='_ts').next()
+        self.assertTrue(entry.pop('_ts', None))
         self.assertEqual(entry, {'foo': 'bar', 'baz': 'qux'})
