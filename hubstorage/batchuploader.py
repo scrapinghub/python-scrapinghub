@@ -23,8 +23,9 @@ class BatchUploader(object):
     # Max number of retries attempts before giving up,
     # Using 10 minutes max interval it accounts for 30hs total wait time
     worker_max_retries = 200
-    # Max wait time between retries in seconds
+    # Minimum and maximum wait time between retries in seconds,
     # it can be 50% greater due to randomization
+    worker_min_interval = 30
     worker_max_interval = 600
 
     def __init__(self, client):
@@ -166,8 +167,9 @@ class BatchUploader(object):
                                  url, offset)
                 break
 
-            backoff = min(retryn ** 2, self.worker_max_interval)
-            time.sleep(backoff * 0.5 * random.random())
+            backoff = min(max(retryn ** 2, self.worker_min_interval),
+                          self.worker_max_interval)
+            time.sleep(backoff * (0.5 + random.random()))
 
     def _upload(self, batch):
         params = {'start': batch['offset']}
