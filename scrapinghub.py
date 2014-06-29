@@ -2,6 +2,7 @@
 Scrapinghub API Client Library
 """
 
+from __future__ import division, print_function, absolute_import
 import os
 import json
 import logging
@@ -140,7 +141,7 @@ class Connection(object):
             except KeyError:
                 raise APIError("JSON response does not contain status")
         else:  # jl
-            return (json.loads(line) for line in response.iter_lines())
+            return (json.loads(line.decode()) for line in response.iter_lines())
 
     ##
     ## public methods
@@ -241,7 +242,7 @@ class JobSet(RequestProxyMixin):
         self._jobs = None
 
     def __repr__(self):
-        params = ', '.join("{0}={1}".format(*i) for i in self.params.iteritems())
+        params = ', '.join("{0}={1}".format(*i) for i in list(self.params.items()))
         return "JobSet({0.project!r}, {1})".format(self, params)
 
     def __iter__(self):
@@ -274,7 +275,7 @@ class JobSet(RequestProxyMixin):
         if self._jobs is None:
             result = self._get('jobs_list', 'jl', self.params)
             try:
-                status_line = result.next()
+                status_line = next(result)
             except StopIteration:
                 raise APIError("JSON response does not contain status")
             else:
@@ -323,7 +324,7 @@ class Job(RequestProxyMixin):
             params['count'] = count
 
         lastexc = None
-        for attempt in xrange(self.MAX_RETRIES):
+        for attempt in list(range(self.MAX_RETRIES)):
             retrieved = 0
             try:
                 for item in self._get('items', 'jl', params=params):
