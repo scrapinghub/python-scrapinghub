@@ -14,7 +14,7 @@ deploy:
   distributions: "sdist bdist_wheel"
   on:
     tags: true
-    allbranches: true
+    all_branches: true
     repo: scrapinghub/python-scrapinghub
   user: scrapinghub
   password:
