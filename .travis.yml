@@ -6,12 +6,15 @@ env:
   - TOXENV=pypy
   - TOXENV=py33
 install:
-- pip install -M tox
+- "./.travis-workarounds.sh"
+- pip install -U tox
 script: tox
 deploy:
   provider: pypi
+  distributions: "sdist bdist_wheel"
   on:
     tags: true
+    allbranches: true
     repo: scrapinghub/python-scrapinghub
   user: scrapinghub
   password:
