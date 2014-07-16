@@ -30,7 +30,7 @@ Example creating a new job::
 
     >>> from hubstorage import HubstorageClient
     >>> hs = HubstorageClient(auth=apikey)
-    >>> job = hs.new_job(projectid='1111111', spider='foo')
+    >>> job = hs.push_job(projectid='1111111', spidername='foo')
     >>> job.key
     '1111111/1/1'
 
