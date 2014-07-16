@@ -187,6 +187,64 @@ class JobqTest(HSTestCase):
         self._assert_queue('running', [])
         self._assert_queue('finished', [])
 
+    def test_list(self):
+        jobq = self.project.jobq
+        j1 = jobq.push(self.spidername, state='finished', foo='bar1')
+        j2 = jobq.push(self.spidername, state='finished', foo='bar2')
+        j3 = jobq.push(self.spidername, state='finished', foo='bar3')
+        j4 = jobq.push(self.spidername, state='finished', foo='bar4')
+        j5 = jobq.push(self.spidername, state='running', foo='bar5')
+        j6 = jobq.push(self.spidername, state='pending', foo='bar6')
+
+        jobs = list(jobq.list())
+
+        job_ids = [j['key'] for j in jobs]
+        timestamps = [j['ts'] for j in jobs]
+        foo_bars = ['bar4', 'bar3', 'bar2', 'bar1']
+
+        # check we get only finished jobs,
+        # and in reverse order
+        self.assertEqual(len(jobs), len(foo_bars))
+        for i, t in enumerate(foo_bars):
+            job = self.hsclient.get_job(job_ids[i])
+            self.assertEqual(job.metadata.get('state'), u'finished')
+            self.assertEqual(job.metadata.get('spider'), self.spidername)
+            self.assertEqual(job.metadata.get('foo'), t)
+
+        # check that jobs are returned in DESCending timestamp order
+        self.assertListEqual(sorted(timestamps, reverse=True), timestamps)
+
+        # test "count" parameter:
+        # fetch only the 2 most recent jobs
+        jobs = list(jobq.list(count=2))
+        self.assertEqual(len(jobs), 2)
+        for i, t in enumerate(foo_bars[:2]):
+            job = self.hsclient.get_job(job_ids[i])
+            self.assertEqual(job.metadata.get('state'), u'finished')
+            self.assertEqual(job.metadata.get('spider'), self.spidername)
+            self.assertEqual(job.metadata.get('foo'), t)
+
+        # test "stop" parameter
+        # we should stop before the 4th finished job
+        jobs = list(jobq.list(stop=job_ids[3]))
+        self.assertEqual(len(jobs), 3)
+        for i, t in enumerate(foo_bars[:3]):
+            job = self.hsclient.get_job(job_ids[i])
+            self.assertEqual(job.metadata.get('state'), u'finished')
+            self.assertEqual(job.metadata.get('spider'), self.spidername)
+            self.assertEqual(job.metadata.get('foo'), t)
+
+        # test "startts/endts" parameters
+        # endts is not inclusive
+        # so we should get the 2 in the middle out of 4
+        jobs = list(jobq.list(startts=timestamps[2], endts=timestamps[0]))
+        self.assertEqual(len(jobs), 2)
+        for i, t in enumerate(foo_bars[1:3]):
+            job = self.hsclient.get_job(job_ids[i])
+            self.assertEqual(job.metadata.get('state'), u'finished')
+            self.assertEqual(job.metadata.get('spider'), self.spidername)
+            self.assertEqual(job.metadata.get('foo'), t)
+
     def _assert_queue(self, qname, jobs):
         summary = self.project.jobq.summary(qname, spiderid=self.spiderid)
         self.assertEqual(summary['name'], qname)
