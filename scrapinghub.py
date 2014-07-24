@@ -141,7 +141,7 @@ class Connection(object):
             except KeyError:
                 raise APIError("JSON response does not contain status")
         else:  # jl
-            return (json.loads(line.decode()) for line in response.iter_lines())
+            return (json.loads(line.decode('utf-8')) for line in response.iter_lines())
 
     ##
     ## public methods
