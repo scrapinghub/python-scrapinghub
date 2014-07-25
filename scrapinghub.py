@@ -10,6 +10,11 @@ import socket
 import time
 import warnings
 
+#python2 and python3 compatibility
+try:
+    range = xrange
+except NameError:
+    pass
 
 __all__ = ["APIError", "Connection"]
 __version__ = '1.6.0'
@@ -324,7 +329,7 @@ class Job(RequestProxyMixin):
             params['count'] = count
 
         lastexc = None
-        for attempt in list(range(self.MAX_RETRIES)):
+        for attempt in range(self.MAX_RETRIES):
             retrieved = 0
             try:
                 for item in self._get('items', 'jl', params=params):
