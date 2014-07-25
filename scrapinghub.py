@@ -17,7 +17,7 @@ except NameError:
     pass
 
 __all__ = ["APIError", "Connection"]
-__version__ = '1.6.2'
+__version__ = '1.7.0'
 
 logger = logging.getLogger('scrapinghub')
 
