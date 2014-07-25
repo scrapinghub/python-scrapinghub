@@ -242,7 +242,7 @@ class JobSet(RequestProxyMixin):
         self._jobs = None
 
     def __repr__(self):
-        params = ', '.join("{0}={1}".format(*i) for i in list(self.params.items()))
+        params = ', '.join("{0}={1}".format(*i) for i in self.params.items())
         return "JobSet({0.project!r}, {1})".format(self, params)
 
     def __iter__(self):
