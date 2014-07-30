@@ -20,6 +20,10 @@ class JobQ(ResourceType):
         jobparams['spider'] = spider
         try:
             for o in self.apipost('push', jl=jobparams):
+                if 'error' in o:
+                    if 'Active job' in o['error']:
+                        raise DuplicateJobError()
+                    raise HTTPError()
                 return o
         except HTTPError as exc:
             if exc.response.status_code == 409:
