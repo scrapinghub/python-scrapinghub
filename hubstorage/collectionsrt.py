@@ -61,9 +61,6 @@ class Collections(DownloadableResource):
     def count(self, _type, _name, **params):
         return self._batch('GET', (_type, _name, 'count'), 'count', **params)
 
-    def delete_all(self, _type, _name, **params):
-        return self._batch('DELETE', (_type, _name), 'deleted', **params)
-
     def _batch(self, method, path, total_param, progress=None, **params):
         total = 0
         getparams = dict(params)
@@ -110,9 +107,6 @@ class Collection(object):
 
     def delete(self, *args, **kwargs):
         return self._collections.delete(self.coltype, self.colname, *args, **kwargs)
-
-    def delete_all(self, *args, **kwargs):
-        return self._collections.delete_all(self.coltype, self.colname, *args, **kwargs)
 
     def count(self, *args, **kwargs):
         return self._collections.count(self.coltype, self.colname, *args, **kwargs)
