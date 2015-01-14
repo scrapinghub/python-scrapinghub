@@ -106,5 +106,5 @@ To delete several jobs (``JobSet`` also supports the ``update()`` method)::
 
     >>> project.jobs(state='finished').delete()
 
-.. _Scrapinghub API: http://panel.scrapinghub.com/help/api.html
+.. _Scrapinghub API: http://doc.scrapinghub.com/api.html
 .. _Requests: http://docs.python-requests.org/
