@@ -10,6 +10,13 @@ import socket
 import time
 import warnings
 
+try:
+    # For Python 2
+    import httplib
+except ImportError:
+    # For Python 3
+    import http.client as httplib
+
 #python2 and python3 compatibility
 try:
     range = xrange
@@ -336,7 +343,7 @@ class Job(RequestProxyMixin):
                     yield item
                     retrieved += 1
                 break
-            except (ValueError, socket.error, requests.RequestException) as exc:
+            except (ValueError, socket.error, requests.RequestException, httplib.HTTPException) as exc:
                 lastexc = exc
                 params['offset'] += retrieved
                 if 'count' in params:
