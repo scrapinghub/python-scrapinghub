@@ -23,10 +23,10 @@ class JobQ(ResourceType):
                 if 'error' in o:
                     if 'Active job' in o['error']:
                         raise DuplicateJobError()
-                    raise HTTPError()
+                    raise HTTPError(o['error'])
                 return o
         except HTTPError as exc:
-            if exc.response.status_code == 409:
+            if exc.response and exc.response.status_code == 409:
                 raise DuplicateJobError()
             raise
 
