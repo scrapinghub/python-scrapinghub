@@ -33,9 +33,21 @@ class BatchUploaderTest(HSTestCase):
     def test_writer_maxitemsize(self):
         job, w = self._job_and_writer()
         m = w.maxitemsize
-        self.assertRaises(ValueTooLarge, w.write, {'b': 'x' * m})
-        self.assertRaises(ValueTooLarge, w.write, {'b'*m: 'x'})
-        self.assertRaises(ValueTooLarge, w.write, {'b'*(m/2): 'x'*(m/2)})
+        self.assertRaisesRegexp(
+            ValueTooLarge,
+            'Value exceeds max encoded size of 1048576 bytes:'
+            ' \'{"b": "x+\\.\\.\\.\'',
+            w.write, {'b': 'x' * m})
+        self.assertRaisesRegexp(
+            ValueTooLarge,
+            'Value exceeds max encoded size of 1048576 bytes:'
+            ' \'{"b+\\.\\.\\.\'',
+            w.write, {'b'*m: 'x'})
+        self.assertRaisesRegexp(
+            ValueTooLarge,
+            'Value exceeds max encoded size of 1048576 bytes:'
+            ' \'{"b+\\.\\.\\.\'',
+            w.write, {'b'*(m/2): 'x'*(m/2)})
 
     def test_writer_contentencoding(self):
         for ce in ('identity', 'gzip'):

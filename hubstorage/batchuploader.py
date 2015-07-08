@@ -189,6 +189,8 @@ class ValueTooLarge(ValueError):
 
 
 class _BatchWriter(object):
+    #: Truncate overly big items to that many bytes for the error message.
+    ERRMSG_DATA_TRUNCATION_LEN = 1024
 
     def __init__(self, url, start, auth, size, interval, qsize,
                  maxitemsize, content_encoding, uploader, callback=None):
@@ -211,8 +213,10 @@ class _BatchWriter(object):
         assert not self.closed, 'attempting writes to a closed writer'
         data = jsonencode(item)
         if len(data) > self.maxitemsize:
-            raise ValueTooLarge('value exceeds max encoded size of {} bytes'\
-                                .format(self.maxitemsize))
+            truncated_data = data[:self.ERRMSG_DATA_TRUNCATION_LEN] + "..."
+            raise ValueTooLarge(
+                'Value exceeds max encoded size of {} bytes: {!r}'
+                .format(self.maxitemsize, truncated_data))
 
         self.itemsq.put(data)
         if self.itemsq.full():
