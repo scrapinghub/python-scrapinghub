@@ -22,7 +22,7 @@ class JobQ(ResourceType):
             for o in self.apipost('push', jl=jobparams):
                 if 'error' in o:
                     if 'Active job' in o['error']:
-                        raise DuplicateJobError()
+                        raise DuplicateJobError(o['error'])
                     raise HTTPError(o['error'])
                 return o
         except HTTPError as exc:
