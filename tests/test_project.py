@@ -37,10 +37,10 @@ class ProjectTest(HSTestCase):
         j2 = p.push_job(self.spidername, testid=1)
         j3 = p.push_job(self.spidername, testid=2)
         # global list must list at least one job
-        self.assertTrue(list(p.get_jobs(count=1)))
+        self.assertTrue(list(p.get_jobs(count=1, state='pending')))
         # List all jobs for test spider
-        r = list(p.get_jobs(self.spiderid))
-        self.assertEqual([j.key for j in r], [j1.key, j2.key, j3.key])
+        r = list(p.get_jobs(spider=self.spidername, state='pending'))
+        self.assertEqual([j.key for j in r], [j3.key, j2.key, j1.key])
 
     def test_push_job(self):
         job = self.project.push_job(self.spidername, state='running',
@@ -112,7 +112,6 @@ class ProjectTest(HSTestCase):
         jobauth = job.auth
         del job
 
-        self.assertTrue(list(project.jobs.list(self.spiderid, count=1)))
         self.assertTrue(list(project.items.list(self.spiderid, count=1)))
         self.assertTrue(list(project.logs.list(self.spiderid, count=1)))
         self.assertTrue(list(project.samples.list(self.spiderid, count=1)))
@@ -126,14 +125,14 @@ class ProjectTest(HSTestCase):
         settings.pop('botgroups', None)  # ignore testsuite botgroups
         self.assertEqual(settings, {})
         project.settings['created'] = created = millitime()
-        project.settings['botgroups'] = ['g1', 'g2']
+        project.settings['botgroups'] = ['g1']
         project.settings.save()
         self.assertEqual(project.settings.liveget('created'), created)
-        self.assertEqual(project.settings.liveget('botgroups'), ['g1', 'g2'])
+        self.assertEqual(project.settings.liveget('botgroups'), ['g1'])
         project.settings.expire()
         self.assertEqual(dict(project.settings), {
             'created': created,
-            'botgroups': ['g1', 'g2'],
+            'botgroups': ['g1'],
         })
 
     def test_requests(self):

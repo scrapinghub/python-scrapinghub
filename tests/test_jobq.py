@@ -75,14 +75,12 @@ class JobqTest(HSTestCase):
         qj = jobq.push(self.spidername)
         nj = jobq.start()
         self.assertTrue(nj.pop('pending_time', None), nj)
-        nj.pop('running_time', None)
-        self.assertEqual(nj, {
-            u'auth': qj['auth'],
-            u'key': qj['key'],
-            u'priority': jobq.PRIO_NORMAL,
-            u'spider': self.spidername,
-            u'state': u'running',
-        })
+        self.assertTrue(nj.pop('running_time', None), nj)
+        self.assertTrue(nj.pop('auth', None), nj)
+        self.assertEqual(nj[u'key'], qj['key'])
+        self.assertEqual(nj[u'spider'], self.spidername)
+        self.assertEqual(nj[u'state'], u'running')
+        self.assertEqual(nj[u'priority'], jobq.PRIO_NORMAL)
 
     def test_startjob_with_extras(self):
         jobq = self.project.jobq
@@ -101,6 +99,7 @@ class JobqTest(HSTestCase):
         qj = jobq.push(self.spidername, **pushextras)
         startextras = dict(('s_' + k, v) for k, v in pushextras.iteritems())
         nj = jobq.start(**startextras)
+        self.assertEqual(qj['key'], nj['key'])
         for k, v in dict(pushextras, **startextras).iteritems():
             if type(v) is float:
                 self.assertAlmostEqual(nj.get(k), v)
@@ -256,15 +255,13 @@ class JobqTest(HSTestCase):
                          [j['key'] for j in jobs])
 
     def test_simple_botgroups(self):
-        self.project.settings['botgroups'] = ['g1', 'g2']
+        self.project.settings['botgroups'] = ['g1']
         self.project.settings.save()
         pq = self.project.jobq
         hq = self.hsclient.jobq
         q1 = pq.push(self.spidername)
-        q2 = pq.push(self.spidername)
         self.assertEqual(hq.start(botgroup='g3'), None)
         self.assertEqual(apipoll(hq.start, botgroup='g1')['key'], q1['key'])
-        self.assertEqual(apipoll(hq.start, botgroup='g2')['key'], q2['key'])
 
     @unittest.skipUnless(EXCLUSIVE, "test requires exclusive"
         " (without any active bots) access to HS. Set EXCLUSIVE_STORAGE"

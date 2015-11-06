@@ -42,16 +42,15 @@ class Project(object):
         kwargs.setdefault('auth', self.auth)
         return self.client.get_job(key, *args, **kwargs)
 
-    def get_jobs(self, _key=None, **kwargs):
-        for metadata in self.jobs.list(_key, meta='_key', **kwargs):
-            key = metadata.pop('_key')
+    def get_jobs(self, **kwargs):
+        for metadata in self.jobq.list(**kwargs):
+            key = metadata.pop('key')
             yield self.get_job(key, metadata=metadata)
 
     def push_job(self, spidername, **jobparams):
         data = self.jobq.push(spidername, **jobparams)
         key = data['key']
-        jobauth = (key, data['auth'])
-        return Job(self.client, key, auth=self.auth, jobauth=jobauth)
+        return Job(self.client, key, auth=self.auth)
 
     def start_job(self, **startparams):
         return self.client.start_job(projectid=self.projectid, auth=self.auth,
