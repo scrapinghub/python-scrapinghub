@@ -9,10 +9,10 @@ class Job(object):
 
     def __init__(self, client, key, auth=None, jobauth=None, metadata=None):
         self.key = urlpathjoin(key)
-        assert len(self.key.split('/')) == 3, 'Jobkey must be projectid/spiderid/jobid: %s' % self.key
-        self._jobauth = jobauth
-        # It can't use self.jobauth because metadata is not ready yet
-        self.auth = jobauth or auth
+        assert len(self.key.split('/')) == 3, \
+            'Jobkey must be projectid/spiderid/jobid: %s' % self.key
+        self.jobauth = jobauth
+        self.auth = self.jobauth or auth
         self.metadata = JobMeta(client, self.key, self.auth, cached=metadata)
         self.items = Items(client, self.key, self.auth)
         self.logs = Logs(client, self.key, self.auth)
@@ -28,13 +28,6 @@ class Job(object):
         # now wait for all writers to close together
         for w in wl:
             w.close(block=True)
-
-    @property
-    def jobauth(self):
-        if self._jobauth is None:
-            token = self.metadata.authtoken()
-            self._jobauth = (self.key, token)
-        return self._jobauth
 
     def _update_metadata(self, *args, **kwargs):
         self.metadata.update(*args, **kwargs)
