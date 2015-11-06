@@ -1,19 +1,9 @@
 language: python
 python: 2.7
-env:
-  global:
-  - secure: VhSfVnpuAeOqaQ/T8mIZBsFFpGtYmBGQTsZ7puX0vlvaLhEZ4w5vGFqFnlQp8cP6ubwszRoMrsQa8KtLptkQoqSM1Q8O6NY1oeoqM2uGzhVX/0Pgf47Tq83miMEZqq9xXePWJqdzcDSTIzJZr+AUCajl2j33RlaDM8VsTu75Wsk=
-  matrix:
-  - TOXENV=py27
-  - TOXENV=pypy
-  - TOXENV=py33
-matrix:
-  allow_failures:
-  - env: TOXENV=py33
-install:
-- "./.travis-workarounds.sh"
-- pip install -U tox
-script: tox
+sudo: false
+
+script: true
+
 deploy:
   provider: pypi
   distributions: "sdist bdist_wheel"
@@ -22,6 +12,5 @@ deploy:
     secure: Pp3ar+DLDDGJ217nE90xj1EoW2BBjxcjmMbvQs01MZ/Be+ovefrx13OnLALN6mDr/b4FCpPSjKVPWrDiIuSR+HUP8Wn1iY3IwFr9fdS1ZeNkkLy/ZHd6osiRN0kDqgYbLpLp4tJVQ2NSWrGVfNmYcMgJvvqq+nd3uEx4Taje0cQ=
   on:
     tags: true
-    all_branches: true
+    branch: master
     repo: scrapinghub/python-hubstorage
-    condition: $TOXENV = py27
