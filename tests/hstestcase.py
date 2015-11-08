@@ -51,10 +51,6 @@ class HSTestCase(unittest.TestCase):
                 for summary in info['summary']:
                     cls._remove_job(summary['key'])
 
-        # Cleanup jobs created directly with jobsmeta instead of jobq
-        for job in project.get_jobs():
-            cls._delete_job(job.key)
-
     @classmethod
     def _remove_job(cls, jobkey):
         cls.project.jobq.delete(jobkey)

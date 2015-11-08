@@ -42,8 +42,13 @@ class JobQ(ResourceType):
         r = list(self.apiget((spiderid, 'summary', _queuename), params=params))
         return (r and r[0] or None) if _queuename else r
 
-    def list(self, count=None, stop=None, startts=None, endts=None):
+    def list(self, spider=None, count=None, stop=None, state=None,
+             startts=None, endts=None):
         params = {}
+        if state is not None:
+            params['state'] = state
+        if spider is not None:
+            params['spider'] = spider
         if count is not None:
             params['count'] = count
         if stop is not None:
