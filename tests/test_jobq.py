@@ -186,64 +186,62 @@ class JobqTest(HSTestCase):
         self._assert_queue('running', [])
         self._assert_queue('finished', [])
 
-    @unittest.expectedFailure
-    def test_list(self):
+    def test_list_with_state(self):
         jobq = self.project.jobq
-        j1 = jobq.push(self.spidername, state='finished', foo='bar1')
-        j2 = jobq.push(self.spidername, state='finished', foo='bar2')
-        j3 = jobq.push(self.spidername, state='finished', foo='bar3')
-        j4 = jobq.push(self.spidername, state='finished', foo='bar4')
-        j5 = jobq.push(self.spidername, state='running', foo='bar5')
-        j6 = jobq.push(self.spidername, state='pending', foo='bar6')
+        j1 = jobq.push(self.spidername, state='finished')
+        j2 = jobq.push(self.spidername, state='running')
+        j3 = jobq.push(self.spidername, state='pending')
+        j4 = jobq.push(self.spidername, state='finished')
+        # Only finished jobs by default
+        assert _keys(jobq.list()) == _keys([j4, j1])
+        assert _keys(jobq.list(state='finished')) == _keys([j4, j1])
+        assert _keys(jobq.list(state='running')) == _keys([j2])
+        assert _keys(jobq.list(state=['running', 'pending'])) == _keys([j3, j2])
 
-        jobs = list(jobq.list())
-
-        job_ids = [j['key'] for j in jobs]
-        timestamps = [j['ts'] for j in jobs]
-        foo_bars = ['bar4', 'bar3', 'bar2', 'bar1']
-
-        # check we get only finished jobs,
-        # and in reverse order
-        self.assertEqual(len(jobs), len(foo_bars))
-        for i, t in enumerate(foo_bars):
-            job = self.hsclient.get_job(job_ids[i])
-            self.assertEqual(job.metadata.get('state'), u'finished')
-            self.assertEqual(job.metadata.get('spider'), self.spidername)
-            self.assertEqual(job.metadata.get('foo'), t)
-
-        # check that jobs are returned in DESCending timestamp order
-        self.assertListEqual(sorted(timestamps, reverse=True), timestamps)
-
-        # test "count" parameter:
+    def test_list_with_count(self):
+        jobq = self.project.jobq
+        j1 = jobq.push(self.spidername, state='finished')  # NOQA
+        j2 = jobq.push(self.spidername, state='finished')  # NOQA
+        j3 = jobq.push(self.spidername, state='finished')
+        j4 = jobq.push(self.spidername, state='finished')
         # fetch only the 2 most recent jobs
-        jobs = list(jobq.list(count=2))
-        self.assertEqual(len(jobs), 2)
-        for i, t in enumerate(foo_bars[:2]):
-            job = self.hsclient.get_job(job_ids[i])
-            self.assertEqual(job.metadata.get('state'), u'finished')
-            self.assertEqual(job.metadata.get('spider'), self.spidername)
-            self.assertEqual(job.metadata.get('foo'), t)
+        assert _keys(jobq.list(count=2)) == _keys([j4, j3])
 
+    def test_list_with_stop(self):
+        jobq = self.project.jobq
+        j1 = jobq.push(self.spidername, state='finished')
+        j2 = jobq.push(self.spidername, state='finished')
+        j3 = jobq.push(self.spidername, state='finished')
+        j4 = jobq.push(self.spidername, state='finished')
         # test "stop" parameter
         # we should stop before the 4th finished job
-        jobs = list(jobq.list(stop=job_ids[3]))
-        self.assertEqual(len(jobs), 3)
-        for i, t in enumerate(foo_bars[:3]):
-            job = self.hsclient.get_job(job_ids[i])
-            self.assertEqual(job.metadata.get('state'), u'finished')
-            self.assertEqual(job.metadata.get('spider'), self.spidername)
-            self.assertEqual(job.metadata.get('foo'), t)
+        assert _keys(jobq.list(stop=j1['key'])) == _keys([j4, j3, j2])
 
+    def test_list_with_tags(self):
+        jobq = self.project.jobq
+        j1 = jobq.push(self.spidername, state='finished', tags=['t1'])
+        j2 = jobq.push(self.spidername, state='finished', tags=['t2'])
+        j3 = jobq.push(self.spidername, state='finished', tags=['t1', 't2'])
+        j4 = jobq.push(self.spidername, state='finished')
+        assert _keys(jobq.list(has_tag='t1')) == _keys([j3, j1])
+        assert _keys(jobq.list(has_tag=['t2', 't1'])) == _keys([j3, j2, j1])
+        assert _keys(jobq.list(has_tag='t2', lacks_tag='t1')) == _keys([j2])
+        assert _keys(jobq.list(lacks_tag=['t1', 't2'])) == _keys([j4])
+
+    # endts is not implemented
+    @unittest.expectedFailure
+    def test_list_with_startts_endts(self):
+        jobq = self.project.jobq
+        j1 = jobq.push(self.spidername, state='finished')  # NOQA
+        j2 = jobq.push(self.spidername, state='finished')
+        j3 = jobq.push(self.spidername, state='finished')
+        j4 = jobq.push(self.spidername, state='finished')  # NOQA
         # test "startts/endts" parameters
         # endts is not inclusive
         # so we should get the 2 in the middle out of 4
-        jobs = list(jobq.list(startts=timestamps[2], endts=timestamps[0]))
-        self.assertEqual(len(jobs), 2)
-        for i, t in enumerate(foo_bars[1:3]):
-            job = self.hsclient.get_job(job_ids[i])
-            self.assertEqual(job.metadata.get('state'), u'finished')
-            self.assertEqual(job.metadata.get('spider'), self.spidername)
-            self.assertEqual(job.metadata.get('foo'), t)
+        timestamps = [j['ts'] for j in jobq.list()]
+        jobs = jobq.list(startts=timestamps[2], endts=timestamps[0])
+        assert _keys(jobs) == _keys([j3, j2])
 
     def _assert_queue(self, qname, jobs):
         summary = self.project.jobq.summary(qname, spiderid=self.spiderid)
@@ -320,3 +318,7 @@ class JobqTest(HSTestCase):
                         ['running', 'running', 'running'])
         self.assertTrue([x['prevstate'] for x in jobq.delete(ids)],
                         ['finished', 'finished', 'finished'])
+
+
+def _keys(lst):
+    return [x['key'] for x in lst]

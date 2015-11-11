@@ -1,3 +1,4 @@
+import json
 from requests.exceptions import HTTPError
 from .resourcetype import ResourceType
 
@@ -43,8 +44,11 @@ class JobQ(ResourceType):
         return (r and r[0] or None) if _queuename else r
 
     def list(self, spider=None, count=None, stop=None, state=None,
-             startts=None, endts=None):
-        params = {}
+             has_tag=None, lacks_tag=None, startts=None, endts=None,
+             **params):
+        if 'filter' in params:
+            return self._legacy_list_with_filter(params)
+
         if state is not None:
             params['state'] = state
         if spider is not None:
@@ -57,7 +61,32 @@ class JobQ(ResourceType):
             params['startts'] = startts
         if endts is not None:
             params['endts'] = endts
+        if has_tag is not None:
+            params['has_tag'] = has_tag
+        if lacks_tag is not None:
+            params['lacks_tag'] = lacks_tag
         return self.apiget(('list',), params=params)
+
+    def _legacy_list_with_filter(self, params):
+        only_finished_outcome = False
+        for row in params['filter']:
+            field, matchdecider, value = json.loads(row)
+            if field == 'tags' and matchdecider == 'haselement':
+                params['has_tag'] = value
+            if field == 'tags' and matchdecider == 'hasnotelement':
+                params['lacks_tag'] = value
+            if field == 'state' and matchdecider == '=':
+                params['state'] = value
+            if field == 'spider' and matchdecider == '=':
+                params['spider'] = value
+            if field == 'close_reason' and value == ['finished']:
+                only_finished_outcome = True
+                params.setdefault('jobmeta', []).append('close_reason')
+
+        jobs = self.apiget(('list',), params=params)
+        if only_finished_outcome:
+            return (x for x in jobs if x.get('close_reason') == 'finished')
+        return jobs
 
     def start(self, job=None, **start_params):
         """Start a new job

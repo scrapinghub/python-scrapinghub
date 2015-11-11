@@ -8,8 +8,8 @@ class HSTestCase(unittest.TestCase):
 
     projectid = str(random.randint(2222000, 2223000))
     spidername = 'hs-test-spider'
-    endpoint = os.getenv('HS_ENDPOINT', 'http://localhost:8003')
-    auth = os.getenv('HS_AUTH', 'useavalidkey')
+    endpoint = os.getenv('HS_ENDPOINT', 'http://storage.vm.scrapinghub.com')
+    auth = os.getenv('HS_AUTH', 'f' * 32)
     frontier = 'test'
     slot = 'site.com'
     testbotgroup = 'python-hubstorage-test'
