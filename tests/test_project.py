@@ -1,6 +1,7 @@
 """
 Test Project
 """
+import json
 from random import randint, random
 from requests.exceptions import HTTPError
 from hubstorage import HubstorageClient
@@ -41,6 +42,26 @@ class ProjectTest(HSTestCase):
         # List all jobs for test spider
         r = list(p.get_jobs(spider=self.spidername, state='pending'))
         self.assertEqual([j.key for j in r], [j3.key, j2.key, j1.key])
+
+    def test_get_jobs_with_legacy_filter(self):
+        p = self.project
+        j1 = p.push_job(self.spidername, state='finished',
+                        close_reason='finished', tags=['t2'])
+        j2 = p.push_job(self.spidername, state='finished',
+                        close_reason='finished', tags=['t1'])
+        j3 = p.push_job(self.spidername, state='pending')
+        j4 = p.push_job(self.spidername, state='finished',
+                        close_reason='failed', tags=['t1'])
+        j5 = p.push_job(self.spidername + 'skip', state='finished',
+                        close_reason='failed', tags=['t1'])
+
+        filters = [['spider', '=', [self.spidername]],
+                   ['state', '=', ['finished']],
+                   ['close_reason', '=', ['finished']],
+                   ['tags', 'haselement', ['t1']],
+                   ['tags', 'hasnotelement', ['t2']]]
+        jobs = p.get_jobs(filter=[json.dumps(x) for x in filters])
+        assert [j.key for j in jobs] == [j2.key], jobs
 
     def test_push_job(self):
         job = self.project.push_job(self.spidername, state='running',
