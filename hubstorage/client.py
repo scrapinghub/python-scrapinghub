@@ -67,7 +67,7 @@ class HubstorageClient(object):
         jobdata = jobq.start(**startparams)
         if jobdata:
             jobkey = jobdata.pop('key')
-            jobauth = (jobkey, jobdata.pop('auth'))
+            jobauth = (jobkey, jobdata['auth'])
             return self.get_job(jobkey, jobauth=jobauth, metadata=jobdata)
 
     def get_project(self, *args, **kwargs):
