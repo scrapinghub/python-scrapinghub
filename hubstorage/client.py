@@ -1,8 +1,10 @@
 """
 High level Hubstorage client
 """
+import logging
 import pkgutil
-from requests import session, adapters
+from requests import session, adapters, HTTPError
+from retrying import Retrying
 from .utils import xauth, urlpathjoin
 from .project import Project
 from .job import Job
@@ -14,6 +16,19 @@ __all__ = ["HubstorageClient"]
 __version__ = pkgutil.get_data('hubstorage', 'VERSION').strip()
 
 
+logger = logging.getLogger('HubstorageClient')
+
+_ERROR_CODES_TO_RETRY = (429, 503, 504)
+
+
+def _hc_retry_on_exception(err):
+    """Callback used by the client to restrict the retry to acceptable errors"""
+    if (isinstance(err, HTTPError)
+        and err.response.status_code in _ERROR_CODES_TO_RETRY):
+        logger.warning("Server failed with %d status code, retrying (maybe)" % (err.response.status_code,))
+        return True
+    return False
+
 class HubstorageClient(object):
 
     DEFAULT_ENDPOINT = 'http://storage.scrapinghub.com/'
@@ -21,15 +36,27 @@ class HubstorageClient(object):
     DEFAULT_TIMEOUT = 60.0
 
     def __init__(self, auth=None, endpoint=None, connection_timeout=None,
-            max_retries=0):
+            max_retries=3):
         self.auth = xauth(auth)
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
         self.connection_timeout = connection_timeout or self.DEFAULT_TIMEOUT
         self.session = self._create_session()
+        self.retrier = Retrying(stop_max_attempt_number=max_retries + 1, retry_on_exception=_hc_retry_on_exception)
         self.jobq = JobQ(self, None)
         self.projects = Projects(self, None)
         self.root = ResourceType(self, None)
         self._batchuploader = None
+
+    def request(self, *args, **kwargs):
+        def invoke_req():
+            r = self.session.request(*args, **kwargs)
+
+            if not r.ok:
+                logger.debug('%s: %s', r, r.content)
+            r.raise_for_status()
+            return r
+
+        return self.retrier.call(invoke_req)
 
     def _create_session(self):
         s = session()

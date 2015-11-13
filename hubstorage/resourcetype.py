@@ -24,10 +24,7 @@ class ResourceType(object):
         kwargs.setdefault('timeout', self.client.connection_timeout)
         if 'jl' in kwargs:
             kwargs['data'] = jlencode(kwargs.pop('jl'))
-        r = self.client.session.request(**kwargs)
-        if not r.ok:
-            logger.debug('%s: %s', r, r.content)
-        r.raise_for_status()
+        r = self.client.request(**kwargs)
         return r.iter_lines()
 
     def apirequest(self, _path=None, **kwargs):
