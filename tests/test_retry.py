@@ -10,9 +10,53 @@ import re
 
 GET = responses.GET
 POST = responses.POST
+DELETE = responses.DELETE
 
 
 class RetryTest(HSTestCase):
+    def test_delete_on_hubstorage_api_does_not_404(self):
+        # NOTE: The current Hubstorage API does not raise 404 errors on deleting resources that do not exist,
+        #       Thus the retry policy does not catch 404 errors when retrying deletes (simplify implementation A LOT).
+        #       This test checks that this assumption holds.
+
+        # Check frontier delete
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=0)
+
+        project = client.get_project(projectid=self.projectid)
+        result = project.frontier.delete_slot('frontier_non_existing', 'slot_non_existing')
+
+        # Check metadata delete
+        job = client.push_job(self.projectid, self.spidername)
+        job.metadata['foo'] = 'bar'  # Add then delete key, this will trigger an api delete for item foo
+        del job.metadata['foo']
+        job.metadata.save()
+
+        self.assertTrue(True, "No error have been triggered by calling a delete on resources that do not exist")
+
+    @responses.activate
+    def test_delete_requests_are_retried(self):
+        # Prepare
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+        job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
+        callback_getpost, attempts_count_getpost = self.make_request_callback(0, job_metadata)
+        callback_delete, attempts_count_delete = self.make_request_callback(2, job_metadata)
+
+        self.mock_api(method=GET, callback=callback_getpost)
+        self.mock_api(method=POST, callback=callback_getpost)
+        self.mock_api(method=DELETE, callback=callback_delete)
+
+        # Act
+        err = None
+
+        job = client.get_job('%s/%s/%s' % (self.projectid, self.spiderid, 42))
+        job.metadata['foo'] = 'bar'
+        del job.metadata['foo']
+        job.metadata.save()
+
+        # Assert
+        self.assertIsNone(err, None)
+        self.assertEqual(attempts_count_delete[0], 3)
+
     @responses.activate
     def test_metadata_save_does_retry(self):
         # Prepare
