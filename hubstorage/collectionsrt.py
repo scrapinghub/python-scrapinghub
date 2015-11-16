@@ -21,7 +21,7 @@ class Collections(DownloadableResource):
 
     def set(self, _type, _name, _values):
         try:
-            return self.apipost((_type, _name), jl=_values)
+            return self.apipost((_type, _name), is_idempotent=True, jl=_values)
         except HTTPError as exc:
             if exc.response.status_code in (400, 413):
                 raise ValueError(exc.response.text)
@@ -29,7 +29,7 @@ class Collections(DownloadableResource):
                 raise
 
     def delete(self, _type, _name, _keys):
-        return self.apipost((_type, _name, 'deleted'), jl=_keys)
+        return self.apipost((_type, _name, 'deleted'), is_idempotent=True, jl=_keys)
 
     def iter_json(self, _type, _name, requests_params=None, **apiparams):
         return DownloadableResource.iter_json(self, (_type, _name),
