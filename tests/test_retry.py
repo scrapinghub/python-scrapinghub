@@ -20,17 +20,22 @@ class RetryTest(HSTestCase):
         #       Thus the retry policy does not catch 404 errors when retrying deletes (simplify implementation A LOT).
         #       This test checks that this assumption holds.
 
-        # Check frontier delete
         client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=0)
-
         project = client.get_project(projectid=self.projectid)
-        result = project.frontier.delete_slot('frontier_non_existing', 'slot_non_existing')
+
+        # Check frontier delete
+        project.frontier.delete_slot('frontier_non_existing', 'slot_non_existing')
 
         # Check metadata delete
         job = client.push_job(self.projectid, self.spidername)
         job.metadata['foo'] = 'bar'  # Add then delete key, this will trigger an api delete for item foo
         del job.metadata['foo']
         job.metadata.save()
+
+        # Check collections delete
+        store = project.collections.new_store('foo')
+        store.set({'_key': 'foo'})
+        store.delete('bar')
 
         self.assertTrue(True, "No error have been triggered by calling a delete on resources that do not exist")
 
