@@ -1,9 +1,10 @@
 """
 High level Hubstorage client
 """
+from httplib import BadStatusLine
 import logging
 import pkgutil
-from requests import session, adapters, HTTPError
+from requests import session, adapters, HTTPError, ConnectionError
 from retrying import Retrying
 from .utils import xauth, urlpathjoin
 from .project import Project
@@ -23,10 +24,15 @@ _ERROR_CODES_TO_RETRY = (429, 503, 504)
 
 def _hc_retry_on_exception(err):
     """Callback used by the client to restrict the retry to acceptable errors"""
-    if (isinstance(err, HTTPError)
-        and err.response.status_code in _ERROR_CODES_TO_RETRY):
+    if (isinstance(err, HTTPError) and err.response.status_code in _ERROR_CODES_TO_RETRY):
         logger.warning("Server failed with %d status code, retrying (maybe)" % (err.response.status_code,))
         return True
+
+    if (isinstance(err, ConnectionError) and err.args[0] == 'Connection aborted.' and
+            isinstance(err.args[1], BadStatusLine) and err.args[1][0] == repr('')):
+        logger.warning("Protocol failed with BadStatusLine, retrying (maybe)")
+        return True
+
     return False
 
 class HubstorageClient(object):

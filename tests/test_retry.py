@@ -1,7 +1,8 @@
 """
 Test Retry Policy
 """
-from requests import HTTPError
+from httplib import BadStatusLine
+from requests import HTTPError, ConnectionError
 from hstestcase import HSTestCase
 from hubstorage import HubstorageClient
 import responses
@@ -32,6 +33,34 @@ class RetryTest(HSTestCase):
         job.metadata.save()
 
         self.assertTrue(True, "No error have been triggered by calling a delete on resources that do not exist")
+
+    @responses.activate
+    def test_retrier_catches_badstatusline_and_429(self):
+        # Prepare
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+        job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
+
+        attempts_count = [0]  # use a list for nonlocal mutability used in request_callback
+
+        def request_callback(request):
+            attempts_count[0] += 1
+
+            if attempts_count[0] <= 2:
+                raise ConnectionError("Connection aborted.", BadStatusLine("''"))
+            if attempts_count[0] == 3:
+                return (429, {}, {})
+            else:
+                resp_body = dict(job_metadata)
+                return (200, {}, json.dumps(resp_body))
+
+        self.mock_api(callback=request_callback)
+
+        # Act
+        job = client.get_job('%s/%s/%s' % (self.projectid, self.spiderid, 42))
+
+        # Assert
+        self.assertEqual(dict(job_metadata), dict(job.metadata))
+        self.assertEqual(attempts_count[0], 4)
 
     @responses.activate
     def test_delete_requests_are_retried(self):
