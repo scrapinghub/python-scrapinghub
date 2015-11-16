@@ -68,6 +68,27 @@ class RetryTest(HSTestCase):
         self.assertEqual(attempts_count[0], 4)
 
     @responses.activate
+    def test_collection_store_and_delete_are_retried(self):
+        # Prepare
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+
+        callback_post, attempts_count_post = self.make_request_callback(2, [])
+        callback_delete, attempts_count_delete = self.make_request_callback(2, [])
+
+        self.mock_api(method=POST, callback=callback_delete, url_match='/.*/deleted')
+        self.mock_api(method=POST, callback=callback_post)  # /!\ default regexp matches all paths, has to be added last
+
+        # Act
+        project = client.get_project(self.projectid)
+        store = project.collections.new_store('foo')
+        store.set({'_key': 'bar', 'content': 'value'})
+        store.delete('baz')
+
+        # Assert
+        self.assertEqual(attempts_count_post[0], 3)
+        self.assertEqual(attempts_count_delete[0], 3)
+
+    @responses.activate
     def test_delete_requests_are_retried(self):
         # Prepare
         client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
