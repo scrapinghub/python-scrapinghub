@@ -19,12 +19,19 @@ class ResourceType(object):
         self.url = urlpathjoin(client.endpoint, self.key)
 
     def _iter_lines(self, _path, **kwargs):
+        is_idempotent = kwargs.get('is_idempotent', False) or kwargs['method'] == 'GET'
+
         kwargs['url'] = urlpathjoin(self.url, _path)
         kwargs.setdefault('auth', self.auth)
         kwargs.setdefault('timeout', self.client.connection_timeout)
         if 'jl' in kwargs:
             kwargs['data'] = jlencode(kwargs.pop('jl'))
-        r = self.client.request(**kwargs)
+
+        if is_idempotent:
+            r = self.client.request_idempotent(**kwargs)
+        else:
+            r = self.client.request_nonidempotent(**kwargs)
+
         return r.iter_lines()
 
     def apirequest(self, _path=None, **kwargs):
