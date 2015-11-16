@@ -11,6 +11,37 @@ import re
 
 class RetryTest(HSTestCase):
     @responses.activate
+    def test_metadata_save_does_retry(self):
+        # Prepare
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+        job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
+        callback_get, attempts_count_get = self.make_request_callback(0, job_metadata)
+        callback_post, attempts_count_post = self.make_request_callback(2, job_metadata)
+
+        responses.add_callback(
+            responses.GET, re.compile(self.endpoint + '/.*'),
+            callback=callback_get,
+            content_type='application/json',
+        )
+
+        responses.add_callback(
+            responses.POST, re.compile(self.endpoint + '/.*'),
+            callback=callback_post,
+            content_type='application/json',
+        )
+
+        # Act
+        err = None
+
+        job = client.get_job('%s/%s/%s' % (self.projectid, self.spiderid, 42))
+        job.metadata['foo'] = 'bar'
+        job.metadata.save()
+
+        # Assert
+        self.assertIsNone(err, None)
+        self.assertEqual(attempts_count_post[0], 3)
+
+    @responses.activate
     def test_push_job_does_not_retry(self):
         # Prepare
         client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
