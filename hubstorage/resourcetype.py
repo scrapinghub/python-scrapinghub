@@ -19,7 +19,7 @@ class ResourceType(object):
         self.url = urlpathjoin(client.endpoint, self.key)
 
     def _iter_lines(self, _path, **kwargs):
-        is_idempotent = kwargs.get('is_idempotent', False) or kwargs['method'] == 'GET'
+        is_idempotent = kwargs.pop('is_idempotent', False) or kwargs['method'] == 'GET'
 
         kwargs['url'] = urlpathjoin(self.url, _path)
         kwargs.setdefault('auth', self.auth)
@@ -190,10 +190,11 @@ class MappingResourceType(ResourceType, MutableMapping):
         self._deleted.clear()
         if self._cached:
             if not self.ignore_fields:
-                self.apipost(jl=self._data)
+                self.apipost(jl=self._data, is_idempotent=True)
             else:
                 self.apipost(jl=dict((k, v) for k, v in self._data.iteritems()
-                                     if k not in self.ignore_fields))
+                                     if k not in self.ignore_fields),
+                             is_idempotent=True)
 
     def __getitem__(self, key):
         return self._data[key]
