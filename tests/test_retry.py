@@ -8,6 +8,9 @@ import responses
 import json
 import re
 
+GET = responses.GET
+POST = responses.POST
+
 
 class RetryTest(HSTestCase):
     @responses.activate
@@ -18,17 +21,8 @@ class RetryTest(HSTestCase):
         callback_get, attempts_count_get = self.make_request_callback(0, job_metadata)
         callback_post, attempts_count_post = self.make_request_callback(2, job_metadata)
 
-        responses.add_callback(
-            responses.GET, re.compile(self.endpoint + '/.*'),
-            callback=callback_get,
-            content_type='application/json',
-        )
-
-        responses.add_callback(
-            responses.POST, re.compile(self.endpoint + '/.*'),
-            callback=callback_post,
-            content_type='application/json',
-        )
+        self.mock_api(method=GET, callback=callback_get)
+        self.mock_api(method=POST, callback=callback_post)
 
         # Act
         err = None
@@ -47,11 +41,7 @@ class RetryTest(HSTestCase):
         client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
         callback, attempts_count = self.make_request_callback(2, {'key': '1/2/3'})
 
-        responses.add_callback(
-            responses.POST, re.compile(self.endpoint + '/.*'),
-            callback=callback,
-            content_type='application/json',
-        )
+        self.mock_api(POST, callback=callback)
 
         # Act
         job, err = None, None
@@ -72,11 +62,7 @@ class RetryTest(HSTestCase):
         job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
         callback, attempts_count = self.make_request_callback(2, job_metadata)
 
-        responses.add_callback(
-            responses.GET, re.compile(self.endpoint + '/.*'),
-            callback=callback,
-            content_type='application/json',
-        )
+        self.mock_api(callback=callback)
 
         # Act
         job = client.get_job('%s/%s/%s' % (self.projectid, self.spiderid, 42))
@@ -92,11 +78,7 @@ class RetryTest(HSTestCase):
         job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
         callback, attempts_count = self.make_request_callback(2, job_metadata)
 
-        responses.add_callback(
-            responses.GET, re.compile(self.endpoint + '/.*'),
-            callback=callback,
-            content_type='application/json',
-        )
+        self.mock_api(callback=callback)
 
         # Act
         job, metadata, err = None, None, None
@@ -118,11 +100,7 @@ class RetryTest(HSTestCase):
         job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
         callback, attempts_count = self.make_request_callback(3, job_metadata)
 
-        responses.add_callback(
-            responses.GET, re.compile(self.endpoint + '/.*'),
-            callback=callback,
-            content_type='application/json',
-        )
+        self.mock_api(callback=callback)
 
         # Act
         job, metadata, err = None, None, None
@@ -136,6 +114,21 @@ class RetryTest(HSTestCase):
         self.assertIsNone(metadata, None)
         self.assertEqual(err.response.status_code, 504)
         self.assertEqual(attempts_count[0], 3)
+
+    def mock_api(self, method=GET, callback=None, url_match='/.*'):
+        """
+        Mock an API URL using the responses library.
+
+        Args:
+            method (Optional[str]): The HTTP method to mock. Defaults to responses.GET
+            callback (function(request) -> response):
+            url_match (Optional[str]): The API URL regexp. Defaults to '/.*'.
+        """
+        responses.add_callback(
+            method, re.compile(self.endpoint + url_match),
+            callback=callback,
+            content_type='application/json',
+        )
 
     def make_request_callback(self, timeout_count, body_on_success):
         """
