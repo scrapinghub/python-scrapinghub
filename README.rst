@@ -52,3 +52,10 @@ Example getting job data later::
     [{'title': 'my first item'}]
 
     ...
+
+
+Testing
+-------
+
+Running the tests require the hubstorage backend to be running,
+and the python `responses` library (see `tox.ini`).
