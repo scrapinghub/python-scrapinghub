@@ -47,14 +47,14 @@ class HubstorageClient(object):
         self.root = ResourceType(self, None)
         self._batchuploader = None
 
-    def request_idempotent(self, *args, **kwargs):
+    def request_idempotent(self, **kwargs):
         """
         Execute an HTTP request with the current client session.
 
         Use the retry policy configured in the client.
         """
         def invoke_req():
-            r = self.session.request(*args, **kwargs)
+            r = self.session.request(**kwargs)
 
             if not r.ok:
                 logger.debug('%s: %s', r, r.content)
@@ -63,13 +63,13 @@ class HubstorageClient(object):
 
         return self.retrier.call(invoke_req)
 
-    def request_nonidempotent(self, *args, **kwargs):
+    def request_nonidempotent(self, **kwargs):
         """
         Execute an HTTP request with the current client session
 
         Do not use the retry policy to avoid side-effects.
         """
-        r = self.session.request(*args, **kwargs)
+        r = self.session.request(**kwargs)
 
         if not r.ok:
             logger.debug('%s: %s', r, r.content)
