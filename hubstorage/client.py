@@ -39,7 +39,10 @@ class HubstorageClient(object):
 
     DEFAULT_ENDPOINT = 'http://storage.scrapinghub.com/'
     USERAGENT = 'python-hubstorage/{0}'.format(__version__)
+
     DEFAULT_TIMEOUT = 60.0
+    RETRY_EXPONENTIAL_BACKOFF_MS = 500
+    RETRY_JITTER_MS = 500
 
     def __init__(self, auth=None, endpoint=None, connection_timeout=None,
             max_retries=3):
@@ -47,7 +50,7 @@ class HubstorageClient(object):
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
         self.connection_timeout = connection_timeout or self.DEFAULT_TIMEOUT
         self.session = self._create_session()
-        self.retrier = Retrying(stop_max_attempt_number=max_retries + 1, retry_on_exception=_hc_retry_on_exception)
+        self.retrier = self._create_retrier(max_retries, self.RETRY_EXPONENTIAL_BACKOFF_MS, self.RETRY_JITTER_MS)
         self.jobq = JobQ(self, None)
         self.projects = Projects(self, None)
         self.root = ResourceType(self, None)
@@ -81,6 +84,12 @@ class HubstorageClient(object):
             logger.debug('%s: %s', r, r.content)
         r.raise_for_status()
         return r
+
+    def _create_retrier(self, max_retries, exponential_backoff, jitter):
+        return Retrying(stop_max_attempt_number=max_retries + 1,
+                        retry_on_exception=_hc_retry_on_exception,
+                        wait_exponential_multiplier=exponential_backoff,
+                        wait_jitter_max=jitter)
 
     def _create_session(self):
         s = session()
