@@ -123,15 +123,12 @@ class RetryTest(HSTestCase):
         self.mock_api(method=DELETE, callback=callback_delete)
 
         # Act
-        err = None
-
         job = client.get_job('%s/%s/%s' % (self.projectid, self.spiderid, 42))
         job.metadata['foo'] = 'bar'
         del job.metadata['foo']
         job.metadata.save()
 
         # Assert
-        self.assertIsNone(err, None)
         self.assertEqual(attempts_count_delete[0], 3)
 
     @responses.activate
@@ -146,14 +143,11 @@ class RetryTest(HSTestCase):
         self.mock_api(method=POST, callback=callback_post)
 
         # Act
-        err = None
-
         job = client.get_job('%s/%s/%s' % (self.projectid, self.spiderid, 42))
         job.metadata['foo'] = 'bar'
         job.metadata.save()
 
         # Assert
-        self.assertIsNone(err, None)
         self.assertEqual(attempts_count_post[0], 3)
 
     @responses.activate
@@ -172,7 +166,8 @@ class RetryTest(HSTestCase):
             err = e
 
         # Assert
-        self.assertIsNone(job, None)
+        self.assertIsNone(job)
+        self.assertIsNotNone(err)
         self.assertEqual(err.response.status_code, 504)
         self.assertEqual(attempts_count[0], 1)
 
@@ -210,7 +205,8 @@ class RetryTest(HSTestCase):
             err = e
 
         # Assert
-        self.assertIsNone(metadata, None)
+        self.assertIsNone(metadata)
+        self.assertIsNotNone(err)
         self.assertEqual(err.response.status_code, 504)
         self.assertEqual(attempts_count[0], 1)
 
@@ -232,7 +228,8 @@ class RetryTest(HSTestCase):
             err = e
 
         # Assert
-        self.assertIsNone(metadata, None)
+        self.assertIsNone(metadata)
+        self.assertIsNotNone(err)
         self.assertEqual(err.response.status_code, 504)
         self.assertEqual(attempts_count[0], 3)
 
