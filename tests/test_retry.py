@@ -40,6 +40,29 @@ class RetryTest(HSTestCase):
         self.assertTrue(True, "No error have been triggered by calling a delete on resources that do not exist")
 
     @responses.activate
+    def test_retrier_does_not_catch_unwanted_exception(self):
+        # Prepare
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=2)
+        job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
+        callback, attempts_count = self.make_request_callback(3, job_metadata, http_error_status=403)
+
+        self.mock_api(callback=callback)
+
+        # Act
+        job, metadata, err = None, None, None
+        try:
+            job = client.get_job('%s/%s/%s' % (self.projectid, self.spiderid, 42))
+            metadata = dict(job.metadata)
+        except HTTPError as e:
+            err = e
+
+        # Assert
+        self.assertIsNone(metadata)
+        self.assertIsNotNone(err)
+        self.assertEqual(err.response.status_code, 403)
+        self.assertEqual(attempts_count[0], 1)
+
+    @responses.activate
     def test_retrier_catches_badstatusline_and_429(self):
         # Prepare
         client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
@@ -248,7 +271,7 @@ class RetryTest(HSTestCase):
             content_type='application/json',
         )
 
-    def make_request_callback(self, timeout_count, body_on_success):
+    def make_request_callback(self, timeout_count, body_on_success, http_error_status=504):
         """
         Make a request callback that timeout a couple of time before returning body_on_success
 
@@ -262,7 +285,7 @@ class RetryTest(HSTestCase):
             attempts[0] += 1
 
             if attempts[0] <= timeout_count:
-                return (504, {}, "Timeout")
+                return (http_error_status, {}, "Timeout")
             else:
                 resp_body = dict(body_on_success)
                 return (200, {}, json.dumps(resp_body))
