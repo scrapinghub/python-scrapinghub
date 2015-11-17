@@ -44,7 +44,8 @@ class ResourceType(object):
         return self.apirequest(_path, method='GET', **kwargs)
 
     def apidelete(self, _path=None, **kwargs):
-        return self.apirequest(_path, method='DELETE', is_idempotent=True, **kwargs)
+        kwargs.setdefault('is_idempotent', True)
+        return self.apirequest(_path, method='DELETE', **kwargs)
 
 
 class DownloadableResource(ResourceType):
