@@ -68,6 +68,28 @@ class RetryTest(HSTestCase):
         self.assertEqual(attempts_count[0], 4)
 
     @responses.activate
+    def test_api_delete_can_be_set_to_non_idempotent(self):
+        # Prepare
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+        job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
+        callback_delete, attempts_count_delete = self.make_request_callback(2, job_metadata)
+
+        self.mock_api(method=DELETE, callback=callback_delete)
+
+        # Act
+        job = client.get_job('%s/%s/%s' % (self.projectid, self.spiderid, 42))
+
+        err = None
+        try:
+            job.metadata.apidelete('/my/non/idempotent/delete/', is_idempotent=False)
+        except HTTPError as e:
+            err = e
+
+        # Assert
+        self.assertEqual(attempts_count_delete[0], 1)
+        self.assertIsNotNone(err)
+
+    @responses.activate
     def test_collection_store_and_delete_are_retried(self):
         # Prepare
         client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
