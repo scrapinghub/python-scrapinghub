@@ -28,6 +28,7 @@ def _hc_retry_on_exception(err):
         logger.warning("Server failed with %d status code, retrying (maybe)" % (err.response.status_code,))
         return True
 
+    # TODO: python3 compatibility: BadStatusLine error are wrapped differently
     if (isinstance(err, ConnectionError) and err.args[0] == 'Connection aborted.' and
             isinstance(err.args[1], BadStatusLine) and err.args[1][0] == repr('')):
         logger.warning("Protocol failed with BadStatusLine, retrying (maybe)")
