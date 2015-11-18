@@ -166,6 +166,12 @@ class MappingResourceType(ResourceType, MutableMapping):
         self._deleted = set()
         super(MappingResourceType, self).__init__(*a, **kw)
 
+    def __str__(self):
+        return str(self._data)
+
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, repr(self._data))
+
     @property
     def _data(self):
         if self._cached is None:
