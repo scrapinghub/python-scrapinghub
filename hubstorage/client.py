@@ -19,12 +19,12 @@ __version__ = pkgutil.get_data('hubstorage', 'VERSION').strip()
 
 logger = logging.getLogger('HubstorageClient')
 
-_ERROR_CODES_TO_RETRY = (429, 503, 504)
+_HTTP_ERROR_CODES_TO_RETRY = (408, 429, 503, 504)
 
 
 def _hc_retry_on_exception(err):
     """Callback used by the client to restrict the retry to acceptable errors"""
-    if (isinstance(err, HTTPError) and err.response.status_code in _ERROR_CODES_TO_RETRY):
+    if (isinstance(err, HTTPError) and err.response.status_code in _HTTP_ERROR_CODES_TO_RETRY):
         logger.warning("Server failed with %d status code, retrying (maybe)" % (err.response.status_code,))
         return True
 
