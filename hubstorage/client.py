@@ -86,6 +86,7 @@ class HubstorageClient(object):
 
         Use the retry policy configured in the client when is_idempotent is True
         """
+        kwargs.setdefault('timeout', self.connection_timeout)
 
         def invoke_request():
             r = self.session.request(**kwargs)
