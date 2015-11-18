@@ -29,7 +29,7 @@ class Job(object):
         for w in wl:
             w.close(block=True)
 
-    def _update_metadata(self, *args, **kwargs):
+    def update_metadata(self, *args, **kwargs):
         self.metadata.update(*args, **kwargs)
         self.metadata.save()
         self.metadata.expire()
@@ -41,7 +41,7 @@ class Job(object):
         self.metadata.expire()
         close_reason = close_reason or \
             self.metadata.liveget('close_reason') or 'no_reason'
-        self._update_metadata(close_reason=close_reason)
+        self.update_metadata(close_reason=close_reason)
         self.close_writers()
         self.jobq.finish(self)
 
@@ -53,9 +53,6 @@ class Job(object):
     def purged(self):
         self.jobq.delete(self)
         self.metadata.expire()
-
-    def stop(self):
-        self._update_metadata(stop_requested=True)
 
 
 class JobMeta(MappingResourceType):
