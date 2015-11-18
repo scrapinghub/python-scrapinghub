@@ -21,7 +21,6 @@ class ResourceType(object):
     def _iter_lines(self, _path, **kwargs):
         kwargs['url'] = urlpathjoin(self.url, _path)
         kwargs.setdefault('auth', self.auth)
-        kwargs.setdefault('timeout', self.client.connection_timeout)
         if 'jl' in kwargs:
             kwargs['data'] = jlencode(kwargs.pop('jl'))
 
