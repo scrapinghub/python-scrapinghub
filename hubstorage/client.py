@@ -45,17 +45,36 @@ class HubstorageClient(object):
     DEFAULT_ENDPOINT = 'http://storage.scrapinghub.com/'
     USERAGENT = 'python-hubstorage/{0}'.format(__version__)
 
-    DEFAULT_TIMEOUT = 60.0
-    RETRY_EXPONENTIAL_BACKOFF_MS = 500
-    RETRY_JITTER_MS = 500
+    DEFAULT_CONNECTION_TIMEOUT_S = 60.0
+    RETRY_DEFAUT_MAX_RETRY_TIME_S = 60.0
 
-    def __init__(self, auth=None, endpoint=None, connection_timeout=None,
-            max_retries=3):
+    RETRY_DEFAULT_MAX_RETRIES = 3
+    RETRY_DEFAULT_JITTER_MS = 500
+    RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS = 500
+
+    def __init__(self, auth=None, endpoint=None, connection_timeout=None, max_retries=None, max_retry_time=None):
+        """
+        Note:
+            max_retries and max_retry_time change how the client attempt to retry failing requests that are
+            idempotent (safe to execute multiple time).
+
+            HubstorageClient(max_retries=3) will retry requests 3 times, no matter the time it takes.
+            Use max_retry_time if you want to bound the time spent in retrying.
+
+            By default, requests are retried at most 3 times, during 60 seconds.
+
+        Args:
+            auth (str): The client authentication token
+            endpoint (str): The API root address
+            connection_timeout (int): The connection timeout for a _single request_
+            max_retries (int): The number of time idempotent requests may be retried
+            max_retry_time (int): The time, in seconds, during which the client can retry a request
+        """
         self.auth = xauth(auth)
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
-        self.connection_timeout = connection_timeout or self.DEFAULT_TIMEOUT
+        self.connection_timeout = connection_timeout or self.DEFAULT_CONNECTION_TIMEOUT_S
         self.session = self._create_session()
-        self.retrier = self._create_retrier(max_retries, self.RETRY_EXPONENTIAL_BACKOFF_MS, self.RETRY_JITTER_MS)
+        self.retrier = self._create_retrier(max_retries, max_retry_time)
         self.jobq = JobQ(self, None)
         self.projects = Projects(self, None)
         self.root = ResourceType(self, None)
@@ -81,11 +100,32 @@ class HubstorageClient(object):
         else:
             return invoke_request()
 
-    def _create_retrier(self, max_retries, exponential_backoff, jitter):
-        return Retrying(stop_max_attempt_number=max_retries + 1,
+    def _create_retrier(self, max_retries, max_retry_time):
+        """
+        Create the Retrier object used to process idempotent client requests.
+
+        If only max_retries is set, the default max_retry_time is ignored.
+
+        Args:
+            max_retries (int): the number of retries to be attempted
+            max_retry_time (int): the number of time, in seconds, to retry for.
+        Returns:
+            A Retrying instance, that implements a call(func) method.
+        """
+
+        # Client sets max_retries only
+        if max_retries is not None and max_retry_time is None:
+            stop_max_delay = None
+            stop_max_attempt_number = max_retries + 1
+        else:
+            stop_max_delay = (max_retry_time or self.RETRY_DEFAUT_MAX_RETRY_TIME_S) * 1000.0
+            stop_max_attempt_number = (max_retries or self.RETRY_DEFAULT_MAX_RETRIES) + 1
+
+        return Retrying(stop_max_attempt_number=stop_max_attempt_number,
+                        stop_max_delay=stop_max_delay,
                         retry_on_exception=_hc_retry_on_exception,
-                        wait_exponential_multiplier=exponential_backoff,
-                        wait_jitter_max=jitter)
+                        wait_exponential_multiplier=self.RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS,
+                        wait_jitter_max=self.RETRY_DEFAULT_JITTER_MS)
 
     def _create_session(self):
         s = session()
