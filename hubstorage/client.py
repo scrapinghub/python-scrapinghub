@@ -4,7 +4,7 @@ High level Hubstorage client
 from httplib import BadStatusLine
 import logging
 import pkgutil
-from requests import session, adapters, HTTPError, ConnectionError
+from requests import session, adapters, HTTPError, ConnectionError, Timeout
 from retrying import Retrying
 from .utils import xauth, urlpathjoin
 from .project import Project
@@ -32,6 +32,10 @@ def _hc_retry_on_exception(err):
     if (isinstance(err, ConnectionError) and err.args[0] == 'Connection aborted.' and
             isinstance(err.args[1], BadStatusLine) and err.args[1][0] == repr('')):
         logger.warning("Protocol failed with BadStatusLine, retrying (maybe)")
+        return True
+
+    if isinstance(err, Timeout):
+        logger.warning("Server connection timeout, retrying (maybe)")
         return True
 
     return False
