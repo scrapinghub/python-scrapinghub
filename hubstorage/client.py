@@ -118,14 +118,20 @@ class HubstorageClient(object):
         if max_retries is not None and max_retry_time is None:
             stop_max_delay = None
             stop_max_attempt_number = max_retries + 1
+            wait_exponential_multiplier = self.RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS
         else:
             stop_max_delay = (max_retry_time or self.RETRY_DEFAUT_MAX_RETRY_TIME_S) * 1000.0
             stop_max_attempt_number = (max_retries or self.RETRY_DEFAULT_MAX_RETRIES) + 1
 
+            # Compute the backoff to allow for max_retries queries during the allowed delay
+            # Solves the following formula (assumes requests are immediate):
+            # max_retry_time = sum(exp_multiplier * 2 ** i) for i from 1 to max_retries + 1
+            wait_exponential_multiplier = stop_max_delay / ((2 ** (stop_max_attempt_number + 1)) - 2)
+
         return Retrying(stop_max_attempt_number=stop_max_attempt_number,
                         stop_max_delay=stop_max_delay,
                         retry_on_exception=_hc_retry_on_exception,
-                        wait_exponential_multiplier=self.RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS,
+                        wait_exponential_multiplier=wait_exponential_multiplier,
                         wait_jitter_max=self.RETRY_DEFAULT_JITTER_MS)
 
     def _create_session(self):
