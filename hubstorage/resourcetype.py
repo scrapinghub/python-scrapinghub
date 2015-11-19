@@ -21,13 +21,11 @@ class ResourceType(object):
     def _iter_lines(self, _path, **kwargs):
         kwargs['url'] = urlpathjoin(self.url, _path)
         kwargs.setdefault('auth', self.auth)
-        kwargs.setdefault('timeout', self.client.connection_timeout)
         if 'jl' in kwargs:
             kwargs['data'] = jlencode(kwargs.pop('jl'))
-        r = self.client.session.request(**kwargs)
-        if not r.ok:
-            logger.debug('%s: %s', r, r.content)
-        r.raise_for_status()
+
+        r = self.client.request(**kwargs)
+
         return r.iter_lines()
 
     def apirequest(self, _path=None, **kwargs):
@@ -37,9 +35,11 @@ class ResourceType(object):
         return self.apirequest(_path, method='POST', **kwargs)
 
     def apiget(self, _path=None, **kwargs):
+        kwargs.setdefault('is_idempotent', True)
         return self.apirequest(_path, method='GET', **kwargs)
 
     def apidelete(self, _path=None, **kwargs):
+        kwargs.setdefault('is_idempotent', True)
         return self.apirequest(_path, method='DELETE', **kwargs)
 
 
@@ -186,10 +186,11 @@ class MappingResourceType(ResourceType, MutableMapping):
         self._deleted.clear()
         if self._cached:
             if not self.ignore_fields:
-                self.apipost(jl=self._data)
+                self.apipost(jl=self._data, is_idempotent=True)
             else:
                 self.apipost(jl=dict((k, v) for k, v in self._data.iteritems()
-                                     if k not in self.ignore_fields))
+                                     if k not in self.ignore_fields),
+                             is_idempotent=True)
 
     def __getitem__(self, key):
         return self._data[key]

@@ -2,24 +2,9 @@
 Test Client
 """
 from hstestcase import HSTestCase
-from hubstorage import HubstorageClient
 from hubstorage.utils import millitime, apipoll
 
-
 class ClientTest(HSTestCase):
-
-    def test_connect_retry(self):
-        c = HubstorageClient(auth=self.auth, endpoint=self.endpoint,
-                             max_retries=2)
-        c.push_job(self.projectid, self.spidername)
-        job = c.start_job(projectid=self.projectid)
-        m = job.metadata
-        self.assertEqual(m.get('state'), u'running', dict(m))
-        m.expire()
-        retries = c.session.adapters['http://'].max_retries
-        if not isinstance(retries, int):
-            retries = retries.total
-        self.assertEqual(retries, 2)
 
     def test_push_job(self):
         c = self.hsclient
