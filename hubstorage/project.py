@@ -1,10 +1,12 @@
+import warnings
+
 from .job import Job
 from .jobq import JobQ
 from .activity import Activity
 from .collectionsrt import Collections
 from .frontier import Frontier
 from .resourcetype import ResourceType, MappingResourceType
-from .utils import urlpathjoin, xauth, deprecation
+from .utils import urlpathjoin, xauth
 
 
 class Project(object):
@@ -43,8 +45,8 @@ class Project(object):
         return self.client.get_job(key, *args, **kwargs)
 
     def get_jobs(self, **kwargs):
-        deprecation('Method `project.get_jobs()` is deprecated, '
-                    'use `project.jobq.list()` instead')
+        warnings.warn('Method `project.get_jobs()` is deprecated, '
+                      'use `project.jobq.list()` instead', Warning)
         for metadata in self.jobq.list(**kwargs):
             key = metadata.pop('key')
             yield self.get_job(key, metadata=metadata)
