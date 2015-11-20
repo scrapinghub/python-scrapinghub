@@ -1,5 +1,4 @@
 import time
-import warnings
 from Queue import Empty
 
 
@@ -133,5 +132,3 @@ def apipoll(endpoint, *args, **kwargs):
         if result is not None or (time.time() - start) > max_poll:
             return result
 
-def deprecation(message):
-    warnings.warn(message, Warning, stacklevel=2)
