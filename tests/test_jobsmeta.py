@@ -59,6 +59,31 @@ class JobsMetadataTest(HSTestCase):
         job2 = self.hsclient.get_job(job.key)
         self._assertMetadata(job.metadata, job2.metadata)
 
+    def test_updating(self):
+        job = self.project.push_job(self.spidername)
+        self.assertIsNone(job.metadata.get('foo'))
+        job.update_metadata({'foo': 'bar'})
+        # metadata attr should change
+        self.assertEqual(job.metadata.get('foo'), 'bar')
+        # as well as actual metadata
+        job = self.project.get_job(job.key)
+        self.assertEqual(job.metadata.get('foo'), 'bar')
+        job.update_metadata({'foo': None})
+        self.assertFalse(job.metadata.get('foo', False))
+
+        # there are ignored fields like: auth, _key, state
+        state = job.metadata['state']
+        job.update_metadata({'state': 'running'})
+        self.assertEqual(job.metadata['state'], state)
+
+    def test_representation(self):
+        job = self.project.push_job(self.spidername)
+        meta = job.metadata
+        self.assertNotEqual(str(meta), repr(meta))
+        self.assertEqual(meta, eval(str(meta)))
+        self.assertTrue(meta.__class__.__name__ in repr(meta))
+        self.assertFalse(meta.__class__.__name__ in str(meta))
+
     def test_jobauth(self):
         job = self.project.push_job(self.spidername)
         self.assertIsNone(job.jobauth)
