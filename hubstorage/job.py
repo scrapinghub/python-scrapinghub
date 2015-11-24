@@ -20,15 +20,6 @@ class Job(object):
         self.requests = Requests(client, self.key, self.auth)
         self.jobq = JobQ(client, self.key.split('/')[0], auth)
 
-    def close_writers(self):
-        wl = [self.items, self.logs, self.samples, self.requests]
-        # close all resources that use background writers
-        for w in wl:
-            w.close(block=False)
-        # now wait for all writers to close together
-        for w in wl:
-            w.close(block=True)
-
     def update_metadata(self, *args, **kwargs):
         self.metadata.update(*args, **kwargs)
         self.metadata.save()
@@ -36,19 +27,6 @@ class Job(object):
 
     def request_cancel(self):
         self.jobq.request_cancel(self)
-
-    def finished(self, close_reason=None):
-        self.metadata.expire()
-        close_reason = close_reason or \
-            self.metadata.liveget('close_reason') or 'no_reason'
-        self.update_metadata(close_reason=close_reason)
-        self.close_writers()
-        self.jobq.finish(self)
-
-    def failed(self, reason='failed', message=None):
-        if message:
-            self.logs.error(message, appendmode=True)
-        self.finished(reason)
 
     def purged(self):
         self.jobq.delete(self)

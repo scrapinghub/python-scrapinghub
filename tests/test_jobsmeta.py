@@ -97,7 +97,7 @@ class JobsMetadataTest(HSTestCase):
 
     def test_authtoken(self):
         pendingjob = self.project.push_job(self.spidername)
-        runningjob = self.project.start_job()
+        runningjob = self.start_job()
         self.assertEqual(pendingjob.key, runningjob.key)
         self.assertTrue(runningjob.jobauth)
         self.assertEqual(runningjob.jobauth, runningjob.auth)
