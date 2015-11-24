@@ -71,6 +71,33 @@ class HSTestCase(unittest.TestCase):
         cls.project.settings.apidelete('botgroups')
         cls.project.settings.expire()
 
+    def start_job(self, **startparams):
+        jobdata = self.project.jobq.start(**startparams)
+        if jobdata:
+            jobkey = jobdata.pop('key')
+            jobauth = (jobkey, jobdata['auth'])
+            return self.project.get_job(jobkey, jobauth=jobauth, metadata=jobdata)
+
+    def job_finished(self, job, close_reason=None):
+        close_reason = close_reason or \
+            job.metadata.liveget('close_reason') or 'no_reason'
+        self.close_job_writers(job)
+        job.jobq.finish(job, close_reason=close_reason)
+
+    def job_failed(self, job, reason='failed', message=None):
+        if message:
+            job.logs.error(message, appendmode=True)
+        self.job_finished(job, reason)
+
+    def close_job_writers(self, job):
+        wl = [job.items, job.logs, job.samples, job.requests]
+        # close all resources that use background writers
+        for w in wl:
+            w.close(block=False)
+        # now wait for all writers to close together
+        for w in wl:
+            w.close(block=True)
+
 
 class NopTest(HSTestCase):
 

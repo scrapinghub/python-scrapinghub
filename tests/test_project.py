@@ -121,12 +121,12 @@ class ProjectTest(HSTestCase):
         # populate project with at least one job
         job = project.push_job(self.spidername)
         self.assertEqual(job.metadata.get('state'), 'pending')
-        job = project.start_job()
+        job = self.start_job()
         self.assertEqual(job.metadata.get('state'), 'running')
         job.items.write({'title': 'bar'})
         job.logs.info('nice to meet you')
         job.samples.write([1, 2, 3])
-        job.finished()
+        self.job_finished(job)
 
         # keep a jobid for get_job and unreference job
         jobid = job.key
@@ -169,7 +169,7 @@ class ProjectTest(HSTestCase):
         r3 = job.requests.add(url='http://test.com/3', status=400, method='PUT',
                               rs=0, duration=1, parent=r1, ts=ts + 2, fp='1234')
 
-        job.close_writers()
+        self.close_job_writers(job)
         rr = job.requests.list()
         self.assertEqual(rr.next(),
                          {u'status': 200, u'rs': 1337,
