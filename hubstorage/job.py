@@ -20,6 +20,15 @@ class Job(object):
         self.requests = Requests(client, self.key, self.auth)
         self.jobq = JobQ(client, self.key.split('/')[0], auth)
 
+    def close_writers(self):
+        wl = [self.items, self.logs, self.samples, self.requests]
+        # close all resources that use background writers
+        for w in wl:
+            w.close(block=False)
+        # now wait for all writers to close together
+        for w in wl:
+            w.close(block=True)
+
     def update_metadata(self, *args, **kwargs):
         self.metadata.update(*args, **kwargs)
         self.metadata.save()
