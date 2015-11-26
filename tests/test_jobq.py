@@ -319,6 +319,14 @@ class JobqTest(HSTestCase):
         self.assertTrue([x['prevstate'] for x in jobq.delete(ids)],
                         ['finished', 'finished', 'finished'])
 
+    def test_update(self):
+        job = self.project.push_job(self.spidername)
+        self.assertEqual(job.metadata['state'], 'pending')
+        self.project.jobq.update(job, state='running', foo='bar')
+        job = self.project.get_job(job.key)
+        self.assertEqual(job.metadata['state'], 'running')
+        self.assertEqual(job.metadata['foo'], 'bar')
+
 
 def _keys(lst):
     return [x['key'] for x in lst]

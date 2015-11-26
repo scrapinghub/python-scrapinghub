@@ -101,7 +101,7 @@ class JobQ(ResourceType):
         It may take up to a second for a previously added job to be available.
         """
         if job:
-            return self._set_state(job, 'running', **start_params)
+            return self.update(job, state='running', **start_params)
         for o in self.apipost('startjob', jl=start_params):
             return o
 
@@ -109,11 +109,11 @@ class JobQ(ResourceType):
         """Cancel a running job"""
         self.apipost("%s/cancel" % job.key[job.key.index('/') + 1:])
 
-    def finish(self, job):
-        return self._set_state(job, 'finished')
+    def finish(self, job, **params):
+        return self.update(job, state='finished', **params)
 
-    def delete(self, job):
-        return self._set_state(job, 'deleted')
+    def delete(self, job, **params):
+        return self.update(job, state='deleted', **params)
 
     def _jobkeys(self, job):
         if isinstance(job, list):
@@ -127,6 +127,6 @@ class JobQ(ResourceType):
         else:
             yield job
 
-    def _set_state(self, job, state, **extra_args):
-        data = [dict(extra_args, key=k, state=state) for k in self._jobkeys(job)]
+    def update(self, job, **extra_args):
+        data = [dict(extra_args, key=k) for k in self._jobkeys(job)]
         return self.apipost('update', jl=data)

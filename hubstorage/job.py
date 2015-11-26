@@ -37,19 +37,6 @@ class Job(object):
     def request_cancel(self):
         self.jobq.request_cancel(self)
 
-    def finished(self, close_reason=None):
-        self.metadata.expire()
-        close_reason = close_reason or \
-            self.metadata.liveget('close_reason') or 'no_reason'
-        self.update_metadata(close_reason=close_reason)
-        self.close_writers()
-        self.jobq.finish(self)
-
-    def failed(self, reason='failed', message=None):
-        if message:
-            self.logs.error(message, appendmode=True)
-        self.finished(reason)
-
     def purged(self):
         self.jobq.delete(self)
         self.metadata.expire()

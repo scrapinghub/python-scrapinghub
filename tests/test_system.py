@@ -56,7 +56,7 @@ class SystemTest(HSTestCase):
     def _run_runner(self, pushed, close_reason):
         client = HubstorageClient(endpoint=self.endpoint, auth=self.auth)
         with closing(client) as runnerclient:
-            job = runnerclient.start_job(self.projectid)
+            job = self.start_job()
             self.assertFalse(job.metadata.get('stop_requested'))
             job.metadata.update(host='localhost', slot=1)
             self.assertEqual(job.metadata.get('state'), 'running')
@@ -64,12 +64,14 @@ class SystemTest(HSTestCase):
             try:
                 self._run_scraper(job.key, job.jobauth, close_reason=close_reason)
             except Exception as exc:
-                job.failed(message=str(exc))
+                job.logs.error(message=str(exc), appendmode=True)
+                job.close_writers()
+                job.jobq.finish(job, close_reason='failed')
                 # logging from runner must append and never remove messages logged
                 # by scraper
                 self.assertTrue(job.logs.batch_append)
             else:
-                job.finished()
+                job.jobq.finish(job, close_reason=close_reason or 'no_reason')
 
     def _run_scraper(self, jobkey, jobauth, close_reason=None):
         httpmethods = 'GET PUT POST DELETE HEAD OPTIONS TRACE CONNECT'.split()

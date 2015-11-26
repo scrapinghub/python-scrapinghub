@@ -71,6 +71,13 @@ class HSTestCase(unittest.TestCase):
         cls.project.settings.apidelete('botgroups')
         cls.project.settings.expire()
 
+    def start_job(self, **startparams):
+        jobdata = self.project.jobq.start(**startparams)
+        if jobdata:
+            jobkey = jobdata.pop('key')
+            jobauth = (jobkey, jobdata['auth'])
+            return self.project.get_job(jobkey, jobauth=jobauth, metadata=jobdata)
+
 
 class NopTest(HSTestCase):
 

@@ -11,7 +11,7 @@ class BatchUploaderTest(HSTestCase):
 
     def _job_and_writer(self, **writerargs):
         self.project.push_job(self.spidername)
-        job = self.project.start_job()
+        job = self.start_job()
         bu = self.hsclient.batchuploader
         w = bu.create_writer(job.items.url, auth=self.auth, **writerargs)
         return job, w
