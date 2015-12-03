@@ -93,6 +93,9 @@ To push job from project level with the highest priority:
 >>> job.metadata['priority']
 4
 
+Pushing a job with spider arguments:
+ >>> project.push_job(spidername='foo', spider_args={'arg1': 'foo', 'arg2': 'bar'})
+
 Running job can be **cancelled** by calling ``request_cancel()``:
 
 >>> job.request_cancel()
