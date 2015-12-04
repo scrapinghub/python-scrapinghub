@@ -27,25 +27,28 @@ First, you connect to Scrapinghub::
 You can list the projects available to your account::
 
     >>> conn.project_ids()
-    [u'123', u'456']
+    [123, 456]
 
 And select a particular project to work with::
 
-    >>> project = conn['123']
+    >>> project = conn[123]
     >>> project
-    Project(Connection('APIKEY'), '123')
+    Project(Connection('APIKEY'), 123)
     >>> project.id
-    '123'
+    123
 
 To schedule a spider run (it returns the job id)::
 
     >>> project.schedule('myspider', arg1='val1')
-    u'4ca37770a1a3a24c45000005'
+    u'123/1/1'
 
 To get the list of spiders in the project::
 
     >>> project.spiders()
-    [u'spider1', u'spider2']
+    [
+      {u'id': u'spider1', u'tags': [], u'type': u'manual', u'version': u'123'},
+      {u'id': u'spider2', u'tags': [], u'type': u'manual', u'version': u'123'}
+    ]
 
 To get all finished jobs::
 
@@ -60,13 +63,13 @@ return an iterable of ``Job`` objects, so you typically use it like this::
 Or, if you just want to get the job ids::
 
     >>> [x.id for x in jobs]
-    [u'4c916f80e8bd6f68c2000000', u'4c9170fae8bd6f6cac000000', u'4c9190bde8bd6f761c000000']
+    [u'123/1/1', u'123/1/2', u'123/1/3']
 
 To select a specific job::
 
-    >>> job = project.job('4cdacfe7a1a3a27d7a000000')
+    >>> job = project.job(u'123/1/2')
     >>> job.id
-    '4cdacfe7a1a3a27d7a000000'
+    u'123/1/2'
 
 To retrieve all scraped items from a job::
 
