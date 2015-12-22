@@ -1,10 +1,9 @@
 """
 High level Hubstorage client
 """
-from httplib import BadStatusLine
 import logging
 import pkgutil
-from requests import session, adapters, HTTPError, ConnectionError, Timeout
+from requests import session, HTTPError, ConnectionError, Timeout
 from retrying import Retrying
 from .utils import xauth, urlpathjoin
 from .project import Project
@@ -24,14 +23,12 @@ _HTTP_ERROR_CODES_TO_RETRY = (408, 429, 503, 504)
 
 def _hc_retry_on_exception(err):
     """Callback used by the client to restrict the retry to acceptable errors"""
-    if (isinstance(err, HTTPError) and err.response.status_code in _HTTP_ERROR_CODES_TO_RETRY):
-        logger.warning("Server failed with %d status code, retrying (maybe)" % (err.response.status_code,))
+    if isinstance(err, HTTPError) and err.response.status_code in _HTTP_ERROR_CODES_TO_RETRY:
+        logger.warning("Server failed with %d status code, retrying (maybe)", err.response.status_code)
         return True
 
-    # TODO: python3 compatibility: BadStatusLine error are wrapped differently
-    if (isinstance(err, ConnectionError) and err.args[0] == 'Connection aborted.' and
-            isinstance(err.args[1], BadStatusLine) and err.args[1][0] == repr('')):
-        logger.warning("Protocol failed with BadStatusLine, retrying (maybe)")
+    if isinstance(err, ConnectionError):
+        logger.warning("Request encountered a connection error: %r, retrying (maybe)", err)
         return True
 
     if isinstance(err, Timeout):
