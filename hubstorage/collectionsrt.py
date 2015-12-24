@@ -1,3 +1,4 @@
+import re
 from requests.exceptions import HTTPError
 from .resourcetype import DownloadableResource
 from .utils import urlpathjoin
@@ -36,6 +37,7 @@ class Collections(DownloadableResource):
             requests_params=requests_params, **apiparams)
 
     def create_writer(self, coltype, colname, **writer_kwargs):
+        self._validate_collection(coltype, colname)
         kwargs = dict(writer_kwargs)
         kwargs.setdefault('content_encoding', 'gzip')
         kwargs.setdefault('auth', self.auth)
@@ -44,6 +46,7 @@ class Collections(DownloadableResource):
             **kwargs)
 
     def new_collection(self, coltype, colname):
+        self._validate_collection(coltype, colname)
         return Collection(coltype, colname, self)
 
     def new_store(self, colname):
@@ -60,6 +63,15 @@ class Collections(DownloadableResource):
 
     def count(self, _type, _name, **params):
         return self._batch('GET', (_type, _name, 'count'), 'count', **params)
+
+    def _validate_collection(self, coltype, colname):
+        if coltype not in {'s', 'cs', 'vs', 'vcs'}:
+            raise ValueError('Invalid collection type: {}'.format(coltype))
+
+        if not re.match(r'^\w+$', colname):
+            raise ValueError('Invalid collection name {!r}, only alphanumeric '
+                             'characters'.format(colname))
+
 
     def _batch(self, method, path, total_param, progress=None, **params):
         total = 0
