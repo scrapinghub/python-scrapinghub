@@ -99,3 +99,12 @@ class CollectionsTest(HSTestCase):
         with failing_downloader(self.project.collections):
             downloaded = list(col.iter_values(start='test_data_download1'))
             self.assertEqual(len(downloaded), 19)
+
+    def test_invalid_collection_name(self):
+        cols = self.project.collections
+        self.assertRaises(ValueError, cols.new_collection, 'invalidtype', 'n')
+        self.assertRaises(ValueError, cols.new_store, 'foo-bar')
+        self.assertRaises(ValueError, cols.new_store, 'foo/bar')
+        self.assertRaises(ValueError, cols.new_store, '/foo')
+        self.assertRaises(ValueError, cols.create_writer, 'invalidtype', 'n')
+        self.assertRaises(ValueError, cols.create_writer, 's', 'foo-bar')
