@@ -20,13 +20,21 @@ class BatchUploader(object):
 
     # Wait time between all batches status checks
     worker_loop_delay = 1.0
-    # Max number of retries attempts before giving up,
-    # Using 10 minutes max interval it accounts for 30hs total wait time
+    # Max number of retry attempts before giving up.
     worker_max_retries = 200
-    # Minimum and maximum wait time between retries in seconds,
-    # it can be 50% greater due to randomization
+    # The delay increases exponentially with the number of attempts but is
+    # bounded with these values on both sides.
     worker_min_interval = 30
     worker_max_interval = 600
+    # Each delay is also randomized by multiplying by random(0.5, 1.5), so the
+    # total delay using the current parameters is an almost gaussian random
+    # number with the following characteristics (see Irwin-Hall distribution):
+    #
+    # - average = 30hrs
+    # - minimum = 15hrs
+    # - maximum = 45hrs
+    # - standard deviation = approx. 40m, which means that 95% of the time the
+    #   total delay will be within 2*std = 1h20m of the average.
 
     def __init__(self, client):
         self.client = client
