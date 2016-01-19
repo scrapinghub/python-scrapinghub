@@ -88,10 +88,12 @@ class HubstorageClient(object):
         def invoke_request():
             r = self.session.request(**kwargs)
 
-            if not r.ok:
+            try:
+                r.raise_for_status()
+                return r
+            except HTTPError:
                 logger.debug('%s: %s', r, r.content)
-            r.raise_for_status()
-            return r
+                raise
 
         if is_idempotent:
             return self.retrier.call(invoke_request)
