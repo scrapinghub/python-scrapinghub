@@ -5,14 +5,14 @@ from Queue import Empty
 def urlpathjoin(*parts):
     """Join multiple paths into a single url
 
-    >>> urlpathjoin('http://storage.scrapinghub.com:8002/', 'jobs', '1/2/3')
-    'http://storage.scrapinghub.com:8002/jobs/1/2/3'
-    >>> urlpathjoin('http://storage.scrapinghub.com:8002', 'jobs', '1/2/3', None)
-    'http://storage.scrapinghub.com:8002/jobs/1/2/3'
+    >>> urlpathjoin('https://storage.scrapinghub.com:8002/', 'jobs', '1/2/3')
+    'https://storage.scrapinghub.com:8002/jobs/1/2/3'
+    >>> urlpathjoin('https://storage.scrapinghub.com:8002', 'jobs', '1/2/3', None)
+    'https://storage.scrapinghub.com:8002/jobs/1/2/3'
     >>> urlpathjoin(_, 'state')
-    'http://storage.scrapinghub.com:8002/jobs/1/2/3/state'
+    'https://storage.scrapinghub.com:8002/jobs/1/2/3/state'
     >>> urlpathjoin(_, None)
-    'http://storage.scrapinghub.com:8002/jobs/1/2/3/state'
+    'https://storage.scrapinghub.com:8002/jobs/1/2/3/state'
     >>> urlpathjoin(78)
     '78'
     >>> urlpathjoin('78')

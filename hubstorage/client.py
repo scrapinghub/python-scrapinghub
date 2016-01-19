@@ -39,7 +39,7 @@ def _hc_retry_on_exception(err):
 
 class HubstorageClient(object):
 
-    DEFAULT_ENDPOINT = 'http://storage.scrapinghub.com/'
+    DEFAULT_ENDPOINT = 'https://storage.scrapinghub.com/'
     USERAGENT = 'python-hubstorage/{0}'.format(__version__)
 
     DEFAULT_CONNECTION_TIMEOUT_S = 60.0
