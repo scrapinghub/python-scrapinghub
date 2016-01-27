@@ -94,7 +94,8 @@ To push job from project level with the highest priority:
 4
 
 Pushing a job with spider arguments:
- >>> project.push_job(spidername='foo', spider_args={'arg1': 'foo', 'arg2': 'bar'})
+
+>>> project.push_job(spidername='foo', spider_args={'arg1': 'foo', 'arg2': 'bar'})
 
 Running job can be **cancelled** by calling ``request_cancel()``:
 
@@ -132,7 +133,7 @@ u'memusage/startup': 62439424,
 
 Anything can be stored in metadata, here is example how to add tags:
 
->>> job.metadata.update_metadata({'tags': 'obsolete'})
+>>> job.update_metadata({'tags': 'obsolete'})
 
 Jobs
 *************
@@ -165,6 +166,8 @@ There are several filters like spider, state, has_tag, lacks_tag, startts and en
 To get jobs filtered by tags:
 
 >>> jobs_metadata = project.jobq.list(has_tag=['new', 'verified'], lacks_tag='obsolete')
+
+List of tags has ``OR`` power, so in the case above jobs with 'new' or 'verified' tag are expected. 
 
 To get certain number of last finished jobs per some spider:
 
@@ -213,7 +216,44 @@ Let's store hash and timestamp pair for foo spider. Usual workflow with `Collect
 >>> foo_store.count()
 0
 
+Frontier
+**************
+
+Typical workflow with `Frontier`_:
+
+>>> frontier = project.frontier
+
+Add a request to the frontier:
+
+>>> frontier.add('test', 'example.com', [{'fp': '/some/path.html'}])
+>>> frontier.flush()
+>>> frontier.newcount
+1
+
+Add requests with additional parameters:
+
+>>> frontier.add('test', 'example.com', [{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
+>>> frontier.flush()
+>>> frontier.newcount
+2
+
+To delete the slot ``example.com`` from the frontier:
+
+>>> frontier.delete_slot('test', 'example.com')
+
+To retrieve requests for a given slot:
+
+>>> reqs = frontier.read('test', 'example.com')
+
+To delete a batch of requests:
+
+>>> frontier.delete('test', 'example.com', '00013967d8af7b0001')
+
+To retrieve fingerprints for a given slot:
+
+>>> fps = [req['requests'] for req in frontier.read('test', 'example.com')]
 
 .. _Scrapinghub API: http://doc.scrapinghub.com/api.html
 .. _Collections: http://doc.scrapinghub.com/api/collections.html
+.. _Frontier: http://doc.scrapinghub.com/api/frontier.html
 
