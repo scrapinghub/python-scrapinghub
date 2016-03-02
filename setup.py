@@ -1,3 +1,4 @@
+import sys
 from os.path import join, dirname
 from setuptools import setup, find_packages
 
@@ -5,6 +6,8 @@ from setuptools import setup, find_packages
 # can not be available yet
 __version__ = open(join(dirname(__file__), 'hubstorage/VERSION')).read().strip()
 
+is_pypy = '__pypy__' in sys.builtin_module_names
+mpack_required = 'msgpack-pypy>=0.0.2' if is_pypy else 'msgpack-python>=0.4.7'
 
 setup(name='hubstorage',
       version=__version__,
@@ -16,7 +19,8 @@ setup(name='hubstorage',
       platforms=['Any'],
       packages=find_packages(),
       package_data={'hubstorage': ['VERSION']},
-      install_requires=['requests', 'retrying>=1.3.3', 'six>=1.10.0'],
+      install_requires=['requests', 'retrying>=1.3.3',
+                        'six>=1.10.0', mpack_required],
       classifiers=['Development Status :: 4 - Beta',
                    'License :: OSI Approved :: BSD License',
                    'Operating System :: OS Independent',
