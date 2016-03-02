@@ -1,5 +1,6 @@
 import six
 from json import dumps, loads
+from msgpack import Unpacker
 from datetime import datetime
 
 EPOCH = datetime.utcfromtimestamp(0)
@@ -15,6 +16,16 @@ def jlencode(iterable):
 def jldecode(lineiterable):
     for line in lineiterable:
         yield loads(line)
+
+
+def mpdecode(iterable):
+    unpacker = Unpacker(encoding='utf8')
+    for chunk in iterable:
+        unpacker.feed(chunk)
+        # Each chunk can have none or many objects,
+        # so here we dispatch any object ready
+        for obj in unpacker:
+            yield obj
 
 
 def jsonencode(o):
