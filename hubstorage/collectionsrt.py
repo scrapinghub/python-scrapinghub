@@ -11,7 +11,7 @@ class Collections(DownloadableResource):
     def get(self, _type, _name, _key=None, **params):
         try:
             r = self.apiget((_type, _name, _key), params=params)
-            return r if _key is None else r.next()
+            return r if _key is None else next(r)
         except HTTPError as exc:
             if exc.response.status_code == 404:
                 raise KeyError(_key)
@@ -78,8 +78,7 @@ class Collections(DownloadableResource):
         getparams = dict(params)
         try:
             while True:
-                r = self.apirequest(path, method=method,
-                    params=getparams).next()
+                r = next(self.apirequest(path, method=method, params=getparams))
                 total += r[total_param]
                 next = r.get('nextstart')
                 if next is None:

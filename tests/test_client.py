@@ -1,7 +1,7 @@
 """
 Test Client
 """
-from hstestcase import HSTestCase
+from .hstestcase import HSTestCase
 from hubstorage.utils import millitime, apipoll
 
 class ClientTest(HSTestCase):

@@ -3,7 +3,7 @@ Test job metadata
 
 System tests for operations on stored job metadata
 """
-from hstestcase import HSTestCase
+from .hstestcase import HSTestCase
 
 
 class JobsMetadataTest(HSTestCase):

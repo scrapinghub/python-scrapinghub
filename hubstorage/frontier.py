@@ -1,4 +1,3 @@
-import json
 
 from .resourcetype import ResourceType
 from .utils import urlpathjoin
@@ -38,7 +37,7 @@ class Frontier(ResourceType):
         return writer
 
     def _writer_callback(self, response):
-        self.newcount += json.loads(response.content)["newcount"]
+        self.newcount += response.json()["newcount"]
 
     def close(self, block=True):
         for writer in self._writers.values():
