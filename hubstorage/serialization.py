@@ -1,3 +1,4 @@
+import six
 from json import dumps, loads
 from datetime import datetime
 
@@ -6,7 +7,7 @@ ADAYINSECONDS = 24 * 3600
 
 
 def jlencode(iterable):
-    if isinstance(iterable, (dict, str, unicode)):
+    if isinstance(iterable, (dict, six.string_types)):
         iterable = [iterable]
     return u'\n'.join(jsonencode(o) for o in iterable)
 
@@ -26,8 +27,6 @@ def jsondefault(o):
         u = delta.microseconds
         s = delta.seconds
         d = delta.days
-        millis = (u + (s + d * ADAYINSECONDS) * 1e6) / 1000
-        return int(millis)
+        return (u + (s + d * ADAYINSECONDS) * 1e6) // 1000
     else:
-        return str(o)
-
+        return six.text_type(o)

@@ -2,9 +2,10 @@
 Test Collections
 """
 import random
+from six.moves import range
 from contextlib import closing
-from hstestcase import HSTestCase
-from testutil import failing_downloader
+from .hstestcase import HSTestCase
+from .testutil import failing_downloader
 
 
 def _mkitem():
@@ -45,7 +46,7 @@ class CollectionsTest(HSTestCase):
         test_item = _mkitem()
         last_key = None
         with closing(col.create_writer()) as writer:
-            for i in xrange(20):
+            for i in range(20):
                 test_item['_key'] = last_key = "post_scan_test%d" % i
                 test_item['counter'] = i
                 writer.write(test_item)
@@ -66,7 +67,7 @@ class CollectionsTest(HSTestCase):
         self.assertEqual(len(result), 10)
 
         # bulk delete
-        col.delete('post_scan_test%d' % i for i in xrange(20))
+        col.delete('post_scan_test%d' % i for i in range(20))
 
         # test items removed (check first and last)
         self.assertRaises(KeyError, col.get, 'post_scan_test0')
@@ -84,7 +85,7 @@ class CollectionsTest(HSTestCase):
         col = self.project.collections.new_store(self.test_collection_name)
         items = []
         with closing(col.create_writer()) as writer:
-            for i in xrange(20):
+            for i in range(20):
                 test_item = _mkitem()
                 test_item['_key'] = "test_data_download%d" % i
                 test_item['counter'] = i

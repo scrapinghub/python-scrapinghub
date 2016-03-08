@@ -2,9 +2,11 @@
 Test JobQ
 """
 import os, unittest
-from hstestcase import HSTestCase
+import six
+from six.moves import range
 from hubstorage.jobq import DuplicateJobError
 from hubstorage.utils import apipoll
+from .hstestcase import HSTestCase
 
 
 EXCLUSIVE = os.environ.get('EXCLUSIVE_STORAGE')
@@ -97,10 +99,10 @@ class JobqTest(HSTestCase):
             'nil': None,
         }
         qj = jobq.push(self.spidername, **pushextras)
-        startextras = dict(('s_' + k, v) for k, v in pushextras.iteritems())
+        startextras = dict(('s_' + k, v) for k, v in six.iteritems(pushextras))
         nj = jobq.start(**startextras)
         self.assertEqual(qj['key'], nj['key'])
-        for k, v in dict(pushextras, **startextras).iteritems():
+        for k, v in six.iteritems(dict(pushextras, **startextras)):
             if type(v) is float:
                 self.assertAlmostEqual(nj.get(k), v)
             else:
@@ -145,7 +147,7 @@ class JobqTest(HSTestCase):
         N = 6
         jobq = self.project.jobq
         for state in ('pending', 'running', 'finished'):
-            for idx in xrange(N):
+            for idx in range(N):
                 jobq.push(self.spidername, state=state, idx=idx)
 
             s1 = jobq.summary(state)

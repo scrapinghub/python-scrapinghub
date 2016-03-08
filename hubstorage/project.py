@@ -98,7 +98,7 @@ class Ids(ResourceType):
 
     def spider(self, spidername, **params):
         r = self.apiget(('spider', spidername), params=params)
-        return r.next()
+        return next(r)
 
 
 class Settings(MappingResourceType):

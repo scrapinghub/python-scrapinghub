@@ -1,5 +1,6 @@
+import six
 import time
-from Queue import Empty
+from six.moves.queue import Empty
 
 
 def urlpathjoin(*parts):
@@ -35,12 +36,10 @@ def urlpathjoin(*parts):
             continue
         elif isinstance(p, tuple):
             p = urlpathjoin(*p)
-        elif isinstance(p, unicode):
-            p = p.encode('utf8')
-        elif not isinstance(p, str):
-            p = str(p)
+        elif not isinstance(p, six.text_type):
+            p = six.text_type(p)
 
-        url = p if url is None else '{0}/{1}'.format(url.rstrip('/'), p)
+        url = p if url is None else u'{0}/{1}'.format(url.rstrip(u'/'), p)
 
     return url
 
@@ -81,9 +80,9 @@ class iterqueue(object):
 
     it exposes an attribute "count" with the number of messages read
 
-    >>> from Queue import Queue
+    >>> from six.moves.queue import Queue
     >>> q = Queue()
-    >>> for x in xrange(10):
+    >>> for x in range(10):
     ...     q.put(x)
     >>> qiter = iterqueue(q)
     >>> list(qiter)
@@ -91,7 +90,7 @@ class iterqueue(object):
     >>> qiter.count
     10
 
-    >>> for x in xrange(10):
+    >>> for x in range(10):
     ...     q.put(x)
     >>> qiter = iterqueue(q, maxcount=4)
     >>> list(qiter)

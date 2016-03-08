@@ -148,11 +148,11 @@ Jobq metadata fieldset is less detailed, than ``job.metadata``, but contains few
 Additional fields can be requested using the ``jobmeta`` parameter.
 If it used, then it's up to the user to list all the required fields, so only few default fields would be added except requested ones.
 
->>> metadata = project.jobq.list().next()
+>>> metadata = next(project.jobq.list())
 >>> metadata.get('spider', 'missing')
 u'foo'
 >>> jobs_metadata = project.jobq.list(jobmeta=['scheduled_by', ])
->>> metadata = jobs_metadata.next()
+>>> metadata = next(jobs_metadata)
 >>> metadata.get('scheduled_by', 'missing')
 u'John'
 >>> metadata.get('spider', 'missing')

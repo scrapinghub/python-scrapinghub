@@ -1,7 +1,7 @@
 """
 Test Frontier
 """
-from hstestcase import HSTestCase
+from .hstestcase import HSTestCase
 
 
 class FrontierTest(HSTestCase):

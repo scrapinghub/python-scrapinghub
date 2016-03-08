@@ -2,8 +2,9 @@
 Test Project
 """
 import time
+from six.moves import range
 from collections import defaultdict
-from hstestcase import HSTestCase
+from .hstestcase import HSTestCase
 from hubstorage import ValueTooLarge
 
 
@@ -18,7 +19,7 @@ class BatchUploaderTest(HSTestCase):
 
     def test_writer_batchsize(self):
         job, w = self._job_and_writer(size=10)
-        for x in xrange(111):
+        for x in range(111):
             w.write({'x': x})
         w.close()
         # this works only for small batches (previous size=10 and small data)
@@ -47,19 +48,19 @@ class BatchUploaderTest(HSTestCase):
             ValueTooLarge,
             'Value exceeds max encoded size of 1048576 bytes:'
             ' \'{"b+\\.\\.\\.\'',
-            w.write, {'b'*(m/2): 'x'*(m/2)})
+            w.write, {'b'*(m//2): 'x'*(m//2)})
 
     def test_writer_contentencoding(self):
         for ce in ('identity', 'gzip'):
             job, w = self._job_and_writer(content_encoding=ce)
-            for x in xrange(111):
+            for x in range(111):
                 w.write({'x': x})
             w.close()
             self.assertEqual(job.items.stats()['totals']['input_values'], 111)
 
     def test_writer_interval(self):
         job, w = self._job_and_writer(size=1000, interval=1)
-        for x in xrange(111):
+        for x in range(111):
             w.write({'x': x})
             if x == 50:
                 time.sleep(2)

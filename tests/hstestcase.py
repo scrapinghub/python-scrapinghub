@@ -39,7 +39,7 @@ class HSTestCase(unittest.TestCase):
     @classmethod
     def _remove_all_jobs(cls):
         project = cls.project
-        for k in project.settings.keys():
+        for k in list(project.settings.keys()):
             if k != 'botgroups':
                 del project.settings[k]
         project.settings.save()
