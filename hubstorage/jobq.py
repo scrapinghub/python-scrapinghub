@@ -31,6 +31,13 @@ class JobQ(ResourceType):
                 raise DuplicateJobError()
             raise
 
+    def jobsummary(self, jobkeys, jobmeta):
+        """Fetch selected job metadata fields for selected jobs."""
+        if not isinstance(jobkeys, (list, tuple)):
+            raise TypeError("jobkeys must be a list or a tuple")
+        return self.apiget(('jobsummary',),
+                           params={'key': jobkeys, 'jobmeta': jobmeta})
+
     def summary(self, _queuename=None, spiderid=None, count=None, start=None, jobmeta=None):
         params = {}
         if count is not None:

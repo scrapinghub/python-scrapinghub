@@ -336,6 +336,17 @@ class JobqTest(HSTestCase):
         self.assertEqual(job.metadata['state'], 'running')
         self.assertEqual(job.metadata['foo'], 'bar')
 
+    def test_jobsummary(self):
+        jobs = [self.project.push_job(self.spidername, foo=i)
+                for i in range(5)]
+        jobmetas = list(self.project.jobq.jobsummary(
+            jobkeys=[j.key for j in jobs], jobmeta=['key', 'foo']))
+        jobmeta_dict = {jm['key']: jm['foo'] for jm in jobmetas}
+        assert jobmeta_dict == {
+            jobs[i].key: i
+            for i in range(5)
+        }
+
 
 def _keys(lst):
     return [x['key'] for x in lst]
