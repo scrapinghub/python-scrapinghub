@@ -251,9 +251,9 @@ class _BatchWriter(object):
         return self.url
 
 
-def _encode_identity(iter):
+def _encode_identity(iterable):
     data = BytesIO()
-    for item in iter:
+    for item in iterable:
         if isinstance(item, six.text_type):
             item = item.encode('utf8')
         data.write(item)
@@ -261,10 +261,10 @@ def _encode_identity(iter):
     return data.getvalue()
 
 
-def _encode_gzip(iter):
+def _encode_gzip(iterable):
     data = BytesIO()
     with GzipFile(fileobj=data, mode='w') as gzo:
-        for item in iter:
+        for item in iterable:
             if isinstance(item, six.text_type):
                 item = item.encode('utf8')
             gzo.write(item)
