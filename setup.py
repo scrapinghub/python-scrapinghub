@@ -1,8 +1,7 @@
-from scrapinghub import __version__
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from os.path import join, dirname
+from setuptools import setup, find_packages
+
+__version__ = open(join(dirname(__file__), 'VERSION')).read().strip()
 
 
 setup(
@@ -12,22 +11,16 @@ setup(
     description='Client interface for Scrapinghub API',
     author='Scrapinghub',
     author_email='info@scrapinghub.com',
-    url='http://github.com/scrapinghub/python-scrapinghub',
+    url='http://scrapinghub.com',
     platforms = ['Any'],
+    packages=find_packages(),
+    package_data={
+        'scrapinghub': ['VERSION'],
+        'hubstorage': ['VERSION']},
     py_modules = ['scrapinghub'],
-    install_requires = ['requests'],
-    classifiers = [
-        'Development Status :: 5 - Production/Stable',
-        'License :: OSI Approved :: BSD License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Programming Language :: Python :: Implementation :: PyPy',
-        'Topic :: Internet :: WWW/HTTP',
-    ],
+    install_requires=['requests', 'retrying>=1.3.3'],
+    classifiers=['Development Status :: 4 - Beta',
+               'License :: OSI Approved :: BSD License',
+               'Operating System :: OS Independent',
+               'Programming Language :: Python'],
 )
