@@ -1,21 +1,16 @@
 language: python
 python: 2.7
-env:
-  matrix:
-  - TOXENV=py27
-  - TOXENV=pypy
-  - TOXENV=py33
 install:
 - "./.travis-workarounds.sh"
 - pip install -U tox
-script: tox
+script: true
 deploy:
   provider: pypi
   distributions: "sdist bdist_wheel"
-  on:
-    tags: true
-    all_branches: true
-    repo: scrapinghub/python-scrapinghub
   user: scrapinghub
   password:
     secure: SMPghJT7GScj6jQBimk8r58vRNfbKQQkXvfh5DJC38d0XeNtpBJQ750LT7Zlw8R+qAadT8sA7M1YYZY8mIQgdakQv48zX7EVxyc/8a2rAOF9p/ikRn0Dc50Qzr9U5Rtbsp7PMYlmUyeo9VjrStPPkHUPW2Q7vprTpdFrlDaf3WA=
+  on:
+    tags: true
+    branch: master
+    repo: scrapinghub/python-scrapinghub
