@@ -1,7 +1,9 @@
 import os
 import unittest
 import random
+import requests
 from hubstorage import HubstorageClient
+from hubstorage.utils import urlpathjoin
 
 
 class HSTestCase(unittest.TestCase):
@@ -12,7 +14,7 @@ class HSTestCase(unittest.TestCase):
     auth = os.getenv('HS_AUTH', 'f' * 32)
     frontier = 'test'
     slot = 'site.com'
-    testbotgroup = 'python-hubstorage-test'
+    testbotgroups = ['python-hubstorage-test', 'g1']
 
     @classmethod
     def setUpClass(cls):
@@ -63,13 +65,22 @@ class HSTestCase(unittest.TestCase):
 
     @classmethod
     def _set_testbotgroup(cls):
-        cls.project.settings.apipost(jl={'botgroups': [cls.testbotgroup]})
+        cls.project.settings.apipost(jl={'botgroups': [cls.testbotgroups[0]]})
+        # Additional step to populate JobQ's botgroups table
+        for botgroup in cls.testbotgroups:
+            url = urlpathjoin(cls.endpoint, 'botgroups',
+                              botgroup, 'max_running')
+            requests.post(url, auth=cls.project.auth, data='null')
         cls.project.settings.expire()
 
     @classmethod
     def _unset_testbotgroup(cls):
         cls.project.settings.apidelete('botgroups')
         cls.project.settings.expire()
+        # Additional step to delete botgroups in JobQ
+        for botgroup in cls.testbotgroups:
+            url = urlpathjoin(cls.endpoint, 'botgroups', botgroup)
+            requests.delete(url, auth=cls.project.auth)
 
     def start_job(self, **startparams):
         jobdata = self.project.jobq.start(**startparams)
