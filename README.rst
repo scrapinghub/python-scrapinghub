@@ -25,7 +25,7 @@ Testing
 -------
 
 Running the tests require the hubstorage backend to be running,
-and the python `responses` library (see `tox.ini`).
+and the python `responses` library (see `requirements-test.txt`).
 
 Usage
 ---------
@@ -51,7 +51,7 @@ To get project settings or jobs summary:
  u'pending': 0,
  u'project': 1111111,
  u'running': 0}
- 
+
 Spider
 **********
 
@@ -167,7 +167,7 @@ To get jobs filtered by tags:
 
 >>> jobs_metadata = project.jobq.list(has_tag=['new', 'verified'], lacks_tag='obsolete')
 
-List of tags has ``OR`` power, so in the case above jobs with 'new' or 'verified' tag are expected. 
+List of tags has ``OR`` power, so in the case above jobs with 'new' or 'verified' tag are expected.
 
 To get certain number of last finished jobs per some spider:
 
@@ -188,7 +188,7 @@ To iterate through items:
 >>> items = job.items.iter_values()
 >>> for item in items:
    # do something, item is just a dict
-   
+
 Logs
 ********
 
@@ -197,7 +197,7 @@ To iterate through 10 first logs for example:
 >>> logs = job.logs.iter_values(count=10)
 >>> for log in logs:
    # do something, log is a dict with log level, message and time keys
-   
+
 Collections
 **************
 
