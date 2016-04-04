@@ -42,7 +42,7 @@ class RetryTest(HSTestCase):
     @responses.activate
     def test_retrier_does_not_catch_unwanted_exception(self):
         # Prepare
-        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=2)
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=2, max_retry_time=1)
         job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
         callback, attempts_count = self.make_request_callback(3, job_metadata, http_error_status=403)
 
@@ -65,7 +65,7 @@ class RetryTest(HSTestCase):
     @responses.activate
     def test_retrier_catches_badstatusline_and_429(self):
         # Prepare
-        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3, max_retry_time=1)
         job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
 
         attempts_count = [0]  # use a list for nonlocal mutability used in request_callback
@@ -93,7 +93,7 @@ class RetryTest(HSTestCase):
     @responses.activate
     def test_api_delete_can_be_set_to_non_idempotent(self):
         # Prepare
-        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3, max_retry_time=1)
         job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
         callback_delete, attempts_count_delete = self.make_request_callback(2, job_metadata)
 
@@ -115,7 +115,7 @@ class RetryTest(HSTestCase):
     @responses.activate
     def test_collection_store_and_delete_are_retried(self):
         # Prepare
-        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3, max_retry_time=1)
 
         callback_post, attempts_count_post = self.make_request_callback(2, [])
         callback_delete, attempts_count_delete = self.make_request_callback(2, [])
@@ -136,7 +136,7 @@ class RetryTest(HSTestCase):
     @responses.activate
     def test_delete_requests_are_retried(self):
         # Prepare
-        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3, max_retry_time=1)
         job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
         callback_getpost, attempts_count_getpost = self.make_request_callback(0, job_metadata)
         callback_delete, attempts_count_delete = self.make_request_callback(2, job_metadata)
@@ -157,7 +157,7 @@ class RetryTest(HSTestCase):
     @responses.activate
     def test_metadata_save_does_retry(self):
         # Prepare
-        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3, max_retry_time=1)
         job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
         callback_get, attempts_count_get = self.make_request_callback(0, job_metadata)
         callback_post, attempts_count_post = self.make_request_callback(2, job_metadata)
@@ -197,7 +197,7 @@ class RetryTest(HSTestCase):
     @responses.activate
     def test_get_job_does_retry(self):
         # Prepare
-        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3)
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=3, max_retry_time=1)
         job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
         callback, attempts_count = self.make_request_callback(2, job_metadata)
 
@@ -236,7 +236,7 @@ class RetryTest(HSTestCase):
     @responses.activate
     def test_get_job_does_fails_on_too_many_retries(self):
         # Prepare
-        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=2)
+        client = HubstorageClient(auth=self.auth, endpoint=self.endpoint, max_retries=2, max_retry_time=1)
         job_metadata = {'project': self.projectid, 'spider': self.spidername, 'state': 'pending'}
         callback, attempts_count = self.make_request_callback(3, job_metadata)
 
