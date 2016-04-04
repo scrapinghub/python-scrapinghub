@@ -142,7 +142,7 @@ class JobqTest(HSTestCase):
 
     def test_summary_countstart(self):
         # push more than 5 jobs into same queue
-        N = 20
+        N = 6
         jobq = self.project.jobq
         for state in ('pending', 'running', 'finished'):
             for idx in xrange(N):
