@@ -69,6 +69,7 @@ class ProjectTest(HSTestCase):
                                    foo=u'bar')
         self.assertEqual(job.metadata.get('state'), u'running')
         self.assertEqual(job.metadata.get('foo'), u'bar')
+        self.project.jobq.finish(job)
         self.project.jobq.delete(job)
         job.metadata.expire()
         self.assertEqual(job.metadata.get('state'), u'deleted')

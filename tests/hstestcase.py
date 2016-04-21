@@ -55,6 +55,7 @@ class HSTestCase(unittest.TestCase):
 
     @classmethod
     def _remove_job(cls, jobkey):
+        cls.project.jobq.finish(jobkey)
         cls.project.jobq.delete(jobkey)
         cls._delete_job(jobkey)
 
