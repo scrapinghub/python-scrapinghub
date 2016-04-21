@@ -15,6 +15,7 @@ class ClientTest(HSTestCase):
         m = job.metadata
         self.assertEqual(m.get('state'), u'running', c.auth)
         self.assertEqual(m.get('foo'), u'baz')
+        self.project.jobq.finish(job)
         self.project.jobq.delete(job)
 
         # job auth token is valid only while job is running
