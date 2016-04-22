@@ -243,3 +243,12 @@ class ProjectTest(HSTestCase):
             with failing_downloader(resource):
                 downloaded = list(resource.iter_values())
                 self.assertEqual(len(downloaded), 20)
+
+    def test_output_string(self):
+        project = self.hsclient.get_project(self.projectid)
+        project.push_job(self.spidername)
+        job = self.start_job()
+        job.items.write({'foo': 'bar'})
+        job.close_writers()
+        items = self.hsclient.get_job(job.key).items.iter_json()
+        self.assertEqual(type(next(items)), str)
