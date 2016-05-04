@@ -1,6 +1,7 @@
 import random
+from six.moves import range
 from contextlib import closing
-from hstestcase import HSTestCase
+from .hstestcase import HSTestCase
 from hubstorage import HubstorageClient
 from hubstorage.utils import millitime
 
@@ -79,7 +80,7 @@ class SystemTest(HSTestCase):
         client = HubstorageClient(endpoint=self.endpoint)
         with closing(client) as scraperclient:
             job = scraperclient.get_job(jobkey, auth=jobauth)
-            for idx in xrange(self.MAGICN):
+            for idx in range(self.MAGICN):
                 iid = job.items.write({'uuid': idx})
                 job.logs.debug('log debug %s' % idx, idx=idx)
                 job.logs.info('log info %s' % idx, idx=idx)

@@ -1,9 +1,9 @@
 """
 Test Retry Policy
 """
-from httplib import BadStatusLine
+from six.moves.http_client import BadStatusLine
 from requests import HTTPError, ConnectionError
-from hstestcase import HSTestCase
+from .hstestcase import HSTestCase
 from hubstorage import HubstorageClient
 import responses
 import json
@@ -76,7 +76,7 @@ class RetryTest(HSTestCase):
             if attempts_count[0] <= 2:
                 raise ConnectionError("Connection aborted.", BadStatusLine("''"))
             if attempts_count[0] == 3:
-                return (429, {}, {})
+                return (429, {}, u'')
             else:
                 resp_body = dict(job_metadata)
                 return (200, {}, json.dumps(resp_body))

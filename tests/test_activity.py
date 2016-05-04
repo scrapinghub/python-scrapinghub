@@ -1,14 +1,15 @@
 """
 Test Activty
 """
-from hstestcase import HSTestCase
+from .hstestcase import HSTestCase
+from six.moves import range
 
 
 class ActivityTest(HSTestCase):
 
     def test_post_and_reverse_get(self):
         # make some sample data
-        orig_data = [{u'foo': 42, u'counter': i} for i in xrange(20)]
+        orig_data = [{u'foo': 42, u'counter': i} for i in range(20)]
         data1 = orig_data[:10]
         data2 = orig_data[10:]
 
@@ -22,12 +23,12 @@ class ActivityTest(HSTestCase):
         self.assertEqual(orig_data[::-1], result)
 
     def test_filters(self):
-        self.project.activity.post({'c': i} for i in xrange(10))
+        self.project.activity.post({'c': i} for i in range(10))
         r = list(self.project.activity.list(filter='["c", ">", [5]]', count=2))
         self.assertEqual(r, [{'c': 9}, {'c': 8}])
 
     def test_timestamp(self):
         self.project.activity.add({'foo': 'bar'}, baz='qux')
-        entry = self.project.activity.list(count=1, meta='_ts').next()
+        entry = next(self.project.activity.list(count=1, meta='_ts'))
         self.assertTrue(entry.pop('_ts', None))
         self.assertEqual(entry, {'foo': 'bar', 'baz': 'qux'})

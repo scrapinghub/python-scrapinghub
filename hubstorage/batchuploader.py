@@ -3,12 +3,14 @@ import socket
 import random
 import logging
 import warnings
+import six
+from six.moves import range
+from six.moves.queue import Queue
+from io import BytesIO
 from gzip import GzipFile
 from itertools import count
 import requests
-from requests.compat import StringIO
 from collections import deque
-from Queue import Queue
 from threading import Thread, Event
 from .utils import xauth, iterqueue
 from .serialization import jsonencode
@@ -91,7 +93,7 @@ class BatchUploader(object):
                 continue
 
             # Delay once all writers are processed
-            if (ctr.next() % len(self._writers) == 0) and not self.closed:
+            if (next(ctr) % len(self._writers) == 0) and not self.closed:
                 self._interruptable_sleep()
 
             # Get next writer to process
@@ -125,12 +127,12 @@ class BatchUploader(object):
                 'content-encoding': w.content_encoding,
             })
             w.offset += qiter.count
-            for _ in xrange(qiter.count):
+            for _ in range(qiter.count):
                 q.task_done()
             if w.callback is not None:
                 try:
                     w.callback(response)
-                except Exception, e:
+                except Exception:
                     logger.exception("Callback for %s failed", w.url)
 
     def _content_encode(self, qiter, w):
@@ -148,12 +150,12 @@ class BatchUploader(object):
         Use polinomial backoff with 10 minutes maximum interval that accounts
         for ~30 hours of total retry time.
 
-        >>> sum(min(x**2, 600) for x in xrange(200)) / 3600
+        >>> sum(min(x**2, 600) for x in range(200)) / 3600
         30
         """
         url = batch['url']
         offset = batch['offset']
-        for retryn in xrange(self.worker_max_retries):
+        for retryn in range(self.worker_max_retries):
             emsg = ''
             try:
                 r = self._upload(batch)
@@ -229,7 +231,7 @@ class _BatchWriter(object):
         self.itemsq.put(data)
         if self.itemsq.full():
             self.uploader.interrupt()
-        return self._nextid.next()
+        return next(self._nextid)
 
     def flush(self):
         self.flushme = True
@@ -249,18 +251,22 @@ class _BatchWriter(object):
         return self.url
 
 
-def _encode_identity(iter):
-    data = StringIO()
-    for item in iter:
+def _encode_identity(iterable):
+    data = BytesIO()
+    for item in iterable:
+        if isinstance(item, six.text_type):
+            item = item.encode('utf8')
         data.write(item)
-        data.write('\n')
+        data.write(b'\n')
     return data.getvalue()
 
 
-def _encode_gzip(iter):
-    data = StringIO()
+def _encode_gzip(iterable):
+    data = BytesIO()
     with GzipFile(fileobj=data, mode='w') as gzo:
-        for item in iter:
+        for item in iterable:
+            if isinstance(item, six.text_type):
+                item = item.encode('utf8')
             gzo.write(item)
-            gzo.write('\n')
+            gzo.write(b'\n')
     return data.getvalue()

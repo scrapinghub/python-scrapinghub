@@ -2,12 +2,14 @@
 Test Project
 """
 import json
+import six
+from six.moves import range
 from random import randint, random
 from requests.exceptions import HTTPError
 from hubstorage import HubstorageClient
 from hubstorage.utils import millitime
-from hstestcase import HSTestCase
-from testutil import failing_downloader
+from .hstestcase import HSTestCase
+from .testutil import failing_downloader
 
 
 class ProjectTest(HSTestCase):
@@ -16,8 +18,8 @@ class ProjectTest(HSTestCase):
         p1 = self.hsclient.get_project(int(self.projectid))
         p2 = self.hsclient.get_project(str(self.projectid))
         self.assertEqual(p1.projectid, p2.projectid)
-        self.assertEqual(type(p1.projectid), str)
-        self.assertEqual(type(p2.projectid), str)
+        self.assertEqual(type(p1.projectid), six.text_type)
+        self.assertEqual(type(p2.projectid), six.text_type)
         self.assertRaises(AssertionError, self.hsclient.get_project, '111/3')
 
     def test_get_job_from_key(self):
@@ -173,21 +175,21 @@ class ProjectTest(HSTestCase):
 
         job.requests.close()
         rr = job.requests.list()
-        self.assertEqual(rr.next(),
+        self.assertEqual(next(rr),
                          {u'status': 200, u'rs': 1337,
                           u'url': u'http://test.com/', u'time': ts,
                           u'duration': 5, u'method': u'GET'})
-        self.assertEqual(rr.next(),
+        self.assertEqual(next(rr),
                          {u'status': 400, u'parent': 0, u'rs': 0,
                           u'url': u'http://test.com/2', u'time': ts + 1,
                           u'duration': 1, u'method': u'POST'})
-        self.assertEqual(rr.next(),
+        self.assertEqual(next(rr),
                          {u'status': 400, u'fp': u'1234', u'parent': 0,
                           u'rs': 0, u'url': u'http://test.com/3',
                           u'time': ts + 2, u'duration': 1,
                           u'method': u'PUT'})
 
-        self.assertRaises(StopIteration, rr.next)
+        self.assertRaises(StopIteration, next, rr)
 
     def test_samples(self):
         # no samples stored
@@ -208,9 +210,9 @@ class ProjectTest(HSTestCase):
         samples = []
         ts = millitime()
         count = int(j2.samples.batch_size * (random() + randint(1, 5)))
-        for _ in xrange(count):
+        for _ in range(count):
             ts += randint(1, 2**16)
-            row = [ts] + list(randint(0, 2**16) for _ in xrange(randint(0, 100)))
+            row = [ts] + list(randint(0, 2**16) for _ in range(randint(0, 100)))
             samples.append(row)
             j2.samples.write(row)
         j2.samples.flush()
@@ -228,7 +230,7 @@ class ProjectTest(HSTestCase):
 
     def test_bulkdata(self):
         j = self.project.push_job(self.spidername, state='running')
-        for i in xrange(20):
+        for i in range(20):
             j.logs.info("log line %d" % i)
             j.items.write(dict(field1="item%d" % i))
             j.requests.add("http://test.com/%d" % i,
@@ -241,3 +243,12 @@ class ProjectTest(HSTestCase):
             with failing_downloader(resource):
                 downloaded = list(resource.iter_values())
                 self.assertEqual(len(downloaded), 20)
+
+    def test_output_string(self):
+        project = self.hsclient.get_project(self.projectid)
+        project.push_job(self.spidername)
+        job = self.start_job()
+        job.items.write({'foo': 'bar'})
+        job.close_writers()
+        items = self.hsclient.get_job(job.key).items.iter_json()
+        self.assertEqual(type(next(items)), str)

@@ -1,3 +1,5 @@
+import six
+from six.moves import range
 import logging, time, json, socket
 from collections import MutableMapping
 import requests.exceptions as rexc
@@ -26,7 +28,10 @@ class ResourceType(object):
 
         r = self.client.request(**kwargs)
 
-        return r.iter_lines()
+        lines = r.iter_lines()
+        if six.PY3:
+            return (l.decode(r.encoding or 'utf8') for l in lines)
+        return lines
 
     def apirequest(self, _path=None, **kwargs):
         return jldecode(self._iter_lines(_path, **kwargs))
@@ -77,7 +82,7 @@ class DownloadableResource(ResourceType):
         lastexc = None
         line = None
         offset = 0
-        for attempt in xrange(self.MAX_RETRIES):
+        for attempt in range(self.MAX_RETRIES):
             self._add_resume_param(line, offset, apiparams)
             try:
                 for line in self._iter_lines(_path=_path, params=apiparams,
@@ -153,7 +158,7 @@ class ItemsResourceType(ResourceType):
             return o
 
     def stats(self):
-        return self.apiget('stats').next()
+        return next(self.apiget('stats'))
 
 
 class MappingResourceType(ResourceType, MutableMapping):
@@ -177,7 +182,7 @@ class MappingResourceType(ResourceType, MutableMapping):
         if self._cached is None:
             r = self.apiget()
             try:
-                self._cached = r.next()
+                self._cached = next(r)
             except StopIteration:
                 self._cached = {}
 
@@ -194,8 +199,8 @@ class MappingResourceType(ResourceType, MutableMapping):
             if not self.ignore_fields:
                 self.apipost(jl=self._data, is_idempotent=True)
             else:
-                self.apipost(jl=dict((k, v) for k, v in self._data.iteritems()
-                                     if k not in self.ignore_fields),
+                self.apipost(jl={k: v for k, v in six.iteritems(self._data)
+                                 if k not in self.ignore_fields},
                              is_idempotent=True)
 
     def __getitem__(self, key):
