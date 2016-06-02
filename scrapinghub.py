@@ -48,7 +48,8 @@ class Connection(object):
         'eggs_list': 'eggs/list',
         'as_project_slybot': 'as/project-slybot',
         'as_spider_properties': 'as/spider-properties',
-        'schedule': 'schedule',
+        'run': 'run',
+        'schedule': 'schedule',  # Deprecated, use 'run' instead
         'items': 'items',
         'log': 'log',
         'spiders': 'spiders/list',
@@ -204,7 +205,14 @@ class Project(RequestProxyMixin):
         warnings.warn("Project.name is deprecated, use Project.id instead", stacklevel=2)
         return self.id
 
+    def run(self, spider, **params):
+        params['spider'] = spider
+        result = self._post('run', 'json', params)
+        return result['jobid']
+
     def schedule(self, spider, **params):
+        warnings.warn("Project.schedule() method is deprecated, "
+                      "use Project.run() method instead", stacklevel=2)
         params['spider'] = spider
         result = self._post('schedule', 'json', params)
         return result['jobid']

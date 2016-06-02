@@ -39,7 +39,7 @@ And select a particular project to work with::
 
 To schedule a spider run (it returns the job id)::
 
-    >>> project.schedule('myspider', arg1='val1')
+    >>> project.run('myspider', arg1='val1')
     u'123/1/1'
 
 To get the list of spiders in the project::
