@@ -11,10 +11,22 @@ from .testutil import failing_downloader
 def _mkitem():
     return dict(field1='value1', field2=['value2a', 'value2b'], field3=3, field4={'v4k': 'v4v'})
 
+def random_collection_name():
+    return "test_collection_%s" % random.randint(1, 1000000)
 
 class CollectionsTest(HSTestCase):
 
-    test_collection_name = "test_collection_%s" % random.randint(1, 1000000)
+    # For fixed tests (test_errors, test_data_download)
+    test_collection_name = random_collection_name()
+
+    def test_simple_count(self):
+        coll_name = random_collection_name()
+        test_item = dict(_mkitem())
+        test_item['_key'] = 'a'
+
+        collection = self.project.collections.new_store(coll_name)
+        collection.set(test_item)
+        assert collection.count() == 1
 
     def post_get_delete_test(self):
         test_item = _mkitem()
