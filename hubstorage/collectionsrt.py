@@ -80,12 +80,12 @@ class Collections(DownloadableResource):
             while True:
                 r = next(self.apirequest(path, method=method, params=getparams))
                 total += r[total_param]
-                next = r.get('nextstart')
-                if next is None:
+                next_start = r.get('nextstart')
+                if next_start is None:
                     break
-                getparams['start'] = next
+                getparams['start'] = next_start
                 if progress:
-                    progress(total, next)
+                    progress(total, next_start)
             return total
         except HTTPError as exc:
             if exc.response.status_code == 400:
