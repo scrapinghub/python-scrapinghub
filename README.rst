@@ -5,8 +5,8 @@ HubStorage service client library
 .. image:: https://badge.fury.io/py/hubstorage.png
    :target: http://badge.fury.io/py/hubstorage
 
-.. image:: https://secure.travis-ci.org/scrapinghub/python-hubstorage.png?branch=master
-   :target: http://travis-ci.org/scrapinghub/python-hubstorage
+.. image:: https://travis-ci.org/scrapinghub/python-hubstorage.svg?branch=master
+   :target: https://travis-ci.org/scrapinghub/python-hubstorage
 
 .. note:: This module is experimental and its API may change without previous notice.
 
