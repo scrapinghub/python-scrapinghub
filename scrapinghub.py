@@ -4,24 +4,24 @@ Scrapinghub API Client Library
 
 from __future__ import division, print_function, absolute_import
 import os
+import sys
 import json
 import logging
 import socket
 import time
 import warnings
 
-try:
-    # For Python 2
-    import httplib
-except ImportError:
-    # For Python 3
-    import http.client as httplib
 
-#python2 and python3 compatibility
-try:
+# Python 2/3 compatibility
+_IS_PYTHON2 = sys.version_info < (3,)
+if _IS_PYTHON2:
+    import httplib
+    _BINARY_TYPE = str
     range = xrange
-except NameError:
-    pass
+else:
+    import http.client as httplib
+    _BINARY_TYPE = bytes
+
 
 __all__ = ["APIError", "Connection"]
 __version__ = '1.7.0'
@@ -153,7 +153,9 @@ class Connection(object):
             except KeyError:
                 raise APIError("JSON response does not contain status")
         else:  # jl
-            return (json.loads(line.decode('utf-8')) for line in response.iter_lines())
+            return (json.loads(line.decode('utf-8')
+                              if isinstance(line, _BINARY_TYPE) else line)
+                        for line in response.iter_lines())
 
     ##
     ## public methods
