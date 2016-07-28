@@ -1,21 +1,31 @@
 language: python
-python: 2.7
-env:
-  matrix:
-  - TOXENV=py27
-  - TOXENV=pypy
-  - TOXENV=py33
+matrix:
+  include:
+    - python: 2.7
+      env: TOXENV=py27
+    - python: pypy
+      env: TOXENV=pypy
+    - python: 3.3
+      env: TOXENV=py33
+    - python: 3.4
+      env: TOXENV=py34
+    - python: 3.5
+      env: TOXENV=py35
 install:
-- "./.travis-workarounds.sh"
-- pip install -U tox
-script: tox
+  - pip install -U tox coverage codecov pytest-xdist
+script:
+  - tox
+after_success:
+  - codecov
+cache:
+  directories:
+    - $HOME/.cache/pip
 deploy:
   provider: pypi
-  distributions: "sdist bdist_wheel"
+  distributions: sdist bdist_wheel
   on:
     tags: true
-    all_branches: true
-    repo: scrapinghub/python-scrapinghub
+    condition: $TOXENV == py27 && $TRAVIS_TAG =~ ^[0-9]+[.][0-9]+[.][0-9]+(rc[0-9]+|dev[0-9]+)?$
   user: scrapinghub
   password:
     secure: SMPghJT7GScj6jQBimk8r58vRNfbKQQkXvfh5DJC38d0XeNtpBJQ750LT7Zlw8R+qAadT8sA7M1YYZY8mIQgdakQv48zX7EVxyc/8a2rAOF9p/ikRn0Dc50Qzr9U5Rtbsp7PMYlmUyeo9VjrStPPkHUPW2Q7vprTpdFrlDaf3WA=
