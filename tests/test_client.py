@@ -2,9 +2,20 @@
 Test Client
 """
 from .hstestcase import HSTestCase
-from hubstorage.utils import millitime, apipoll
+from hubstorage import HubstorageClient
+from hubstorage.utils import apipoll
 
 class ClientTest(HSTestCase):
+
+    def test_default_ua(self):
+        self.assertEqual(self.hsclient.user_agent,
+                         HubstorageClient.DEFAULT_USER_AGENT)
+
+    def test_custom_ua(self):
+        client = HubstorageClient(auth=HSTestCase.auth,
+                                  endpoint=HSTestCase.endpoint,
+                                  user_agent='testUA')
+        self.assertEqual(client.user_agent, 'testUA')
 
     def test_push_job(self):
         c = self.hsclient

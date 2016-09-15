@@ -40,7 +40,7 @@ def _hc_retry_on_exception(err):
 class HubstorageClient(object):
 
     DEFAULT_ENDPOINT = 'https://storage.scrapinghub.com/'
-    USERAGENT = 'python-hubstorage/{0}'.format(__version__)
+    DEFAULT_USER_AGENT = 'python-hubstorage/{0}'.format(__version__)
 
     DEFAULT_CONNECTION_TIMEOUT_S = 60.0
     RETRY_DEFAUT_MAX_RETRY_TIME_S = 60.0
@@ -49,7 +49,8 @@ class HubstorageClient(object):
     RETRY_DEFAULT_JITTER_MS = 500
     RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS = 500
 
-    def __init__(self, auth=None, endpoint=None, connection_timeout=None, max_retries=None, max_retry_time=None):
+    def __init__(self, auth=None, endpoint=None, connection_timeout=None,
+                 max_retries=None, max_retry_time=None, user_agent=None):
         """
         Note:
             max_retries and max_retry_time change how the client attempt to retry failing requests that are
@@ -70,6 +71,7 @@ class HubstorageClient(object):
         self.auth = xauth(auth)
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
         self.connection_timeout = connection_timeout or self.DEFAULT_CONNECTION_TIMEOUT_S
+        self.user_agent = user_agent or self.DEFAULT_USER_AGENT
         self.session = self._create_session()
         self.retrier = self._create_retrier(max_retries, max_retry_time)
         self.jobq = JobQ(self, None)
@@ -135,7 +137,7 @@ class HubstorageClient(object):
 
     def _create_session(self):
         s = session()
-        s.headers.update({'User-Agent': self.USERAGENT})
+        s.headers.update({'User-Agent': self.user_agent})
         return s
 
     @property
