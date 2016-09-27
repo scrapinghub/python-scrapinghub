@@ -5,6 +5,7 @@ from collections import MutableMapping
 import requests.exceptions as rexc
 from .utils import urlpathjoin, xauth
 from .serialization import jlencode, jldecode, mpdecode
+from .serialization import MSGPACK_AVAILABLE
 
 logger = logging.getLogger('hubstorage.resourcetype')
 CHUNK_SIZE = 512
@@ -24,11 +25,11 @@ class ResourceType(object):
     def _allows_mpack(self, path=None):
         """ Check if request can be served with msgpack data.
 
-        Currently, items, logs, collections and
-        samples endpoints are able to return msgpack data. However, /stats
-        calls can only return JSON data for now.
+        Currently, items, logs, collections and samples endpoints are able to
+        return msgpack data. However, /stats calls can only return JSON data
+        for now.
         """
-        if path == 'stats':
+        if not MSGPACK_AVAILABLE or path == 'stats':
             return False
         return self.resource_type in ('items', 'logs',
                                       'collections', 'samples')
