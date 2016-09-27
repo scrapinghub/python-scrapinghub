@@ -4,9 +4,11 @@ import logging, time, json, socket
 from collections import MutableMapping
 import requests.exceptions as rexc
 from .utils import urlpathjoin, xauth
-from .serialization import jlencode, jldecode
+from .serialization import jlencode, jldecode, mpdecode
+from .serialization import MSGPACK_AVAILABLE
 
 logger = logging.getLogger('hubstorage.resourcetype')
+CHUNK_SIZE = 512
 
 
 class ResourceType(object):
@@ -19,6 +21,29 @@ class ResourceType(object):
         self.key = urlpathjoin(self.resource_type, key, self.key_suffix)
         self.auth = xauth(auth) or client.auth
         self.url = urlpathjoin(client.endpoint, self.key)
+
+    def _allows_mpack(self, path=None):
+        """ Check if request can be served with msgpack data.
+
+        Currently, items, logs, collections and samples endpoints are able to
+        return msgpack data. However, /stats calls can only return JSON data
+        for now.
+        """
+        if not MSGPACK_AVAILABLE or path == 'stats':
+            return False
+        return self.resource_type in ('items', 'logs',
+                                      'collections', 'samples')
+
+    @staticmethod
+    def _enforce_msgpack(**kwargs):
+        kwargs.setdefault('headers', {})
+        kwargs['headers']['Accept'] = 'application/x-msgpack'
+        return kwargs
+
+    def _iter_content(self, _path, **kwargs):
+        kwargs['url'] = urlpathjoin(self.url, _path)
+        kwargs.setdefault('auth', self.auth)
+        return self.client.request(**kwargs).iter_content(CHUNK_SIZE)
 
     def _iter_lines(self, _path, **kwargs):
         kwargs['url'] = urlpathjoin(self.url, _path)
@@ -34,6 +59,9 @@ class ResourceType(object):
         return lines
 
     def apirequest(self, _path=None, **kwargs):
+        if self._allows_mpack(_path) and kwargs.get('method').upper() == 'GET':
+            kwargs = self._enforce_msgpack(**kwargs)
+            return mpdecode(self._iter_content(_path=_path, **kwargs))
         return jldecode(self._iter_lines(_path, **kwargs))
 
     def apipost(self, _path=None, **kwargs):
@@ -52,15 +80,18 @@ class DownloadableResource(ResourceType):
     MAX_RETRIES = 180
     RETRY_INTERVAL = 60
 
-    def _add_resume_param(self, lastline, offset, params):
-        """Adds a startafter=LASTKEY parameter if there was
-        a lastvalue. It also adds meta=_key to ensure a key is returned
-        """
+    @staticmethod
+    def _add_key_meta(params):
+        """Adds meta=_key to ensure a key is returned"""
         meta = params.get('meta', [])
         if '_key' not in meta:
             meta = list(meta)
             meta.append('_key')
             params['meta'] = meta
+        return params
+
+    def _add_resume_param(self, lastline, offset, params):
+        """Adds a startafter=LASTKEY parameter if there was a lastvalue"""
         if lastline is not None:
             lastvalue = json.loads(lastline)
             params['startafter'] = lastvalue['_key']
@@ -70,24 +101,25 @@ class DownloadableResource(ResourceType):
     def iter_values(self, *args, **kwargs):
         """Reliably iterate through all data as python objects
 
-        calls iter_json, decoding the results
+        calls either iter_json or iter_msgpack, decoding the results
         """
+        if self._allows_mpack():
+            return mpdecode(self.iter_msgpack(*args, **kwargs))
         return jldecode(self.iter_json(*args, **kwargs))
 
-    def iter_json(self, _path=None, requests_params=None, **apiparams):
-        """Reliably iterate through all data as json strings"""
-        requests_params = dict(requests_params or {})
-        requests_params.setdefault('method', 'GET')
-        requests_params.setdefault('stream', True)
+    def _retry(self, iter_callback, resume=False, _path=None, requests_params=None, **apiparams):
+        """Reliable iterate through all data calling iter_callback"""
+        self._add_key_meta(apiparams)
         lastexc = None
-        line = None
+        chunk = None
         offset = 0
-        for attempt in range(self.MAX_RETRIES):
-            self._add_resume_param(line, offset, apiparams)
+        for attempt in xrange(self.MAX_RETRIES):
+            if resume:
+                self._add_resume_param(chunk, offset, apiparams)
             try:
-                for line in self._iter_lines(_path=_path, params=apiparams,
-                        **requests_params):
-                    yield line
+                for chunk in iter_callback(_path=_path, params=apiparams,
+                                           **requests_params):
+                    yield chunk
                     offset += 1
                 break
             except (ValueError, socket.error, rexc.RequestException) as exc:
@@ -103,7 +135,27 @@ class DownloadableResource(ResourceType):
         else:
             url = urlpathjoin(self.url, _path)
             logger.error("Failed %d times reading items from %s, params %s, "
-                "last error was: %s", self.MAX_RETRIES, url, apiparams, lastexc)
+                         "last error was: %s", self.MAX_RETRIES, url,
+                         apiparams, lastexc)
+
+    def iter_msgpack(self, _path=None, requests_params=None, **apiparams):
+        """Reliably iterate through all data as msgpack"""
+        requests_params = dict(requests_params or {})
+        requests_params.setdefault('method', 'GET')
+        requests_params.setdefault('stream', True)
+        requests_params = self._enforce_msgpack(**requests_params)
+        for chunk in self._retry(self._iter_content, False, _path,
+                                 requests_params, **apiparams):
+            yield chunk
+
+    def iter_json(self, _path=None, requests_params=None, **apiparams):
+        """Reliably iterate through all data as json strings"""
+        requests_params = dict(requests_params or {})
+        requests_params.setdefault('method', 'GET')
+        requests_params.setdefault('stream', True)
+        for line in self._retry(self._iter_lines, True, _path, requests_params,
+                                **apiparams):
+            yield line
 
 
 class ItemsResourceType(ResourceType):

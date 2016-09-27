@@ -6,6 +6,13 @@ EPOCH = datetime.utcfromtimestamp(0)
 ADAYINSECONDS = 24 * 3600
 
 
+try:
+    from msgpack import Unpacker
+    MSGPACK_AVAILABLE = True
+except ImportError:
+    MSGPACK_AVAILABLE = False
+
+
 def jlencode(iterable):
     if isinstance(iterable, (dict, six.string_types)):
         iterable = [iterable]
@@ -15,6 +22,16 @@ def jlencode(iterable):
 def jldecode(lineiterable):
     for line in lineiterable:
         yield loads(line)
+
+
+def mpdecode(iterable):
+    unpacker = Unpacker(encoding='utf8')
+    for chunk in iterable:
+        unpacker.feed(chunk)
+        # Each chunk can have none or many objects,
+        # so here we dispatch any object ready
+        for obj in unpacker:
+            yield obj
 
 
 def jsonencode(o):
