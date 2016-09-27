@@ -1,10 +1,16 @@
 import six
 from json import dumps, loads
-from msgpack import Unpacker
 from datetime import datetime
 
 EPOCH = datetime.utcfromtimestamp(0)
 ADAYINSECONDS = 24 * 3600
+
+
+try:
+    from msgpack import Unpacker
+    MSGPACK_AVAILABLE = True
+except ImportError:
+    MSGPACK_AVAILABLE = False
 
 
 def jlencode(iterable):
