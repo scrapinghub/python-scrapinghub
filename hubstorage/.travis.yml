@@ -1,0 +1,16 @@
+language: python
+python: 2.7
+sudo: false
+
+script: true
+
+deploy:
+  provider: pypi
+  distributions: "sdist bdist_wheel"
+  user: scrapinghub
+  password:
+    secure: Pp3ar+DLDDGJ217nE90xj1EoW2BBjxcjmMbvQs01MZ/Be+ovefrx13OnLALN6mDr/b4FCpPSjKVPWrDiIuSR+HUP8Wn1iY3IwFr9fdS1ZeNkkLy/ZHd6osiRN0kDqgYbLpLp4tJVQ2NSWrGVfNmYcMgJvvqq+nd3uEx4Taje0cQ=
+  on:
+    tags: true
+    branch: master
+    repo: scrapinghub/python-hubstorage
