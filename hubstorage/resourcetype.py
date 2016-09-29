@@ -113,7 +113,7 @@ class DownloadableResource(ResourceType):
         lastexc = None
         chunk = None
         offset = 0
-        for attempt in xrange(self.MAX_RETRIES):
+        for attempt in range(self.MAX_RETRIES):
             if resume:
                 self._add_resume_param(chunk, offset, apiparams)
             try:
