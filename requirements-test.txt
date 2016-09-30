@@ -1,4 +1,6 @@
--r requirements.txt
 -r requirements-pypy.txt
 
+mock
+pytest
+pytest-cov
 responses==0.5.0
