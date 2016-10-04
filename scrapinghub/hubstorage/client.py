@@ -2,7 +2,6 @@
 High level Hubstorage client
 """
 import logging
-import pkgutil
 from requests import session, HTTPError, ConnectionError, Timeout
 from retrying import Retrying
 from .utils import xauth, urlpathjoin
@@ -12,9 +11,8 @@ from .jobq import JobQ
 from .batchuploader import BatchUploader
 from .resourcetype import ResourceType
 
-__all__ = ["HubstorageClient"]
-__version__ = pkgutil.get_data('hubstorage', 'VERSION').strip()
 
+__all__ = ["HubstorageClient"]
 
 logger = logging.getLogger('HubstorageClient')
 
@@ -37,10 +35,17 @@ def _hc_retry_on_exception(err):
 
     return False
 
+
+def _get_package_version():
+    """Small helper to avoid circular imports"""
+    from scrapinghub import __version__
+    return __version__
+
+
 class HubstorageClient(object):
 
     DEFAULT_ENDPOINT = 'https://storage.scrapinghub.com/'
-    DEFAULT_USER_AGENT = 'python-hubstorage/{0}'.format(__version__)
+    DEFAULT_USER_AGENT = 'python-hubstorage/{0}'.format(_get_package_version())
 
     DEFAULT_CONNECTION_TIMEOUT_S = 60.0
     RETRY_DEFAUT_MAX_RETRY_TIME_S = 60.0

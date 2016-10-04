@@ -1,7 +1,7 @@
 import pytest
 
-from scrapinghub import Job, JobSet
 from scrapinghub import Connection
+from scrapinghub import Job, JobSet
 from scrapinghub import RequestProxyMixin
 from scrapinghub import Project
 

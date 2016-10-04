@@ -17,13 +17,13 @@ upload: clean
 	python setup.py sdist bdist_wheel upload
 
 test:
-	py.test tests/
+	py.test tests/legacy
 
 test-all:
 	tox
 
 lint:
-	flake8 hubstorage
+	flake8 scrapinghub
 
 clean:
 	rm -rf build/ dist/ *.egg-info htmlcov/
