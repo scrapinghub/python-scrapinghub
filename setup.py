@@ -1,5 +1,4 @@
 import sys
-from scrapinghub import __version__
 try:
     from setuptools import setup
 except ImportError:
@@ -12,14 +11,14 @@ mpack_required = 'msgpack-pypy>=0.0.2' if is_pypy else 'msgpack-python>=0.4.7'
 
 setup(
     name='scrapinghub',
-    version=__version__,
+    version='1.8.0',
     license='BSD',
     description='Client interface for Scrapinghub API',
     author='Scrapinghub',
     author_email='info@scrapinghub.com',
     url='http://github.com/scrapinghub/python-scrapinghub',
     platforms = ['Any'],
-    py_modules = ['scrapinghub', 'hubstorage'],
+    packages=['scrapinghub', 'scrapinghub.hubstorage'],
     install_requires=['requests', 'retrying>=1.3.3', 'six>=1.10.0'],
     extras_require = {'msgpack': [mpack_required]},
     classifiers = [

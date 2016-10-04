@@ -22,9 +22,7 @@ else:
     import http.client as httplib
     _BINARY_TYPE = bytes
 
-
 __all__ = ["APIError", "Connection"]
-__version__ = '1.8.0'
 
 logger = logging.getLogger('scrapinghub')
 
