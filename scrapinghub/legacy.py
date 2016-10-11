@@ -23,9 +23,6 @@ else:
     _BINARY_TYPE = bytes
 
 
-__all__ = ["APIError", "Connection"]
-__version__ = '1.8.0'
-
 logger = logging.getLogger('scrapinghub')
 
 
@@ -81,6 +78,7 @@ class Connection(object):
 
     def _create_session(self):
         from requests import session
+        from scrapinghub import __version__
         s = session()
         s.auth = (self.apikey, '')
         s.headers.update({

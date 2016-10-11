@@ -44,14 +44,14 @@ def test_jobset_update(jobset):
           {"param": "newvalue", "paramB": "valueB"}), {})]
 
 
-@mock.patch('scrapinghub.Job')
+@mock.patch('scrapinghub.legacy.Job')
 def test_jobset_stop(job_mock, jobset):
     jobset._jobs = [{'id': '1/2/3'}]
     jobset.stop()
     assert job_mock.return_value.stop.called
 
 
-@mock.patch('scrapinghub.Job')
+@mock.patch('scrapinghub.legacy.Job')
 def test_jobset_delete(job_mock, jobset):
     jobset._jobs = [{'id': '1/2/3'}]
     jobset.delete()
