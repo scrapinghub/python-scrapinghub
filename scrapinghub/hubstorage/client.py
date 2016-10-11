@@ -45,7 +45,8 @@ def _get_package_version():
 class HubstorageClient(object):
 
     DEFAULT_ENDPOINT = 'https://storage.scrapinghub.com/'
-    DEFAULT_USER_AGENT = 'python-hubstorage/{0}'.format(_get_package_version())
+    DEFAULT_USER_AGENT = 'python-scrapinghub/{version}'.format(
+        version=_get_package_version())
 
     DEFAULT_CONNECTION_TIMEOUT_S = 60.0
     RETRY_DEFAUT_MAX_RETRY_TIME_S = 60.0

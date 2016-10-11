@@ -1,8 +1,9 @@
-__all__ = ['__version__', "APIError", "Connection", "HubstorageClient"]
+__all__ = ["APIError", "Connection", "HubstorageClient"]
 
 
 import pkgutil
-__version__ = pkgutil.get_data(__package__, 'VERSION').decode('ascii').strip()
+__version__ = pkgutil.get_data(__package__, 'VERSION')
+__version__ = str(__version__.decode('ascii').strip())
 del pkgutil
 
 
