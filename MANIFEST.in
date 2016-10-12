@@ -1,5 +1,4 @@
 include README.rst
-include README-hubstorage.rst
 include LICENSE
 include MANIFEST.in
 include scrapinghub/VERSION
