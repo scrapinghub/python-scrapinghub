@@ -16,7 +16,19 @@ Requirements
 ============
 
 * Python 2.6 or above
-* `Requests`_ library
+
+
+Installation
+============
+
+The quick way::
+
+    pip install scrapinghub
+
+You can also install the library with MessagePack support, it provides better
+response time and improved bandwidth usage::
+
+    pip install scrapinghub[msgpack]
 
 
 Usage
@@ -347,6 +359,5 @@ To retrieve fingerprints for a given slot::
 
 
 .. _Scrapinghub API: http://doc.scrapinghub.com/api.html
-.. _Requests: http://docs.python-requests.org/
 .. _Collections: http://doc.scrapinghub.com/api/collections.html
 .. _Frontier: http://doc.scrapinghub.com/api/frontier.html
