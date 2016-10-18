@@ -1,12 +1,44 @@
 import re
+
 from requests.exceptions import HTTPError
+
 from .resourcetype import DownloadableResource
+from .serialization import MSGPACK_AVAILABLE
 from .utils import urlpathjoin
+
+
+COLLECTIONS_MSGPACK_REGEX = re.compile(
+    r"""(v?c?s)  # collection type
+        /\w+     # collection name
+        (
+            /?                 # no key
+            |                  # OR
+            /(?P<key>[^/]+)/?  # item key
+        )
+        $
+    """,
+    re.VERBOSE)
 
 
 class Collections(DownloadableResource):
 
     resource_type = 'collections'
+
+    def _allows_mpack(self, path=None):
+        """Check if request can be served with msgpack data.
+
+        Collection scan and get requests for keys are able to return msgpack data.
+
+        :param path: None, tuple or string
+
+        """
+        if not MSGPACK_AVAILABLE:
+            return False
+        # path
+        path = urlpathjoin(path or '')
+        match = COLLECTIONS_MSGPACK_REGEX.match(path)
+        # count endpoint doesn't support msgpack
+        return bool(match and match.group('key') != 'count')
 
     def get(self, _type, _name, _key=None, **params):
         try:

@@ -5,7 +5,8 @@ import time
 from six.moves import range
 from collections import defaultdict
 from .hstestcase import HSTestCase
-from hubstorage import ValueTooLarge
+
+from scrapinghub.hubstorage import ValueTooLarge
 
 
 class BatchUploaderTest(HSTestCase):

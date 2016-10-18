@@ -1,9 +1,12 @@
 import random
-from six.moves import range
 from contextlib import closing
+
+from six.moves import range
+
+from scrapinghub import HubstorageClient
+from scrapinghub.hubstorage.utils import millitime
+
 from .hstestcase import HSTestCase
-from hubstorage import HubstorageClient
-from hubstorage.utils import millitime
 
 
 class SystemTest(HSTestCase):

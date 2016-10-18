@@ -2,8 +2,9 @@ import os
 import unittest
 import random
 import requests
-from hubstorage import HubstorageClient
-from hubstorage.utils import urlpathjoin
+
+from scrapinghub import HubstorageClient
+from scrapinghub.hubstorage.utils import urlpathjoin
 
 
 class HSTestCase(unittest.TestCase):
