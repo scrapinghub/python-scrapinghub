@@ -23,16 +23,22 @@ class ResourceType(object):
         self.url = urlpathjoin(client.endpoint, self.key)
 
     def _allows_mpack(self, path=None):
-        """ Check if request can be served with msgpack data.
+        """Check if request can be served with msgpack data.
 
-        Currently, items, logs, collections and samples endpoints are able to
+        Currently, items, logs and samples endpoints are able to
         return msgpack data. However, /stats calls can only return JSON data
         for now.
+
+        :param path: None, tuple or string
+
         """
-        if not MSGPACK_AVAILABLE or path == 'stats':
+        if not MSGPACK_AVAILABLE:
             return False
-        return self.resource_type in ('items', 'logs',
-                                      'collections', 'samples')
+        path = urlpathjoin(path or '')
+        return (
+            self.resource_type in ('items', 'logs', 'samples') and
+            not path.rstrip('/').endswith('stats')
+        )
 
     @staticmethod
     def _enforce_msgpack(**kwargs):

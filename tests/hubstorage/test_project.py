@@ -2,12 +2,16 @@
 Test Project
 """
 import json
+from random import randint, random
+
+import pytest
 import six
 from six.moves import range
-from random import randint, random
 from requests.exceptions import HTTPError
-from hubstorage import HubstorageClient
-from hubstorage.utils import millitime
+
+from scrapinghub import HubstorageClient
+from scrapinghub.hubstorage.utils import millitime
+
 from .hstestcase import HSTestCase
 from .testutil import failing_downloader
 
@@ -252,3 +256,27 @@ class ProjectTest(HSTestCase):
         job.close_writers()
         items = self.hsclient.get_job(job.key).items.iter_json()
         self.assertEqual(type(next(items)), str)
+
+
+@pytest.mark.parametrize('msgpack_available', [True, False])
+@pytest.mark.parametrize('path,expected_result', [
+    (None, True),
+    ('33/1', True),
+    ('33/1/', True),
+    ((33, 1), True),
+    ('stats', False),
+    ('stats/', False),
+    ('33/1/stats', False),
+    ('33/1/stats/', False),
+    ((33, 1, 'stats'), False),
+])
+def test_allows_msgpack(monkeypatch, msgpack_available, path, expected_result):
+    monkeypatch.setattr(
+        'scrapinghub.hubstorage.resourcetype.MSGPACK_AVAILABLE', msgpack_available)
+    hsclient = HubstorageClient()
+    job = hsclient.get_job('2222000/1/1')
+    for resource in [job.items, job.logs, job.samples]:
+        assert resource._allows_mpack(path) is (msgpack_available and expected_result)
+    assert job.requests._allows_mpack(path) is False
+    assert job.metadata._allows_mpack(path) is False
+    assert job.jobq._allows_mpack(path) is False

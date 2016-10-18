@@ -2,8 +2,8 @@
 Test Client
 """
 from .hstestcase import HSTestCase
-from hubstorage import HubstorageClient
-from hubstorage.utils import apipoll
+from scrapinghub import HubstorageClient
+from scrapinghub.hubstorage.utils import apipoll
 
 class ClientTest(HSTestCase):
 

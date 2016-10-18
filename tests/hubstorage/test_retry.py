@@ -1,13 +1,15 @@
 """
 Test Retry Policy
 """
-from six.moves.http_client import BadStatusLine
-from requests import HTTPError, ConnectionError
-from .hstestcase import HSTestCase
-from hubstorage import HubstorageClient
-import responses
 import json
 import re
+
+import responses
+from requests import HTTPError, ConnectionError
+from scrapinghub import HubstorageClient
+from six.moves.http_client import BadStatusLine
+
+from .hstestcase import HSTestCase
 
 GET = responses.GET
 POST = responses.POST

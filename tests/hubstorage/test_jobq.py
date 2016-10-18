@@ -2,10 +2,13 @@
 Test JobQ
 """
 import os, unittest
+
 import six
 from six.moves import range
-from hubstorage.jobq import DuplicateJobError
-from hubstorage.utils import apipoll
+
+from scrapinghub.hubstorage.jobq import DuplicateJobError
+from scrapinghub.hubstorage.utils import apipoll
+
 from .hstestcase import HSTestCase
 
 

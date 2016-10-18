@@ -2,8 +2,12 @@
 Test Collections
 """
 import random
-from six.moves import range
 from contextlib import closing
+
+import pytest
+from scrapinghub import HubstorageClient
+from six.moves import range
+
 from .hstestcase import HSTestCase
 from .testutil import failing_downloader
 
@@ -121,3 +125,31 @@ class CollectionsTest(HSTestCase):
         self.assertRaises(ValueError, cols.new_store, '/foo')
         self.assertRaises(ValueError, cols.create_writer, 'invalidtype', 'n')
         self.assertRaises(ValueError, cols.create_writer, 's', 'foo-bar')
+
+
+@pytest.mark.parametrize('msgpack_available', [True, False])
+@pytest.mark.parametrize('path,expected_result', [
+        ('s/foo', True),
+        ('s/foo/', True),
+        (('s', 'foo'), True),
+        ('s/foo/bar', True),
+        ('s/foo/bar/', True),
+        (('s', 'foo', 'bar'), True),
+        ('vs/foo/bar/', True),
+        ('cs/foo/bar/', True),
+        ('vcs/foo/bar/', True),
+        ('s/foo/scan', True),
+        ('s/foo/bar/baz', False),
+        ('s/foo/count', False),
+        (('s', 'foo', 'count'), False),
+        ('x/foo', False),
+        (('x', 'foo'), False),
+        ('list', False),
+        (None, False),
+])
+def test_allows_msgpack(monkeypatch, msgpack_available, path, expected_result):
+    monkeypatch.setattr(
+        'scrapinghub.hubstorage.collectionsrt.MSGPACK_AVAILABLE', msgpack_available)
+    hsclient = HubstorageClient()
+    collections = hsclient.get_project(2222000).collections
+    assert collections._allows_mpack(path) is (msgpack_available and expected_result)
