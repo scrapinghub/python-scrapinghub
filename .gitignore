@@ -4,3 +4,8 @@
 *egg-info
 build
 dist
+
+# tests
+/.cache
+.coverage
+
