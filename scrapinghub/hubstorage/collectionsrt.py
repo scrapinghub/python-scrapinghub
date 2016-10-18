@@ -34,7 +34,6 @@ class Collections(DownloadableResource):
         """
         if not MSGPACK_AVAILABLE:
             return False
-        # path
         path = urlpathjoin(path or '')
         match = COLLECTIONS_MSGPACK_REGEX.match(path)
         # count endpoint doesn't support msgpack
