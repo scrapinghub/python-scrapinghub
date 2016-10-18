@@ -2,73 +2,81 @@
 Test Project
 """
 import time
+import pytest
 from six.moves import range
 from collections import defaultdict
-from .hstestcase import HSTestCase
 
 from scrapinghub.hubstorage import ValueTooLarge
+from .conftest import TEST_SPIDER_NAME, TEST_AUTH
 
 
-class BatchUploaderTest(HSTestCase):
+def _job_and_writer(hsclient, hsproject, **writerargs):
+    job = hsproject.push_job(TEST_SPIDER_NAME)
+    hsproject.jobq.start(job)
+    batch_uploader = hsclient.batchuploader
+    writer = batch_uploader.create_writer(
+        job.items.url, auth=TEST_AUTH, **writerargs)
+    return job, writer
 
-    def _job_and_writer(self, **writerargs):
-        self.project.push_job(self.spidername)
-        job = self.start_job()
-        bu = self.hsclient.batchuploader
-        w = bu.create_writer(job.items.url, auth=self.auth, **writerargs)
-        return job, w
 
-    def test_writer_batchsize(self):
-        job, w = self._job_and_writer(size=10)
+def test_writer_batchsize(hsclient, hsproject):
+    job, writer = _job_and_writer(hsclient, hsproject, size=10)
+    for x in range(111):
+        writer.write({'x': x})
+    writer.close()
+    # this works only for small batches (previous size=10 and small data)
+    # as internally HS may commit a single large request as many smaller
+    # commits, each with different timestamps
+    groups = defaultdict(int)
+    for doc in job.items.list(meta=['_ts']):
+        groups[doc['_ts']] += 1
+
+    assert len(groups) == 12
+
+
+def test_writer_maxitemsize(hsclient, hsproject):
+    _, writer = _job_and_writer(hsclient, hsproject)
+    max_size = writer.maxitemsize
+    with pytest.raises(ValueTooLarge) as excinfo1:
+        writer.write({'b': 'x' * max_size})
+    excinfo1.match(
+        r'Value exceeds max encoded size of 1048576 bytes:'
+        ' \'{"b": "x+\\.\\.\\.\'')
+
+    with pytest.raises(ValueTooLarge) as excinfo2:
+        writer.write({'b'*max_size: 'x'})
+    excinfo2.match(
+        r'Value exceeds max encoded size of 1048576 bytes:'
+        ' \'{"b+\\.\\.\\.\'')
+
+    with pytest.raises(ValueTooLarge) as excinfo3:
+        writer.write({'b'*(max_size//2): 'x'*(max_size//2)})
+    excinfo3.match(
+        r'Value exceeds max encoded size of 1048576 bytes:'
+        ' \'{"b+\\.\\.\\.\'')
+
+
+def test_writer_contentencoding(hsclient, hsproject):
+    for ce in ('identity', 'gzip'):
+        job, writer = _job_and_writer(hsclient, hsproject,
+                                      content_encoding=ce)
         for x in range(111):
-            w.write({'x': x})
-        w.close()
-        # this works only for small batches (previous size=10 and small data)
-        # as internally HS may commit a single large request as many smaller
-        # commits, each with different timestamps
-        groups = defaultdict(int)
-        for doc in job.items.list(meta=['_ts']):
-            groups[doc['_ts']] += 1
+            writer.write({'x': x})
+        writer.close()
+        assert job.items.stats()['totals']['input_values'] == 111
 
-        self.assertEqual(len(groups), 12)
 
-    def test_writer_maxitemsize(self):
-        job, w = self._job_and_writer()
-        m = w.maxitemsize
-        self.assertRaisesRegexp(
-            ValueTooLarge,
-            'Value exceeds max encoded size of 1048576 bytes:'
-            ' \'{"b": "x+\\.\\.\\.\'',
-            w.write, {'b': 'x' * m})
-        self.assertRaisesRegexp(
-            ValueTooLarge,
-            'Value exceeds max encoded size of 1048576 bytes:'
-            ' \'{"b+\\.\\.\\.\'',
-            w.write, {'b'*m: 'x'})
-        self.assertRaisesRegexp(
-            ValueTooLarge,
-            'Value exceeds max encoded size of 1048576 bytes:'
-            ' \'{"b+\\.\\.\\.\'',
-            w.write, {'b'*(m//2): 'x'*(m//2)})
+def test_writer_interval(hsclient, hsproject):
+    job, writer = _job_and_writer(hsclient, hsproject,
+                                  size=1000, interval=1)
+    for x in range(111):
+        writer.write({'x': x})
+        if x == 50:
+            time.sleep(2)
 
-    def test_writer_contentencoding(self):
-        for ce in ('identity', 'gzip'):
-            job, w = self._job_and_writer(content_encoding=ce)
-            for x in range(111):
-                w.write({'x': x})
-            w.close()
-            self.assertEqual(job.items.stats()['totals']['input_values'], 111)
+    writer.close()
+    groups = defaultdict(int)
+    for doc in job.items.list(meta=['_ts']):
+        groups[doc['_ts']] += 1
 
-    def test_writer_interval(self):
-        job, w = self._job_and_writer(size=1000, interval=1)
-        for x in range(111):
-            w.write({'x': x})
-            if x == 50:
-                time.sleep(2)
-
-        w.close()
-        groups = defaultdict(int)
-        for doc in job.items.list(meta=['_ts']):
-            groups[doc['_ts']] += 1
-
-        self.assertEqual(len(groups), 2)
+    assert len(groups) == 2
