@@ -13,7 +13,7 @@ from .conftest import start_job
 
 def _job_and_writer(hsclient, hsproject, **writerargs):
     hsproject.push_job(TEST_SPIDER_NAME)
-    start_job(hsproject)
+    job = start_job(hsproject)
     batch_uploader = hsclient.batchuploader
     writer = batch_uploader.create_writer(
         job.items.url, auth=TEST_AUTH, **writerargs)
