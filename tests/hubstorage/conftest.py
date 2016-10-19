@@ -63,11 +63,19 @@ def setup_test(hsclient, hsproject, hscollection, request, vcr_instance):
         _set_testbotgroup(hsproject)
         _remove_all_jobs(hsproject)
         _clean_collection(hscollection)
+        _delete_frontier_slot(hsproject)
         yield
         _remove_all_jobs(hsproject)
+        _clean_collection(hscollection)
+        _delete_frontier_slot(hsproject)
         _unset_testbotgroup(hsproject)
 
 # ----------------------------------------------------------------------------
+
+def _delete_frontier_slot(hsproject):
+    frontier = hsproject.frontier
+    frontier.delete_slot(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT)
+
 
 def _clean_collection(hscollection):
     for item in hscollection.iter_values():
