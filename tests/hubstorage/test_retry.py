@@ -153,6 +153,7 @@ def test_retrier_catches_badstatusline_and_429(hsspiderid):
     assert dict(job_metadata) == dict(job.metadata)
     assert attempts_count[0] == 4
 
+
 @responses.activate
 def test_api_delete_can_be_set_to_non_idempotent(hsspiderid):
     # Prepare
@@ -181,6 +182,7 @@ def test_api_delete_can_be_set_to_non_idempotent(hsspiderid):
     assert attempts_count_delete[0] == 1
     assert err is not None
 
+
 @responses.activate
 def test_collection_store_and_delete_are_retried():
     # Prepare
@@ -201,6 +203,7 @@ def test_collection_store_and_delete_are_retried():
     # Assert
     assert attempts_count_post[0] == 3
     assert attempts_count_delete[0] == 3
+
 
 @responses.activate
 def test_delete_requests_are_retried(hsspiderid):
@@ -229,6 +232,7 @@ def test_delete_requests_are_retried(hsspiderid):
     # Assert
     assert attempts_count_delete[0] == 3
 
+
 @responses.activate
 def test_metadata_save_does_retry(hsspiderid):
     # Prepare
@@ -252,6 +256,7 @@ def test_metadata_save_does_retry(hsspiderid):
     # Assert
     assert attempts_count_post[0] == 3
 
+
 @responses.activate
 def test_push_job_does_not_retry():
     # Prepare
@@ -272,6 +277,7 @@ def test_push_job_does_not_retry():
     assert err is not None
     assert err.response.status_code == 504
     assert attempts_count[0] == 1
+
 
 @responses.activate
 def test_get_job_does_retry(hsspiderid):
@@ -320,6 +326,7 @@ def test_get_job_does_fails_if_no_retries(hsspiderid):
     assert err is not None
     assert err.response.status_code == 504
     assert attempts_count[0] == 1
+
 
 @responses.activate
 def test_get_job_does_fails_on_too_many_retries(hsspiderid):

@@ -81,6 +81,7 @@ def test_push_with_unique(hsproject):
         jobq.push(TEST_SPIDER_NAME, unique='h2')
     jobq.push(TEST_SPIDER_NAME, unique='h1')
 
+
 def test_startjob(hsproject):
     jobq = hsproject.jobq
     qj = jobq.push(TEST_SPIDER_NAME)

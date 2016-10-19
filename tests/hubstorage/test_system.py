@@ -75,6 +75,7 @@ def _do_test_job(hsproject, panelproject,
     assert job.metadata.get('close_reason') == expected_close_reason
     return job
 
+
 def _run_runner(hsproject, pushed, close_reason):
     client = HubstorageClient(endpoint=TEST_ENDPOINT, auth=TEST_AUTH)
     with closing(client) as runnerclient:

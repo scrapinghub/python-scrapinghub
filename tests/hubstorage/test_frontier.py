@@ -31,10 +31,12 @@ def test_add_multiple_chunks(hsproject):
     fps1 = [{'fp': '/index_%s.html' % fp} for fp in range(0, batch_size)]
     frontier.add(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT, fps1)
 
-    fps2 = [{'fp': '/index_%s.html' % fp} for fp in range(batch_size, batch_size * 2)]
+    fps2 = [{'fp': '/index_%s.html' % fp}
+            for fp in range(batch_size, batch_size * 2)]
     frontier.add(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT, fps2)
 
-    fps3 = [{'fp': '/index_%s.html' % fp} for fp in range(batch_size * 2, batch_size * 3)]
+    fps3 = [{'fp': '/index_%s.html' % fp}
+            for fp in range(batch_size * 2, batch_size * 3)]
     frontier.add(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT, fps3)
     frontier.flush()
 
@@ -49,7 +51,8 @@ def test_add_multiple_chunks(hsproject):
     assert frontier.newcount == 150 + old_count
 
     # get first 100
-    batches = list(frontier.read(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT, mincount=100))
+    batches = list(frontier.read(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT,
+                                 mincount=100))
     urls = [_get_urls(batch) for batch in batches]
     expected_urls = [[fp['fp'] for fp in fps1 + fps2]]
     assert urls == expected_urls
@@ -74,7 +77,8 @@ def test_add_big_chunk(hsproject):
     frontier.flush()
 
     # get first 100
-    batches = list(frontier.read(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT, mincount=100))
+    batches = list(frontier.read(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT,
+                                 mincount=100))
     urls = [_get_urls(batch) for batch in batches]
     expected_urls = [[fp['fp'] for fp in fps1[:100]]]
     assert urls == expected_urls
@@ -84,7 +88,8 @@ def test_add_big_chunk(hsproject):
     frontier.delete(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT, ids)
 
     # get next 100
-    batches = list(frontier.read(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT, mincount=100))
+    batches = list(frontier.read(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT,
+                                 mincount=100))
     urls = [_get_urls(batch) for batch in batches]
     expected_urls = [[fp['fp'] for fp in fps1[100:200]]]
     assert urls == expected_urls
@@ -94,7 +99,8 @@ def test_add_big_chunk(hsproject):
     frontier.delete(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT, ids)
 
     # get next 100
-    batches = list(frontier.read(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT, mincount=100))
+    batches = list(frontier.read(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT,
+                                 mincount=100))
     urls = [_get_urls(batch) for batch in batches]
     expected_urls = [[fp['fp'] for fp in fps1[200:300]]]
     assert urls == expected_urls

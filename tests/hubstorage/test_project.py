@@ -115,7 +115,8 @@ def test_auth(hsclient):
         raise AssertionError('401 not raised')
 
     try:
-        hsc.get_project(TEST_PROJECT_ID).get_job((TEST_PROJECT_ID, 1, 1)).items.list()
+        hsc.get_project(TEST_PROJECT_ID).get_job(
+            (TEST_PROJECT_ID, 1, 1)).items.list()
     except HTTPError as exc:
         assert exc.response.status_code == 401
     else:
@@ -179,13 +180,13 @@ def test_requests(hsproject):
     job = hsproject.push_job(TEST_SPIDER_NAME, state='running')
     # top parent
     r1 = job.requests.add(url='http://test.com/', status=200, method='GET',
-                            rs=1337, duration=5, parent=None, ts=ts)
+                          rs=1337, duration=5, parent=None, ts=ts)
     # first child
     r2 = job.requests.add(url='http://test.com/2', status=400, method='POST',
-                            rs=0, duration=1, parent=r1, ts=ts + 1)
+                          rs=0, duration=1, parent=r1, ts=ts + 1)
     # another child with fingerprint set
     r3 = job.requests.add(url='http://test.com/3', status=400, method='PUT',
-                            rs=0, duration=1, parent=r1, ts=ts + 2, fp='1234')
+                          rs=0, duration=1, parent=r1, ts=ts + 2, fp='1234')
 
     job.requests.close()
     rr = job.requests.list()
@@ -243,7 +244,7 @@ def test_samples(hsproject):
 def test_jobsummary(hsproject):
     js = hsproject.jobsummary()
     assert js.get('project') == int(hsproject.projectid), js
-    assert js.get('has_capacity') == True, js
+    assert js.get('has_capacity') is True, js
     assert 'pending' in js, js
     assert 'running' in js, js
 
@@ -253,8 +254,7 @@ def test_bulkdata(hsproject):
     for i in range(20):
         j.logs.info("log line %d" % i)
         j.items.write(dict(field1="item%d" % i))
-        j.requests.add("http://test.com/%d" % i,
-            200, 'GET', 10, None, 10, 120)
+        j.requests.add("http://test.com/%d" % i, 200, 'GET', 10, None, 10, 120)
     for resourcename in ('logs', 'items', 'requests'):
         resource = getattr(j, resourcename)
         resource.flush()

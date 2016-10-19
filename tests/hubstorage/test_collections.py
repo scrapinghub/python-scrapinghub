@@ -13,7 +13,8 @@ from .testutil import failing_downloader
 
 
 def _mkitem():
-    return dict(field1='value1', field2=['value2a', 'value2b'], field3=3, field4={'v4k': 'v4v'})
+    return dict(field1='value1', field2=['value2a', 'value2b'],
+                field3=3, field4={'v4k': 'v4v'})
 
 
 def test_simple_count(hsproject):
@@ -73,7 +74,8 @@ def post_scan_test(hsproject):
     assert len(result) == 11
 
     # combining with normal filters
-    result = list(col.get(filter='["counter", ">", [5]]', prefix='post_scan_test1'))
+    result = list(col.get(filter='["counter", ">", [5]]',
+                          prefix='post_scan_test1'))
     # 10-19
     assert len(result) == 10
 
