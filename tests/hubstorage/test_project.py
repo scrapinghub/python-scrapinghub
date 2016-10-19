@@ -13,6 +13,7 @@ from scrapinghub import HubstorageClient
 
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import hsspiderid
+from .conftest import start_job
 from .testutil import failing_downloader
 
 
@@ -133,7 +134,7 @@ def test_broad(hsproject, hsspiderid):
     # populate project with at least one job
     job = hsproject.push_job(TEST_SPIDER_NAME)
     assert job.metadata.get('state') == 'pending'
-    hsproject.jobq.start(job)
+    job = start_job(hsproject)
     job.metadata.expire()
     assert job.metadata.get('state') == 'running'
     job.items.write({'title': 'bar'})
@@ -265,8 +266,8 @@ def test_bulkdata(hsproject):
 
 
 def test_output_string(hsclient, hsproject):
-    job = hsproject.push_job(TEST_SPIDER_NAME)
-    hsproject.jobq.start(job)
+    hsproject.push_job(TEST_SPIDER_NAME)
+    job = start_job(hsproject)
     job.items.write({'foo': 'bar'})
     job.close_writers()
     items = hsclient.get_job(job.key).items.iter_json()

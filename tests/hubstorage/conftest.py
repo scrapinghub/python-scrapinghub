@@ -11,6 +11,7 @@ TEST_SPIDER_NAME = 'hs-test-spider'
 TEST_FRONTIER_NAME = 'test'
 TEST_FRONTIER_SLOT = 'site.com'
 TEST_BOTGROUPS = ['python-hubstorage-test', 'g1']
+TEST_COLLECTION_NAME = "test_collection_123"
 
 VCR_CASSETES_DIR = 'tests/hubstorage/cassetes'
 
@@ -41,6 +42,11 @@ def hsspiderid(hsproject):
     return str(hsproject.ids.spider(TEST_SPIDER_NAME, create=1))
 
 
+@pytest.fixture
+def hscollection(hsproject):
+    return hsproject.collections.new_store(TEST_COLLECTION_NAME)
+
+
 @pytest.fixture(autouse=True, scope='session')
 def setup_session(hsclient, hsproject):
     yield
@@ -48,7 +54,7 @@ def setup_session(hsclient, hsproject):
 
 
 @pytest.fixture(autouse=True)
-def setup_test(hsclient, hsproject, request, vcr_instance):
+def setup_test(hsclient, hsproject, hscollection, request, vcr_instance):
     cassette_name = '{}/{}.yaml'.format(
         request.function.__module__.split('.')[-1],
         request.function.__name__
@@ -56,11 +62,16 @@ def setup_test(hsclient, hsproject, request, vcr_instance):
     with vcr_instance.use_cassette(cassette_name):
         _set_testbotgroup(hsproject)
         _remove_all_jobs(hsproject)
+        _clean_collection(hscollection)
         yield
         _remove_all_jobs(hsproject)
         _unset_testbotgroup(hsproject)
 
 # ----------------------------------------------------------------------------
+
+def _clean_collection(hscollection):
+    for item in hscollection.iter_values():
+        hscollection.delete(item['_key'])
 
 
 def _set_testbotgroup(hsproject):
@@ -79,7 +90,6 @@ def _unset_testbotgroup(hsproject):
     for botgroup in TEST_BOTGROUPS:
         url = urlpathjoin(TEST_ENDPOINT, 'botgroups', botgroup)
         requests.delete(url, auth=hsproject.auth)
-
 
 
 def _remove_all_jobs(hsproject):
