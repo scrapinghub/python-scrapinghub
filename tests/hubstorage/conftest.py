@@ -24,7 +24,6 @@ def vcr_instance(scope='session'):
     return vcr.VCR(
         cassette_library_dir=VCR_CASSETES_DIR,
         record_mode='once',
-        match_on=['uri', 'method'],
     )
 
 @pytest.fixture(scope='session')
