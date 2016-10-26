@@ -43,6 +43,17 @@ my_vcr.register_serializer('gz', VCRGzipSerializer())
 my_vcr.serializer = 'gz'
 
 
+def pytest_addoption(parser):
+    parser.addoption(
+        "--update-cassettes", action="store_true", default=False,
+        help="make tests with real services instead of vcr cassettes")
+
+
+def pytest_generate_tests(metafunc):
+    if metafunc.config.option.update_cassettes:
+        my_vcr.record_mode = 'all'
+
+
 @pytest.fixture(scope='session')
 def hsclient():
     return HubstorageClient(auth=TEST_AUTH, endpoint=TEST_ENDPOINT)
