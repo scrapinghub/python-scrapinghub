@@ -13,15 +13,7 @@ from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import hsspiderid
 from .conftest import start_job
 from .conftest import set_testbotgroup
-from .conftest import remove_all_jobs
 from .testutil import failing_downloader
-
-
-@pytest.fixture(autouse=True)
-def clean_jobs(hsproject):
-    remove_all_jobs(hsproject)
-    yield
-    remove_all_jobs(hsproject)
 
 
 def test_projectid(hsclient):

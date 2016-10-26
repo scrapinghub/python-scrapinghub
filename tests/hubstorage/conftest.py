@@ -1,10 +1,14 @@
 import os
-import vcr
 import zlib
 import base64
-import pytest
 import pickle
+
+import vcr
+import mock
+import pytest
+import shutil
 import requests
+
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import urlpathjoin
 
@@ -29,7 +33,7 @@ class VCRGzipSerializer(object):
         # receives a dict, must return a string
         # there can be binary data inside some of the requests,
         # so it's impossible to use json for serialization to string
-        compressed = zlib.compress(pickle.dumps(cassette_dict))
+        compressed = zlib.compress(pickle.dumps(cassette_dict, protocol=2))
         return base64.b64encode(compressed).decode('utf8')
 
     def deserialize(self, cassette_string):
@@ -46,12 +50,25 @@ my_vcr.serializer = 'gz'
 def pytest_addoption(parser):
     parser.addoption(
         "--update-cassettes", action="store_true", default=False,
-        help="make tests with real services instead of vcr cassettes")
+        help="test with real services rewriting existing vcr cassettes")
+    parser.addoption(
+        "--ignore-cassettes", action="store_true", default=False,
+        help="test with real services skipping existing vcr cassettes")
 
 
-def pytest_generate_tests(metafunc):
-    if metafunc.config.option.update_cassettes:
+def pytest_configure(config):
+    if config.option.update_cassettes:
+        # there's vcr `all` mode to update cassettes but it doesn't delete
+        # or clear existing records, so its size will always only grow
+        if os.path.exists(VCR_CASSETES_DIR):
+            shutil.rmtree(VCR_CASSETES_DIR)
+    elif config.option.ignore_cassettes:
+        # simple hack to just ignore vcr cassettes:
+        # - all record_mode means recording new interactions + no replay
+        # - before_record returning None means skipping all the requests
+        global my_vcr
         my_vcr.record_mode = 'all'
+        my_vcr.before_record_request = lambda request: None
 
 
 @pytest.fixture(scope='session')
@@ -64,11 +81,19 @@ def hsproject(hsclient):
     return hsclient.get_project(TEST_PROJECT_ID)
 
 
-#@my_vcr.use_cassette()
+@my_vcr.use_cassette()
 @pytest.fixture(scope='session')
 def hsspiderid(hsproject):
     return str(hsproject.ids.spider(TEST_SPIDER_NAME, create=1))
 
+
+@my_vcr.use_cassette()
+@pytest.fixture(scope='session')
+def hscollection(hsproject):
+    collection = get_test_collection(hsproject)
+    clean_collection(collection)
+    yield collection
+    clean_collection(collection)
 
 
 @my_vcr.use_cassette()
@@ -83,23 +108,21 @@ def setup_session(hsclient, hsproject, hscollection):
 
 
 @pytest.fixture(autouse=True)
-def setup_vcrpy_per_test(request, hsproject):
+def setup_vcrpy(request, hsproject):
     # generates names like "test_module/test_function.yaml"
+    # otherwise it uses current function name (setup_vcrpy) for all tests
+    # other option is to add vcr decorator to each test separately
     cassette_name = '{}/{}.gz'.format(
         request.function.__module__.split('.')[-1],
         request.function.__name__
     )
+    # we should clean jobs only when working with real services
+    # doesn't make sense to clean jobs when working with cassettes
+    if (request.config.option.update_cassettes or
+            request.config.option.ignore_cassettes):
+        remove_all_jobs(hsproject)
     with my_vcr.use_cassette(cassette_name):
         yield
-
-
-@my_vcr.use_cassette()
-@pytest.fixture(scope='session')
-def hscollection(hsproject):
-    collection = get_test_collection(hsproject)
-    clean_collection(collection)
-    yield collection
-    clean_collection(collection)
 
 
 # ----------------------------------------------------------------------------

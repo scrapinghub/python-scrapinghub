@@ -86,17 +86,19 @@ def post_scan_test(hsproject, hscollection):
         hscollection.get(last_key)
 
 
-def test_errors(hscollection):
+def test_errors_bad_key(hscollection):
     with pytest.raises(KeyError):
         hscollection.get('does_not_exist')
-    args = [
+
+
+@pytest.mark.parametrize('testarg', [
         {'foo': 42},
         {'_key': []},
         {'_key': 'large_test', 'value': 'x' * 1024 ** 2},
-    ]
-    for arg in args:
-        with pytest.raises(ValueError):
-            hscollection.set(arg)
+])
+def test_errors(hscollection, testarg):
+    with pytest.raises(ValueError):
+        hscollection.set(testarg)
 
 
 def test_data_download(hsproject, hscollection):

@@ -11,14 +11,6 @@ from scrapinghub.hubstorage.utils import apipoll
 
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import hsspiderid
-from .conftest import remove_all_jobs
-
-
-@pytest.fixture(autouse=True)
-def clean_jobs(hsproject):
-    remove_all_jobs(hsproject)
-    yield
-    remove_all_jobs(hsproject)
 
 
 def _keys(lst):

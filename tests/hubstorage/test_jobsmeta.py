@@ -3,17 +3,8 @@ Test job metadata
 
 System tests for operations on stored job metadata
 """
-import pytest
 from .conftest import TEST_SPIDER_NAME
 from .conftest import start_job
-from .conftest import remove_all_jobs
-
-
-@pytest.fixture(autouse=True)
-def clean_jobs(hsproject):
-    remove_all_jobs(hsproject)
-    yield
-    remove_all_jobs(hsproject)
 
 
 def _assertMetadata(meta1, meta2):
