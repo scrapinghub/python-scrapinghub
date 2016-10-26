@@ -1,10 +1,8 @@
 """
 Test Project
 """
-import json
-from random import randint, random
-
 import six
+import json
 import pytest
 from six.moves import range
 from requests.exceptions import HTTPError
@@ -14,7 +12,16 @@ from scrapinghub import HubstorageClient
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import hsspiderid
 from .conftest import start_job
+from .conftest import set_testbotgroup
+from .conftest import remove_all_jobs
 from .testutil import failing_downloader
+
+
+@pytest.fixture(autouse=True)
+def clean_jobs(hsproject):
+    remove_all_jobs(hsproject)
+    yield
+    remove_all_jobs(hsproject)
 
 
 def test_projectid(hsclient):
@@ -157,7 +164,13 @@ def test_broad(hsproject, hsspiderid):
     job.purged()
 
 
-def test_settings(hsproject):
+@pytest.fixture
+def restore_botgroup(hsproject):
+    yield
+    set_testbotgroup(hsproject)
+
+
+def test_settings(hsproject, restore_botgroup):
     settings = dict(hsproject.settings)
     settings.pop('botgroups', None)  # ignore testsuite botgroups
     assert settings == {}

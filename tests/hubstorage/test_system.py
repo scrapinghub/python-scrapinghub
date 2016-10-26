@@ -10,9 +10,16 @@ from scrapinghub.hubstorage.utils import millitime
 from .conftest import TEST_ENDPOINT, TEST_SPIDER_NAME
 from .conftest import TEST_PROJECT_ID, TEST_AUTH
 from .conftest import start_job
+from .conftest import remove_all_jobs
 
 
 MAGICN = 1211
+
+@pytest.fixture(autouse=True)
+def clean_jobs(hsproject):
+    remove_all_jobs(hsproject)
+    yield
+    remove_all_jobs(hsproject)
 
 
 @pytest.fixture

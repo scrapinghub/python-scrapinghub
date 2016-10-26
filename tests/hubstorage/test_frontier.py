@@ -1,7 +1,14 @@
 """
 Test Frontier
 """
+import pytest
 from .conftest import TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT
+
+
+@pytest.fixture(autouse=True)
+def delete_frontier_slot(hsproject):
+    frontier = hsproject.frontier
+    frontier.delete_slot(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT)
 
 
 def _get_urls(batch):

@@ -17,13 +17,12 @@ def _mkitem():
                 field3=3, field4={'v4k': 'v4v'})
 
 
-def test_simple_count(hsproject):
+def test_simple_count(hsproject, hscollection):
     test_item = dict(_mkitem())
     test_item['_key'] = 'a'
 
-    collection = hsproject.collections.new_store(TEST_COLLECTION_NAME)
-    collection.set(test_item)
-    assert collection.count() == 1
+    hscollection.set(test_item)
+    assert hscollection.count() == 1
 
 
 def post_get_delete_test(hsproject):
@@ -51,42 +50,40 @@ def post_get_delete_test(hsproject):
             col.get(test_key)
 
 
-def post_scan_test(hsproject):
-    col = hsproject.collections.new_store(TEST_COLLECTION_NAME)
-
+def post_scan_test(hsproject, hscollection):
     # populate with 20 items
     test_item = _mkitem()
     last_key = None
-    with closing(col.create_writer()) as writer:
+    with closing(hscollection.create_writer()) as writer:
         for i in range(20):
             test_item['_key'] = last_key = "post_scan_test%d" % i
             test_item['counter'] = i
             writer.write(test_item)
 
     # check last value is as expected
-    returned_item = col.get(last_key)
+    returned_item = hscollection.get(last_key)
     del test_item['_key']
     assert test_item == returned_item
 
     # get all values starting with 1
-    result = list(col.get(prefix='post_scan_test1'))
+    result = list(hscollection.get(prefix='post_scan_test1'))
     # 1 & 10-19 = 11 items
     assert len(result) == 11
 
     # combining with normal filters
-    result = list(col.get(filter='["counter", ">", [5]]',
+    result = list(hscollection.get(filter='["counter", ">", [5]]',
                           prefix='post_scan_test1'))
     # 10-19
     assert len(result) == 10
 
     # bulk delete
-    col.delete('post_scan_test%d' % i for i in range(20))
+    hscollection.delete('post_scan_test%d' % i for i in range(20))
 
     # test items removed (check first and last)
     with pytest.raises(KeyError):
-        col.get('post_scan_test0')
+        hscollection.get('post_scan_test0')
     with pytest.raises(KeyError):
-        col.get(last_key)
+        hscollection.get(last_key)
 
 
 def test_errors(hscollection):
@@ -102,10 +99,9 @@ def test_errors(hscollection):
             hscollection.set(arg)
 
 
-def test_data_download(hsproject):
-    col = hsproject.collections.new_store(TEST_COLLECTION_NAME)
+def test_data_download(hsproject, hscollection):
     items = []
-    with closing(col.create_writer()) as writer:
+    with closing(hscollection.create_writer()) as writer:
         for i in range(20):
             test_item = _mkitem()
             test_item['_key'] = "test_data_download%d" % i
@@ -114,12 +110,12 @@ def test_data_download(hsproject):
             items.append(test_item)
 
     # check parameters are passed correctly
-    downloaded = list(col.iter_values(prefix='test_data_download1'))
+    downloaded = list(hscollection.iter_values(prefix='test_data_download1'))
     assert len(downloaded) == 11
 
     # simulate network timeouts and download data
     with failing_downloader(hsproject.collections):
-        downloaded = list(col.iter_values(start='test_data_download1'))
+        downloaded = list(hscollection.iter_values(start='test_data_download1'))
         assert len(downloaded) == 19
 
 
