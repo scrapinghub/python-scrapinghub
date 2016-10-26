@@ -2,6 +2,7 @@
 Test Frontier
 """
 import pytest
+
 from .conftest import TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT
 
 

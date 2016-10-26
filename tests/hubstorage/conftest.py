@@ -1,6 +1,9 @@
 import os
 import vcr
+import zlib
+import base64
 import pytest
+import pickle
 import requests
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import urlpathjoin
@@ -15,9 +18,29 @@ TEST_COLLECTION_NAME = "test_collection_123"
 TEST_AUTH = os.getenv('HS_AUTH', 'f' * 32)
 TEST_ENDPOINT = os.getenv('HS_ENDPOINT', 'http://storage.vm.scrapinghub.com')
 
+# vcrpy creates the cassetes automatically under VCR_CASSETES_DIR
 VCR_CASSETES_DIR = 'tests/hubstorage/cassetes'
 
+
+class VCRGzipSerializer(object):
+    """Custom ZIP serializer for VCR.py."""
+
+    def serialize(self, cassette_dict):
+        # receives a dict, must return a string
+        # there can be binary data inside some of the requests,
+        # so it's impossible to use json for serialization to string
+        compressed = zlib.compress(pickle.dumps(cassette_dict))
+        return base64.b64encode(compressed).decode('utf8')
+
+    def deserialize(self, cassette_string):
+        # receives a string, must return a dict
+        decoded = base64.b64decode(cassette_string.encode('utf8'))
+        return pickle.loads(zlib.decompress(decoded))
+
+
 my_vcr = vcr.VCR(cassette_library_dir=VCR_CASSETES_DIR, record_mode='once')
+my_vcr.register_serializer('gz', VCRGzipSerializer())
+my_vcr.serializer = 'gz'
 
 
 @pytest.fixture(scope='session')
@@ -37,7 +60,7 @@ def hsspiderid(hsproject):
 
 
 
-#@my_vcr.use_cassette()
+@my_vcr.use_cassette()
 @pytest.fixture(autouse=True, scope='session')
 def setup_session(hsclient, hsproject, hscollection):
     set_testbotgroup(hsproject)
@@ -51,16 +74,15 @@ def setup_session(hsclient, hsproject, hscollection):
 @pytest.fixture(autouse=True)
 def setup_vcrpy_per_test(request, hsproject):
     # generates names like "test_module/test_function.yaml"
-    # vcrpy creates the cassetes automatically under VCR_CASSETES_DIR
-    cassette_name = '{}/{}.yaml'.format(
+    cassette_name = '{}/{}.gz'.format(
         request.function.__module__.split('.')[-1],
         request.function.__name__
     )
-    #with my_vcr.use_cassette(cassette_name):
-    yield
+    with my_vcr.use_cassette(cassette_name):
+        yield
 
 
-#@my_vcr.use_cassette()
+@my_vcr.use_cassette()
 @pytest.fixture(scope='session')
 def hscollection(hsproject):
     collection = get_test_collection(hsproject)

@@ -244,7 +244,7 @@ def test_samples(hsproject):
     count = int(j2.samples.batch_size * 3)
     for i in range(count):
         ts += i
-        row = [ts] + list(val*i for val in range(100))
+        row = [ts] + list(val*i for val in range(10))
         samples.append(row)
         j2.samples.write(row)
     j2.samples.flush()
