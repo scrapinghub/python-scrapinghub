@@ -4,10 +4,10 @@ import base64
 import pickle
 
 import vcr
-import mock
 import pytest
 import shutil
 import requests
+from requests import HTTPError
 
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import urlpathjoin
@@ -166,8 +166,13 @@ def get_test_collection(project):
 
 
 def clean_collection(collection):
-    for item in collection.iter_values():
-        collection.delete(item['_key'])
+    try:
+        for item in collection.iter_values():
+            collection.delete(item['_key'])
+    except HTTPError as e:
+        # if collection doesn't exist yet service responds 404
+        if e.response.status_code != 404:
+            raise
 
 
 # Botgroups helpers section
