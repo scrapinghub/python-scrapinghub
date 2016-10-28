@@ -47,15 +47,6 @@ my_vcr.register_serializer('gz', VCRGzipSerializer())
 my_vcr.serializer = 'gz'
 
 
-def pytest_addoption(parser):
-    parser.addoption(
-        "--update-cassettes", action="store_true", default=False,
-        help="test with real services rewriting existing vcr cassettes")
-    parser.addoption(
-        "--ignore-cassettes", action="store_true", default=False,
-        help="test with real services skipping existing vcr cassettes")
-
-
 def pytest_configure(config):
     if config.option.update_cassettes:
         # there's vcr `all` mode to update cassettes but it doesn't delete
