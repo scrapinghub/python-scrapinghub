@@ -71,6 +71,11 @@ def pytest_configure(config):
         my_vcr.before_record_request = lambda request: None
 
 
+def is_using_real_services(request):
+    return (request.config.option.update_cassettes or
+            request.config.option.ignore_cassettes)
+
+
 @pytest.fixture(scope='session')
 def hsclient():
     return HubstorageClient(auth=TEST_AUTH, endpoint=TEST_ENDPOINT)
@@ -87,23 +92,20 @@ def hsspiderid(hsproject):
     return str(hsproject.ids.spider(TEST_SPIDER_NAME, create=1))
 
 
-@my_vcr.use_cassette()
 @pytest.fixture(scope='session')
-def hscollection(hsproject):
+def hscollection(hsproject, request):
     collection = get_test_collection(hsproject)
-    clean_collection(collection)
+    if is_using_real_services(request):
+        clean_collection(collection)
     yield collection
-    clean_collection(collection)
 
 
-@my_vcr.use_cassette()
 @pytest.fixture(autouse=True, scope='session')
-def setup_session(hsclient, hsproject, hscollection):
-    set_testbotgroup(hsproject)
-    remove_all_jobs(hsproject)
+def setup_session(hsclient, hsproject, hscollection, request):
+    if is_using_real_services(request):
+        set_testbotgroup(hsproject)
+        remove_all_jobs(hsproject)
     yield
-    remove_all_jobs(hsproject)
-    unset_testbotgroup(hsproject)
     hsclient.close()
 
 
@@ -116,10 +118,7 @@ def setup_vcrpy(request, hsproject):
         request.function.__module__.split('.')[-1],
         request.function.__name__
     )
-    # we should clean jobs only when working with real services
-    # doesn't make sense to clean jobs when working with cassettes
-    if (request.config.option.update_cassettes or
-            request.config.option.ignore_cassettes):
+    if is_using_real_services(request):
         remove_all_jobs(hsproject)
     with my_vcr.use_cassette(cassette_name):
         yield
@@ -145,14 +144,11 @@ def remove_all_jobs(hsproject):
             del hsproject.settings[k]
     hsproject.settings.save()
 
-    # Cleanup JobQ
-    jobq = hsproject.jobq
-    for queuename in ('pending', 'running', 'finished'):
-        info = {'summary': [None]}  # poor-guy do...while
-        while info['summary']:
-            info = jobq.summary(queuename)
-            for summary in info['summary']:
-                _remove_job(hsproject, summary['key'])
+    # Cleanup JobQ: run 2 times to ensure we covered all jobs
+    for queuename in ('pending', 'running', 'finished')*2:
+        info = hsproject.jobq.summary(queuename)
+        for summary in info['summary']:
+            _remove_job(hsproject, summary['key'])
 
 
 def _remove_job(hsproject, jobkey):

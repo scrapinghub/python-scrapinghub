@@ -12,7 +12,7 @@ from scrapinghub import HubstorageClient
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import hsspiderid
 from .conftest import start_job
-from .conftest import set_testbotgroup
+from .conftest import set_testbotgroup, unset_testbotgroup
 from .testutil import failing_downloader
 
 
@@ -157,14 +157,14 @@ def test_broad(hsproject, hsspiderid):
 
 
 @pytest.fixture
-def restore_botgroup(hsproject):
+def unset_botgroup(hsproject):
+    unset_testbotgroup(hsproject)
     yield
     set_testbotgroup(hsproject)
 
 
-def test_settings(hsproject, restore_botgroup):
+def test_settings(hsproject, unset_botgroup):
     settings = dict(hsproject.settings)
-    settings.pop('botgroups', None)  # ignore testsuite botgroups
     assert settings == {}
     # use some fixed timestamp to represent current time
     hsproject.settings['created'] = created = 1476803148638

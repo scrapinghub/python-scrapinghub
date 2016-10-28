@@ -4,6 +4,7 @@ Test Retry Policy
 import json
 import re
 
+from mock import patch
 import responses
 from requests import HTTPError, ConnectionError
 from scrapinghub import HubstorageClient
@@ -18,11 +19,23 @@ POST = responses.POST
 DELETE = responses.DELETE
 
 
+@patch.multiple('scrapinghub.HubstorageClient',
+                RETRY_DEFAULT_JITTER_MS=1,
+                RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS=1)
 def hsclient_with_retries(max_retries=3, max_retry_time=1):
     return HubstorageClient(
         auth=TEST_AUTH, endpoint=TEST_ENDPOINT,
         max_retries=max_retries, max_retry_time=max_retry_time,
     )
+
+
+@patch('scrapinghub.hubstorage.client.Retrying')
+def test_hsclient_with_retries_no_wait(retrying_class):
+    hsclient_with_retries()
+    assert retrying_class.call_count == 1
+    call = retrying_class.call_args_list[0]
+    assert call[1]['wait_jitter_max'] == 1
+    assert int(call[1]['wait_exponential_multiplier']) == 33
 
 
 def mock_api(method=GET, callback=None, url_match='/.*'):
