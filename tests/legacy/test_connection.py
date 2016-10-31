@@ -15,7 +15,8 @@ def test_connection_class_attrs():
     assert isinstance(Connection.API_METHODS, dict)
 
 
-def test_connection_init_fail_wo_apikey():
+def test_connection_init_fail_wo_apikey(monkeypatch):
+    monkeypatch.delenv('SH_APIKEY', raising=False)
     with pytest.raises(RuntimeError):
         Connection()
 
