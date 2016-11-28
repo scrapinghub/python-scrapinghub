@@ -10,6 +10,8 @@ from scrapinghub.hubstorage import HubstorageClient
 from scrapinghub.hubstorage.client import Projects as _Projects
 from scrapinghub.hubstorage.project import Project as _Project
 from scrapinghub.hubstorage.project import Spiders as _Spiders
+from scrapinghub.hubstorage.job import Job as _Job
+from scrapinghub.hubstorage.job import JobMeta as _JobMeta
 from scrapinghub.hubstorage.jobq import JobQ as _JobQ
 from scrapinghub.hubstorage.jobq import DuplicateJobError
 
@@ -37,13 +39,19 @@ class ScrapinghubClient(HubstorageClient):
         """Returns a list of available projects."""
         return self.projects.list()
 
+    def get_job(self, *args, **kwargs):
+        # same logic but with different Job class
+        return Job(self, *args, **kwargs)
+
 
 class DashMixin(object):
     """A simple mixin class to work with Dash API endpoints"""
 
     def _dash_apiget(self, endpoint, basepath, params=None, raw=False,
                      auth=None, **kwargs):
-        """Performs GET request to Dash endpoint"""
+        """Performs GET request to Dash endpoint.
+        Thin wrapper over requests.session.get.
+        """
         url = urljoin(endpoint, basepath)
         if params:
             url = "{0}?{1}".format(url, urlencode(params, True))
@@ -53,7 +61,9 @@ class DashMixin(object):
 
     def _dash_apipost(self, endpoint, basepath, raw=False, auth=None,
                       **kwargs):
-        """Performs POST request to Dash endpoint"""
+        """Performs POST request to Dash endpoint.
+        Thin wrapper over requests.session.post.
+        """
         url = urljoin(endpoint, basepath)
         response = self.client.session.post(
             url, auth=auth or self.auth, **kwargs)
@@ -90,6 +100,12 @@ class Project(_Project, DashMixin):
         self.jobq = JobQ(self.client, self.projectid, auth=self.auth)
         self.spiders = Spiders(self.client, self.projectid, auth=self.auth)
 
+    def push_job(self, spidername, **jobparams):
+        # same logic but with different Job class
+        data = self.jobq.push(spidername, **jobparams)
+        key = data['key']
+        return Job(self.client, key, auth=self.auth)
+
 
 class Spiders(_Spiders, DashMixin):
 
@@ -97,21 +113,61 @@ class Spiders(_Spiders, DashMixin):
         # FIXME ResourceType doesn't store key as is, but we can extract it
         # easily from url itself, though ofc it's a rude hack
         params = {'project': self.url.rsplit('/')[-1]}
-        result = self._dash_apiget(self.client.dash_endpoint,
-                                   'spiders/list.json',
-                                   params=params)
+        result = next(self._dash_apiget(self.client.dash_endpoint,
+                                        'spiders/list.json',
+                                        params=params))
         return result['spiders']
+
+    def update_tags(self, spidername, add=None, remove=None):
+        # FIXME extracting project using splitting spiders/ID key is hack-ish
+        projectid = self.key.split('/')[-1]
+        spiderid = next(self.client.root.apiget(
+            ('ids', projectid, 'spider', spidername)))
+        if not spiderid:
+            raise ScrapinghubAPIError("Spider is not found")
+
+        # TODO or create a separate Spider resource?
+        params = get_tags_for_update(add_tags=add, remove_tags=remove)
+        if params:
+            # update_tags is defined for spiders resource but should use a
+            # different /jobs/x/y/ endpoint to update tags for a given spider
+            # FIXME we should end uri with an empty string to have a proper url
+            uri = ('jobs', projectid, spiderid, '')
+            return next(self.client.root.apipost(
+                uri, auth=self.auth, data=params))
+
+
+class Job(_Job):
+
+    def __init__(self, *args, **kwargs):
+        super(self.__class__, self).__init__(*args, **kwargs)
+        # FIXME a bit rude hack to reuse wrong self.metadata
+        # to get client and cached data
+        self.metadata = JobMeta(self.metadata.client,
+                                self.key, self.auth,
+                                cached=self.metadata._cached)
+
+    def update_tags(self, *args, **kwargs):
+        return self.metadata.update_tags(*args, **kwargs)
+
+
+class JobMeta(_JobMeta):
+
+    def update_tags(self, add=None, remove=None):
+        params = get_tags_for_update(add_tags=add, remove_tags=remove)
+        if params:
+            return next(self.apipost('', auth=self.auth, data=params))
 
 
 class JobQ(_JobQ, DashMixin):
 
     def push(self, spider, **jobparams):
+        jobparams['spider'] = spider
         # FIXME ResourceType doesn't store key as is, but we can extract it
         # from url itself but only if it's called from Project.JobQ
         # for Client-level JobQ project should be provided via jobparams
         if 'project' not in jobparams and self.url != 'jobq':
             jobparams['project'] = self.url.rsplit('/')[-1]
-        jobparams['spider'] = spider
         # FIXME JobQ endpoint can schedule multiple jobs with json-lines,
         # corresponding Dash endpoint that we're going to use supports
         # only one job per request: most likely we need to extend Dash
@@ -124,3 +180,15 @@ class JobQ(_JobQ, DashMixin):
                 raise DuplicateJobError(response['message'])
             raise ScrapinghubAPIError(response['message'])
         return response
+
+
+def get_tags_for_update(**kwargs):
+    """Helper to check tags changes"""
+    params = {}
+    for k, v in kwargs.items():
+        if not v:
+            continue
+        if not isinstance(v, list):
+            raise ScrapinghubAPIError("Add/remove value must be a list")
+        params[k] = v
+    return params
