@@ -23,14 +23,13 @@ class ScrapinghubClient(HubstorageClient):
     DEFAULT_DASH_ENDPOINT = 'https://app.scrapinghub.com/api/'
 
     def __init__(self, auth=None, endpoint=None, dash_endpoint=None, **kwargs):
-        # listing first kwargs to keep order of main arguments
-        super(ScrapinghubClient, self).__init__(
+        # listing first kwargs of original class to keep order for main args
+        super(self.__class__, self).__init__(
             auth=auth, endpoint=endpoint, **kwargs)
 
-        # we should store dash_endpoint and use modified Projects class
         self.dash_endpoint = dash_endpoint or self.DEFAULT_DASH_ENDPOINT
-        # FIXME in this way we define self.projects twice, but it's cleaner
-        # than copy-pasting __init__ body of original class
+        # FIXME in this way we define jobq & projects twice, but it's cleaner
+        # than copy-pasting full __init__ body of original class
         self.jobq = JobQ(self, None)
         self.projects = Projects(self, None)
 
@@ -40,25 +39,24 @@ class ScrapinghubClient(HubstorageClient):
 
 
 class DashMixin(object):
-    """A simple mixin class to allow requesting Dash"""
+    """A simple mixin class to work with Dash API endpoints"""
 
-    def _dash_apiget(self, endpoint, basepath, params=None,
-                     headers=None, raw=False, auth=None):
-        """Performs GET request to SH Dash."""
+    def _dash_apiget(self, endpoint, basepath, params=None, raw=False,
+                     auth=None, **kwargs):
+        """Performs GET request to Dash endpoint"""
         url = urljoin(endpoint, basepath)
         if params:
             url = "{0}?{1}".format(url, urlencode(params, True))
         response = self.client.session.get(
-            url, headers=headers, auth=auth or self.auth)
+            url, auth=auth or self.auth, **kwargs)
         return self._decode_dash_response(response, raw)
 
-    def _dash_apipost(self, endpoint, basepath, params=None,
-                      headers=None, raw=False, files=None, auth=None):
-        """Performs POST request to SH Dash."""
+    def _dash_apipost(self, endpoint, basepath, raw=False, auth=None,
+                      **kwargs):
+        """Performs POST request to Dash endpoint"""
         url = urljoin(endpoint, basepath)
         response = self.client.session.post(
-            url, headers=headers, data=params,
-            files=files, auth=auth or self.auth)
+            url, auth=auth or self.auth, **kwargs)
         return self._decode_dash_response(response, raw)
 
     def _decode_dash_response(self, response, raw):
@@ -88,7 +86,7 @@ class Projects(_Projects, DashMixin):
 class Project(_Project, DashMixin):
 
     def __init__(self, *args, **kwargs):
-        super(Project, self).__init__(*args, **kwargs)
+        super(self.__class__, self).__init__(*args, **kwargs)
         self.jobq = JobQ(self.client, self.projectid, auth=self.auth)
         self.spiders = Spiders(self.client, self.projectid, auth=self.auth)
 
@@ -111,7 +109,7 @@ class JobQ(_JobQ, DashMixin):
         # FIXME ResourceType doesn't store key as is, but we can extract it
         # from url itself but only if it's called from Project.JobQ
         # for Client-level JobQ project should be provided via jobparams
-        if self.url != 'jobq':
+        if 'project' not in jobparams and self.url != 'jobq':
             jobparams['project'] = self.url.rsplit('/')[-1]
         jobparams['spider'] = spider
         # FIXME JobQ endpoint can schedule multiple jobs with json-lines,
@@ -120,7 +118,7 @@ class JobQ(_JobQ, DashMixin):
         # endpoint functionality to work in the same manner.
         response = self._dash_apipost(self.client.dash_endpoint,
                                       'schedule.json',
-                                      params=jobparams)
+                                      data=jobparams)
         if response.get('status') == 'error':
             if 'already scheduled' in response['message']:
                 raise DuplicateJobError(response['message'])
