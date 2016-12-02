@@ -1,4 +1,5 @@
 import json
+import logging
 
 from requests import session
 from requests.exceptions import HTTPError
@@ -11,6 +12,8 @@ from scrapinghub.hubstorage.client import Projects as _Projects
 from scrapinghub.hubstorage.project import Project as _Project
 from scrapinghub.hubstorage.project import Spiders as _Spiders
 from scrapinghub.hubstorage.job import Job as _Job
+from scrapinghub.hubstorage.job import Items as _Items
+from scrapinghub.hubstorage.job import Logs as _Logs
 from scrapinghub.hubstorage.job import JobMeta as _JobMeta
 from scrapinghub.hubstorage.jobq import JobQ as _JobQ
 from scrapinghub.hubstorage.jobq import DuplicateJobError
@@ -18,6 +21,15 @@ from scrapinghub.hubstorage.jobq import DuplicateJobError
 
 class ScrapinghubAPIError(Exception):
     pass
+
+
+class Log(object):
+    DEBUG = logging.DEBUG
+    INFO = logging.INFO
+    WARNING = logging.WARNING
+    ERROR = logging.ERROR
+    CRITICAL = logging.CRITICAL
+    SILENT = CRITICAL + 1
 
 
 class ScrapinghubClient(HubstorageClient):
@@ -152,6 +164,8 @@ class Job(_Job):
         self.metadata = JobMeta(self.metadata.client,
                                 self.key, self.auth,
                                 cached=self.metadata._cached)
+        self.items = Items(self.metadata.client, self.key, self.auth)
+        self.logs = Logs(self.metadata.client, self.key, self.auth)
 
     def update_tags(self, *args, **kwargs):
         return self.metadata.update_tags(*args, **kwargs)
@@ -194,6 +208,34 @@ class JobQ(_JobQ, DashMixin):
                 raise DuplicateJobError(response['message'])
             raise ScrapinghubAPIError(response['message'])
         return response
+
+
+class Items(_Items):
+
+    def list(self, _key=None, **params):
+        if 'offset' in params:
+            jobid = self.key.split('/', 1)[1]
+            params['start'] = '%s/%s' % (jobid, params['offset'])
+            del params['offset']
+        return self.apiget(_key, params=params)
+
+
+class Logs(_Logs):
+
+    def list(self, _key=None, **params):
+        if 'offset' in params:
+            jobid = self.key.split('/', 1)[1]
+            params['start'] = '%s/%s' % (jobid, params['offset'])
+            del params['offset']
+        if 'level' in params:
+            level = params['level']
+            minlevel = getattr(Log, params.get('level'), None)
+            if minlevel is None:
+                raise ScrapinghubAPIError(
+                    "Unknown log level: %s" % params.get('level'))
+            params['filters'] = ['level', '>=', [minlevel]]
+        print(params)
+        return self.apiget(_key, params=params)
 
 
 def get_tags_for_update(**kwargs):
