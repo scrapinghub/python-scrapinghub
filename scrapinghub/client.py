@@ -35,13 +35,21 @@ class ScrapinghubClient(HubstorageClient):
         self.jobq = JobQ(self, None)
         self.projects = Projects(self, None)
 
-    def project_ids(self):
-        """Returns a list of available projects."""
-        return self.projects.list()
-
     def get_job(self, *args, **kwargs):
         # same logic but with different Job class
         return Job(self, *args, **kwargs)
+
+    def push_job(self, *args, **kwargs):
+        # FIXME could be also implemented via class empty property
+        # push_job = property()
+        raise AttributeError(
+            "Scheduling jobs from client level is deprecated."
+            "Please schedule new jobs via project.push_job()."
+        )
+
+    def project_ids(self):
+        """Returns a list of available projects."""
+        return self.projects.list()
 
 
 class DashMixin(object):
@@ -87,6 +95,7 @@ class DashMixin(object):
 class Projects(_Projects, DashMixin):
 
     def get(self, *args, **kwargs):
+        # same logic but with different Project class
         return Project(self.client, *args, **kwargs)
 
     def list(self):
@@ -103,7 +112,7 @@ class Project(_Project, DashMixin):
     def push_job(self, spidername, **jobparams):
         # same logic but with different Job class
         data = self.jobq.push(spidername, **jobparams)
-        key = data['key']
+        key = data['jobid']
         return Job(self.client, key, auth=self.auth)
 
 
@@ -111,30 +120,23 @@ class Spiders(_Spiders, DashMixin):
 
     def list(self):
         # FIXME ResourceType doesn't store key as is, but we can extract it
-        # easily from url itself, though ofc it's a rude hack
-        params = {'project': self.url.rsplit('/')[-1]}
-        result = next(self._dash_apiget(self.client.dash_endpoint,
-                                        'spiders/list.json',
-                                        params=params))
+        # easily from local key itself, though ofc it's a rude hack
+        params = {'project': self.key.split('/')[-1]}
+        result = self._dash_apiget(self.client.dash_endpoint,
+                                   'spiders/list.json',
+                                   params=params)
         return result['spiders']
 
     def update_tags(self, spidername, add=None, remove=None):
         # FIXME extracting project using splitting spiders/ID key is hack-ish
         projectid = self.key.split('/')[-1]
-        spiderid = next(self.client.root.apiget(
-            ('ids', projectid, 'spider', spidername)))
-        if not spiderid:
-            raise ScrapinghubAPIError("Spider is not found")
-
-        # TODO or create a separate Spider resource?
-        params = get_tags_for_update(add_tags=add, remove_tags=remove)
-        if params:
-            # update_tags is defined for spiders resource but should use a
-            # different /jobs/x/y/ endpoint to update tags for a given spider
-            # FIXME we should end uri with an empty string to have a proper url
-            uri = ('jobs', projectid, spiderid, '')
-            return next(self.client.root.apipost(
-                uri, auth=self.auth, data=params))
+        params = get_tags_for_update(add_tag=add, remove_tag=remove)
+        if not params:
+            return
+        params['spider'] = "noop"
+        params['project'] = self.key.split('/')[-1]
+        response = self._dash_apipost(self.client.dash_endpoint,
+                                      'jobs/update.json', data=params)
 
 
 class Job(_Job):
@@ -151,12 +153,16 @@ class Job(_Job):
         return self.metadata.update_tags(*args, **kwargs)
 
 
-class JobMeta(_JobMeta):
+class JobMeta(_JobMeta, DashMixin):
 
     def update_tags(self, add=None, remove=None):
-        params = get_tags_for_update(add_tags=add, remove_tags=remove)
-        if params:
-            return next(self.apipost('', auth=self.auth, data=params))
+        params = get_tags_for_update(add_tag=add, remove_tag=remove)
+        if not params:
+            return
+        params['job'] = self.key.split('/', 1)[1]
+        params['project'] = params['job'].split('/', 1)[0]
+        response = self._dash_apipost(self.client.dash_endpoint,
+                                      'jobs/update.json', data=params)
 
 
 class JobQ(_JobQ, DashMixin):
