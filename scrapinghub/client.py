@@ -115,6 +115,9 @@ class Project(_Project, DashMixin):
         key = data['jobid']
         return Job(self.client, key, auth=self.auth)
 
+    def count(self, **params):
+        return self.jobq.count(**params)
+
 
 class Spiders(_Spiders, DashMixin):
 
@@ -137,6 +140,7 @@ class Spiders(_Spiders, DashMixin):
         params['project'] = self.key.split('/')[-1]
         response = self._dash_apipost(self.client.dash_endpoint,
                                       'jobs/update.json', data=params)
+        return response['count']
 
 
 class Job(_Job):
@@ -163,9 +167,13 @@ class JobMeta(_JobMeta, DashMixin):
         params['project'] = params['job'].split('/', 1)[0]
         response = self._dash_apipost(self.client.dash_endpoint,
                                       'jobs/update.json', data=params)
+        return response['count']
 
 
 class JobQ(_JobQ, DashMixin):
+
+    def count(self, **params):
+        return self.apiget(('count',), params=params)
 
     def push(self, spider, **jobparams):
         jobparams['spider'] = spider
