@@ -50,6 +50,8 @@ class BatchUploader(object):
     def create_writer(self, url, start=0, auth=None, size=1000, interval=15,
                       qsize=None, content_encoding='identity',
                       maxitemsize=1024 ** 2, callback=None):
+        # callback shouldn't try to inject more items in the queue
+        # otherwise it can lead to deadlock on _checkpoint step
         assert not self.closed, 'Can not create new writers when closed'
         auth = xauth(auth) or self.client.auth
         w = _BatchWriter(url=url,
@@ -127,13 +129,13 @@ class BatchUploader(object):
                 'content-encoding': w.content_encoding,
             })
             w.offset += qiter.count
-            for _ in range(qiter.count):
-                q.task_done()
             if w.callback is not None:
                 try:
                     w.callback(response)
                 except Exception:
                     logger.exception("Callback for %s failed", w.url)
+            for _ in range(qiter.count):
+                q.task_done()
 
     def _content_encode(self, qiter, w):
         ce = w.content_encoding
