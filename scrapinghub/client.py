@@ -8,16 +8,17 @@ from requests.compat import urlencode
 from requests.compat import urljoin
 
 from scrapinghub.hubstorage import HubstorageClient
+from scrapinghub.hubstorage.job import Requests
+from scrapinghub.hubstorage.job import Samples as JobSamples
 from scrapinghub.hubstorage.jobq import DuplicateJobError
 from scrapinghub.hubstorage.project import Ids
 from scrapinghub.hubstorage.project import Jobs
 from scrapinghub.hubstorage.project import Reports
-from scrapinghub.hubstorage.project import Requests
-from scrapinghub.hubstorage.project import Samples
+from scrapinghub.hubstorage.project import Samples as ProjectSamples
 from scrapinghub.hubstorage.project import Settings
-from scrapinghub.hubstorage.project.activity import Activity
-from scrapinghub.hubstorage.project.collectionsrt import Collections
-from scrapinghub.hubstorage.project.frontier import Frontier
+from scrapinghub.hubstorage.activity import Activity
+from scrapinghub.hubstorage.collectionsrt import Collections
+from scrapinghub.hubstorage.frontier import Frontier
 from scrapinghub.hubstorage.utils import urlpathjoin, xauth
 
 # import the classes to redefine them in the module
@@ -107,6 +108,7 @@ class DashMixin(object):
     def _decode_dash_response(self, response, raw):
         if raw:
             return response.raw
+        response.raise_for_status()
         data = json.loads(response.text)
         try:
             if data['status'] == 'ok':
@@ -124,7 +126,7 @@ class DashMixin(object):
 class ResourceType(resourcetype.ResourceType, DashMixin):
 
     def __init__(self, client, key, auth=None):
-        super(self.__class__, self).__init__(client, key, auth=auth)
+        super(ResourceType, self).__init__(client, key, auth=auth)
         self._key = key
 
 
@@ -168,7 +170,7 @@ class Project(_Project):
         self.jobs = Jobs(client, self.projectid, auth=auth)
         self.items = Items(client, self.projectid, auth=auth)
         self.logs = Logs(client, self.projectid, auth=auth)
-        self.samples = Samples(client, self.projectid, auth=auth)
+        self.samples = ProjectSamples(client, self.projectid, auth=auth)
         self.jobq = JobQ(client, self.projectid, auth=auth)
         self.activity = Activity(client, self.projectid, auth=auth)
         self.collections = Collections(client, self.projectid, auth=auth)
@@ -180,7 +182,7 @@ class Project(_Project):
 
     def push_job(self, spidername, **jobparams):
         data = self.jobq.push(spidername, **jobparams)
-        key = data['jobid']
+        key = data['key']
         return Job(self.client, key, auth=self.auth)
 
     def count(self, **params):
@@ -216,7 +218,7 @@ class Job(_Job):
         self.metadata = JobMeta(client, self.key, self.auth, cached=metadata)
         self.items = Items(client, self.key, self.auth)
         self.logs = Logs(client, self.key, self.auth)
-        self.samples = Samples(client, self.key, self.auth)
+        self.samples = JobSamples(client, self.key, self.auth)
         self.requests = Requests(client, self.key, self.auth)
         self.jobq = JobQ(client, self.key.split('/')[0], auth)
 
