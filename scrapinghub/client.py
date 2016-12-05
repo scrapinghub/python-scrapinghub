@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import MutableMapping
 
 from requests import session
 from requests.exceptions import HTTPError
@@ -7,7 +8,20 @@ from requests.compat import urlencode
 from requests.compat import urljoin
 
 from scrapinghub.hubstorage import HubstorageClient
+from scrapinghub.hubstorage.jobq import DuplicateJobError
+from scrapinghub.hubstorage.project import Ids
+from scrapinghub.hubstorage.project import Jobs
+from scrapinghub.hubstorage.project import Reports
+from scrapinghub.hubstorage.project import Requests
+from scrapinghub.hubstorage.project import Samples
+from scrapinghub.hubstorage.project import Settings
+from scrapinghub.hubstorage.project.activity import Activity
+from scrapinghub.hubstorage.project.collectionsrt import Collections
+from scrapinghub.hubstorage.project.frontier import Frontier
+from scrapinghub.hubstorage.utils import urlpathjoin, xauth
 
+# import the classes to redefine them in the module
+from scrapinghub.hubstorage import resourcetype
 from scrapinghub.hubstorage.client import Projects as _Projects
 from scrapinghub.hubstorage.project import Project as _Project
 from scrapinghub.hubstorage.project import Spiders as _Spiders
@@ -16,7 +30,6 @@ from scrapinghub.hubstorage.job import Items as _Items
 from scrapinghub.hubstorage.job import Logs as _Logs
 from scrapinghub.hubstorage.job import JobMeta as _JobMeta
 from scrapinghub.hubstorage.jobq import JobQ as _JobQ
-from scrapinghub.hubstorage.jobq import DuplicateJobError
 
 
 class ScrapinghubAPIError(Exception):
@@ -36,24 +49,25 @@ class ScrapinghubClient(HubstorageClient):
 
     DEFAULT_DASH_ENDPOINT = 'https://app.scrapinghub.com/api/'
 
-    def __init__(self, auth=None, endpoint=None, dash_endpoint=None, **kwargs):
-        # listing first kwargs of original class to keep order for main args
-        super(self.__class__, self).__init__(
-            auth=auth, endpoint=endpoint, **kwargs)
-
-        self.dash_endpoint = dash_endpoint or self.DEFAULT_DASH_ENDPOINT
-        # FIXME in this way we define jobq & projects twice, but it's cleaner
-        # than copy-pasting full __init__ body of original class
+    def __init__(self, auth=None, endpoint=None, dash_endpoint=None,
+                 connection_timeout=None, max_retries=None,
+                 max_retry_time=None, user_agent=None):
+        self.auth = xauth(auth)
+        self.endpoint = endpoint or self.DEFAULT_ENDPOINT
+        self.connection_timeout = connection_timeout or self.DEFAULT_CONNECTION_TIMEOUT_S
+        self.user_agent = user_agent or self.DEFAULT_USER_AGENT
+        self.session = self._create_session()
+        self.retrier = self._create_retrier(max_retries, max_retry_time)
         self.jobq = JobQ(self, None)
         self.projects = Projects(self, None)
+        self.root = ResourceType(self, None)
+        self.dash_endpoint = dash_endpoint or self.DEFAULT_DASH_ENDPOINT
+        self._batchuploader = None
 
     def get_job(self, *args, **kwargs):
-        # same logic but with different Job class
         return Job(self, *args, **kwargs)
 
     def push_job(self, *args, **kwargs):
-        # FIXME could be also implemented via class empty property
-        # push_job = property()
         raise AttributeError(
             "Scheduling jobs from client level is deprecated."
             "Please schedule new jobs via project.push_job()."
@@ -63,6 +77,7 @@ class ScrapinghubClient(HubstorageClient):
         """Returns a list of available projects."""
         return self.projects.list()
 
+# ------------------ special dash mixin class ------------------
 
 class DashMixin(object):
     """A simple mixin class to work with Dash API endpoints"""
@@ -104,25 +119,66 @@ class DashMixin(object):
             raise ScrapinghubAPIError("JSON response does not contain status")
 
 
-class Projects(_Projects, DashMixin):
+# ------------------ resource type classes section ------------------
+
+class ResourceType(resourcetype.ResourceType, DashMixin):
+
+    def __init__(self, client, key, auth=None):
+        super(self.__class__, self).__init__(client, key, auth=auth)
+        self._key = key
+
+
+class MappingResourceType(resourcetype.MappingResourceType, ResourceType):
+    """Custom MappingResourceType based on modified ResourceType.
+    MRO: 1) MappingResourceType
+         2) hubstorage.resourcetype.MappingResourceType
+         3) ResourceType
+         4) hubstorage.resourcetype.ResourceType"""
+
+
+class ItemsResourceType(resourcetype.ItemsResourceType, ResourceType):
+    """Custom ItemsResourceType based on modified ResourceType
+    MRO: 1) ItemsResourceType
+         2) hubstorage.resourcetype.ItemsResourceType
+         3) ResourceType
+         4) hubstorage.resourcetype.ResourceType"""
+
+
+# ------------------ project classes section ---------------------
+
+
+class Projects(_Projects, ResourceType):
 
     def get(self, *args, **kwargs):
-        # same logic but with different Project class
         return Project(self.client, *args, **kwargs)
 
     def list(self):
         return self._dash_apiget(self.client.dash_endpoint,
                                  'scrapyd/listprojects.json')
 
-class Project(_Project, DashMixin):
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        self.jobq = JobQ(self.client, self.projectid, auth=self.auth)
-        self.spiders = Spiders(self.client, self.projectid, auth=self.auth)
+class Project(_Project):
+
+    def __init__(self, client, projectid, auth=None):
+        self.client = client
+        self.projectid = urlpathjoin(projectid)
+        assert len(self.projectid.split('/')) == 1, \
+                'projectkey must be just one id: %s' % projectid
+        self.auth = xauth(auth) or client.auth
+        self.jobs = Jobs(client, self.projectid, auth=auth)
+        self.items = Items(client, self.projectid, auth=auth)
+        self.logs = Logs(client, self.projectid, auth=auth)
+        self.samples = Samples(client, self.projectid, auth=auth)
+        self.jobq = JobQ(client, self.projectid, auth=auth)
+        self.activity = Activity(client, self.projectid, auth=auth)
+        self.collections = Collections(client, self.projectid, auth=auth)
+        self.frontier = Frontier(client, self.projectid, auth=auth)
+        self.ids = Ids(client, self.projectid, auth=auth)
+        self.settings = Settings(client, self.projectid, auth=auth)
+        self.reports = Reports(client, self.projectid, auth=auth)
+        self.spiders = Spiders(client, self.projectid, auth=auth)
 
     def push_job(self, spidername, **jobparams):
-        # same logic but with different Job class
         data = self.jobq.push(spidername, **jobparams)
         key = data['jobid']
         return Job(self.client, key, auth=self.auth)
@@ -131,75 +187,96 @@ class Project(_Project, DashMixin):
         return self.jobq.count(**params)
 
 
-class Spiders(_Spiders, DashMixin):
+class Spiders(_Spiders, ResourceType):
 
     def list(self):
-        # FIXME ResourceType doesn't store key as is, but we can extract it
-        # easily from local key itself, though ofc it's a rude hack
-        params = {'project': self.key.split('/')[-1]}
-        result = self._dash_apiget(self.client.dash_endpoint,
-                                   'spiders/list.json',
-                                   params=params)
-        return result['spiders']
+        return self._dash_apiget(self.client.dash_endpoint,
+                                 'spiders/list.json',
+                                 params={'project': self._key})['spiders']
 
     def update_tags(self, spidername, add=None, remove=None):
-        # FIXME extracting project using splitting spiders/ID key is hack-ish
-        projectid = self.key.split('/')[-1]
         params = get_tags_for_update(add_tag=add, remove_tag=remove)
         if not params:
             return
-        params['spider'] = "noop"
-        params['project'] = self.key.split('/')[-1]
-        response = self._dash_apipost(self.client.dash_endpoint,
-                                      'jobs/update.json', data=params)
-        return response['count']
+        params.update({'spider': "noop", 'project': self._key})
+        return self._dash_apipost(self.client.dash_endpoint,
+                                  'jobs/update.json', data=params)['count']
 
+
+# ------------------------ job-related section -----------------------
 
 class Job(_Job):
 
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        # FIXME a bit rude hack to reuse wrong self.metadata
-        # to get client and cached data
-        self.metadata = JobMeta(self.metadata.client,
-                                self.key, self.auth,
-                                cached=self.metadata._cached)
-        self.items = Items(self.metadata.client, self.key, self.auth)
-        self.logs = Logs(self.metadata.client, self.key, self.auth)
+    def __init__(self, client, key, auth=None, jobauth=None, metadata=None):
+        self.key = urlpathjoin(key)
+        assert len(self.key.split('/')) == 3, \
+            'Jobkey must be projectid/spiderid/jobid: %s' % self.key
+        self.jobauth = jobauth
+        self.auth = self.jobauth or auth
+        self.metadata = JobMeta(client, self.key, self.auth, cached=metadata)
+        self.items = Items(client, self.key, self.auth)
+        self.logs = Logs(client, self.key, self.auth)
+        self.samples = Samples(client, self.key, self.auth)
+        self.requests = Requests(client, self.key, self.auth)
+        self.jobq = JobQ(client, self.key.split('/')[0], auth)
 
     def update_tags(self, *args, **kwargs):
         return self.metadata.update_tags(*args, **kwargs)
 
 
-class JobMeta(_JobMeta, DashMixin):
+class JobMeta(_JobMeta, MappingResourceType):
 
     def update_tags(self, add=None, remove=None):
         params = get_tags_for_update(add_tag=add, remove_tag=remove)
         if not params:
             return
-        params['job'] = self.key.split('/', 1)[1]
-        params['project'] = params['job'].split('/', 1)[0]
+        params['job'] = self._key
+        params['project'] = self._key.split('/', 1)[0]
         response = self._dash_apipost(self.client.dash_endpoint,
                                       'jobs/update.json', data=params)
         return response['count']
 
 
-class JobQ(_JobQ, DashMixin):
+class Items(_Items, ItemsResourceType):
+
+    def list(self, _key=None, **params):
+        if 'offset' in params:
+            params['start'] = '%s/%s' % (self._key, params['offset'])
+            del params['offset']
+        return self.apiget(_key, params=params)
+
+
+class Logs(_Logs, ItemsResourceType):
+
+    def list(self, _key=None, **params):
+        if 'offset' in params:
+            params['start'] = '%s/%s' % (self._key, params['offset'])
+            del params['offset']
+        if 'level' in params:
+            level = params['level']
+            minlevel = getattr(Log, params.get('level'), None)
+            if minlevel is None:
+                raise ScrapinghubAPIError(
+                    "Unknown log level: %s" % params.get('level'))
+            params['filters'] = ['level', '>=', [minlevel]]
+        return self.apiget(_key, params=params)
+
+
+# ------------------------ jobq section -----------------------
+
+
+class JobQ(_JobQ, ResourceType):
 
     def count(self, **params):
         return self.apiget(('count',), params=params)
 
     def push(self, spider, **jobparams):
         jobparams['spider'] = spider
-        # FIXME ResourceType doesn't store key as is, but we can extract it
-        # from url itself but only if it's called from Project.JobQ
         # for Client-level JobQ project should be provided via jobparams
         if 'project' not in jobparams and self.url != 'jobq':
-            jobparams['project'] = self.url.rsplit('/')[-1]
+            jobparams['project'] = self._key
         # FIXME JobQ endpoint can schedule multiple jobs with json-lines,
-        # corresponding Dash endpoint that we're going to use supports
-        # only one job per request: most likely we need to extend Dash
-        # endpoint functionality to work in the same manner.
+        # corresponding Dash endpoint - only one job per request
         response = self._dash_apipost(self.client.dash_endpoint,
                                       'schedule.json',
                                       data=jobparams)
@@ -210,33 +287,7 @@ class JobQ(_JobQ, DashMixin):
         return response
 
 
-class Items(_Items):
-
-    def list(self, _key=None, **params):
-        if 'offset' in params:
-            jobid = self.key.split('/', 1)[1]
-            params['start'] = '%s/%s' % (jobid, params['offset'])
-            del params['offset']
-        return self.apiget(_key, params=params)
-
-
-class Logs(_Logs):
-
-    def list(self, _key=None, **params):
-        if 'offset' in params:
-            jobid = self.key.split('/', 1)[1]
-            params['start'] = '%s/%s' % (jobid, params['offset'])
-            del params['offset']
-        if 'level' in params:
-            level = params['level']
-            minlevel = getattr(Log, params.get('level'), None)
-            if minlevel is None:
-                raise ScrapinghubAPIError(
-                    "Unknown log level: %s" % params.get('level'))
-            params['filters'] = ['level', '>=', [minlevel]]
-        print(params)
-        return self.apiget(_key, params=params)
-
+# ------------------------ auxiliaries section -----------------------
 
 def get_tags_for_update(**kwargs):
     """Helper to check tags changes"""
