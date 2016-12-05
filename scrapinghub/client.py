@@ -284,7 +284,7 @@ class JobQ(_JobQ, ResourceType):
             if 'already scheduled' in response['message']:
                 raise DuplicateJobError(response['message'])
             raise ScrapinghubAPIError(response['message'])
-        return response
+        return {'key': response.get('jobid'), 'auth': None}
 
 
 # ------------------------ auxiliaries section -----------------------
