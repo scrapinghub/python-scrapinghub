@@ -274,8 +274,11 @@ class JobQ(_JobQ, ResourceType):
 
     def push(self, spider, **jobparams):
         jobparams['spider'] = spider
-        # for Client-level JobQ project should be provided via jobparams
-        if 'project' not in jobparams and self.url != 'jobq':
+        # for client-level JobQ, project should be provided via jobparams
+        if 'project' not in jobparams:
+            if not self._key:
+                raise ScrapinghubAPIError(
+                    "Project is required when scheduling new jobs")
             jobparams['project'] = self._key
         # FIXME JobQ endpoint can schedule multiple jobs with json-lines,
         # corresponding Dash endpoint - only one job per request
