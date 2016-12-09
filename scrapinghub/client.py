@@ -1,9 +1,5 @@
-import json
 import logging
-from collections import MutableMapping
 
-from requests import session
-from requests.exceptions import HTTPError
 from requests.compat import urlencode
 from requests.compat import urljoin
 
@@ -55,7 +51,8 @@ class ScrapinghubClient(HubstorageClient):
                  max_retry_time=None, user_agent=None):
         self.auth = xauth(auth)
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
-        self.connection_timeout = connection_timeout or self.DEFAULT_CONNECTION_TIMEOUT_S
+        self.connection_timeout = (connection_timeout or
+                                   self.DEFAULT_CONNECTION_TIMEOUT_S)
         self.user_agent = user_agent or self.DEFAULT_USER_AGENT
         self.session = self._create_session()
         self.retrier = self._create_retrier(max_retries, max_retry_time)
@@ -79,6 +76,7 @@ class ScrapinghubClient(HubstorageClient):
         return self.projects.list()
 
 # ------------------ special dash mixin class ------------------
+
 
 class DashMixin(object):
     """A simple mixin class to work with Dash API endpoints"""
@@ -109,7 +107,7 @@ class DashMixin(object):
         if raw:
             return response.raw
         response.raise_for_status()
-        data = json.loads(response.text)
+        data = response.json()
         try:
             if data['status'] == 'ok':
                 return data
@@ -165,7 +163,7 @@ class Project(_Project):
         self.client = client
         self.projectid = urlpathjoin(projectid)
         assert len(self.projectid.split('/')) == 1, \
-                'projectkey must be just one id: %s' % projectid
+            'projectkey must be just one id: %s' % projectid
         self.auth = xauth(auth) or client.auth
         self.jobs = Jobs(client, self.projectid, auth=auth)
         self.items = Items(client, self.projectid, auth=auth)
@@ -255,7 +253,6 @@ class Logs(_Logs, ItemsResourceType):
             params['start'] = '%s/%s' % (self._key, params['offset'])
             del params['offset']
         if 'level' in params:
-            level = params['level']
             minlevel = getattr(Log, params.get('level'), None)
             if minlevel is None:
                 raise ScrapinghubAPIError(
@@ -270,7 +267,7 @@ class Logs(_Logs, ItemsResourceType):
 class JobQ(_JobQ, ResourceType):
 
     def count(self, **params):
-        return self.apiget(('count',), params=params)
+        return next(self.apiget(('count',), params=params))
 
     def push(self, spider, **jobparams):
         jobparams['spider'] = spider
