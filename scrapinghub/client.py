@@ -4,11 +4,8 @@ from requests.compat import urlencode
 from requests.compat import urljoin
 
 from scrapinghub.hubstorage import HubstorageClient
-from scrapinghub.hubstorage.job import Requests
-from scrapinghub.hubstorage.job import Samples as JobSamples
 from scrapinghub.hubstorage.jobq import DuplicateJobError
 from scrapinghub.hubstorage.project import Ids
-from scrapinghub.hubstorage.project import Jobs
 from scrapinghub.hubstorage.project import Reports
 from scrapinghub.hubstorage.project import Samples as ProjectSamples
 from scrapinghub.hubstorage.project import Settings
@@ -25,8 +22,12 @@ from scrapinghub.hubstorage.project import Spiders as _Spiders
 from scrapinghub.hubstorage.job import Job as _Job
 from scrapinghub.hubstorage.job import Items as _Items
 from scrapinghub.hubstorage.job import Logs as _Logs
+from scrapinghub.hubstorage.job import Requests as _Requests
 from scrapinghub.hubstorage.job import JobMeta as _JobMeta
+from scrapinghub.hubstorage.job import Samples as _Samples
 from scrapinghub.hubstorage.jobq import JobQ as _JobQ
+
+from scrapinghub.hubstorage.serialization import jldecode, mpdecode
 
 
 class ScrapinghubAPIError(Exception):
@@ -143,6 +144,44 @@ class ItemsResourceType(resourcetype.ItemsResourceType, ResourceType):
          3) ResourceType
          4) hubstorage.resourcetype.ResourceType"""
 
+    def list(self, _key=None, **params):
+        if hasattr(self, 'iter'):
+            return list(self.iter(_key=_key, **params))
+        return super(ItemsResourceType, self).list(_key=None, **params)
+
+
+class DownloadableResource(resourcetype.DownloadableResource):
+    """Custom DownloadableResource based on modified ResourceType
+    MRO: 1) DownloadableResource
+         2) hubstorage.resourcetype.DownloadableResource
+         3) ResourceType
+         4) hubstorage.resourcetype.ResourceType
+    """
+    def __init__(self, *args, **kwargs):
+        super(DownloadableResource, self).__init__(*args, **kwargs)
+        self.iter_raw_msgpack = super(DownloadableResource, self).iter_msgpack
+        self.iter_raw_json = super(DownloadableResource, self).iter_json
+
+    def iter(self, *args, **kwargs):
+        """Reliably iterate through all data as python objects
+
+        calls either iter_json or iter_msgpack, decoding the results
+        """
+        if self._allows_mpack():
+            return mpdecode(self.iter_raw_msgpack(*args, **kwargs))
+        return jldecode(self.iter_raw_json(*args, **kwargs))
+
+    def __getattribute__(self, name):
+        rename_map = {
+            'iter_values': 'iter',
+            'iter_json': 'iter_raw_json',
+            'iter_msgpack': 'iter_raw_msgpack',
+        }
+        if name in rename_map:
+            raise AttributeError(
+                'Method was renamed to %s()' % rename_map[name])
+        return super(DownloadableResource, self).__getattribute__(name)
+
 
 # ------------------ project classes section ---------------------
 
@@ -165,7 +204,6 @@ class Project(_Project):
         assert len(self.projectid.split('/')) == 1, \
             'projectkey must be just one id: %s' % projectid
         self.auth = xauth(auth) or client.auth
-        self.jobs = Jobs(client, self.projectid, auth=auth)
         self.items = Items(client, self.projectid, auth=auth)
         self.logs = Logs(client, self.projectid, auth=auth)
         self.samples = ProjectSamples(client, self.projectid, auth=auth)
@@ -216,7 +254,7 @@ class Job(_Job):
         self.metadata = JobMeta(client, self.key, self.auth, cached=metadata)
         self.items = Items(client, self.key, self.auth)
         self.logs = Logs(client, self.key, self.auth)
-        self.samples = JobSamples(client, self.key, self.auth)
+        self.samples = Samples(client, self.key, self.auth)
         self.requests = Requests(client, self.key, self.auth)
         self.jobq = JobQ(client, self.key.split('/')[0], auth)
 
@@ -237,18 +275,18 @@ class JobMeta(_JobMeta, MappingResourceType):
         return response['count']
 
 
-class Items(_Items, ItemsResourceType):
+class Items(_Items, ItemsResourceType, DownloadableResource):
 
-    def list(self, _key=None, **params):
+    def iter(self, _key=None, **params):
         if 'offset' in params:
             params['start'] = '%s/%s' % (self._key, params['offset'])
             del params['offset']
         return self.apiget(_key, params=params)
 
 
-class Logs(_Logs, ItemsResourceType):
+class Logs(_Logs, ItemsResourceType, DownloadableResource):
 
-    def list(self, _key=None, **params):
+    def iter(self, _key=None, **params):
         if 'offset' in params:
             params['start'] = '%s/%s' % (self._key, params['offset'])
             del params['offset']
@@ -260,6 +298,17 @@ class Logs(_Logs, ItemsResourceType):
             params['filters'] = ['level', '>=', [minlevel]]
         return self.apiget(_key, params=params)
 
+
+class Requests(_Requests, ItemsResourceType, DownloadableResource):
+
+    def iter(self, _key=None, **params):
+        return self.apiget(_key, params=params)
+
+
+class Samples(_Samples, ItemsResourceType):
+
+    def iter(self, _key=None, **params):
+        return self.apiget(_key, params=params)
 
 # ------------------------ jobq section -----------------------
 
