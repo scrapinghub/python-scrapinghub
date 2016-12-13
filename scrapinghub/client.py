@@ -7,6 +7,11 @@ from scrapinghub.hubstorage.collectionsrt import Collections
 from scrapinghub.hubstorage.frontier import Frontier
 from scrapinghub.hubstorage.project import Reports
 from scrapinghub.hubstorage.project import Settings
+from scrapinghub.hubstorage.job import Items
+from scrapinghub.hubstorage.job import JobMeta
+from scrapinghub.hubstorage.job import Logs
+from scrapinghub.hubstorage.job import Samples
+from scrapinghub.hubstorage.job import Requests
 
 from scrapinghub.hubstorage.utils import xauth
 
@@ -23,11 +28,11 @@ class ScrapinghubClient(object):
         self.projects = Projects(self)
 
     def get_project(self, projectid):
-        return self.projects.get(projectid)
+        return self.projects.get(int(projectid))
 
     def get_job(self, jobkey):
         # FIXME solve the splitting more gracefully
-        projectid = jobkey.split('/')[0]
+        projectid = int(jobkey.split('/')[0])
         return self.projects.get(projectid).jobs.get(jobkey)
 
 
@@ -141,10 +146,24 @@ class Jobs(object):
 
 class Job(object):
 
-    def __init__(self, client, jobkey):
+    def __init__(self, client, jobkey, metadata=None):
         self.client = client
         self.key = jobkey
         self.projectid = jobkey.split('/')[0]
+
+        # proxied sub-resources
+        hsclient, auth = client.hsclient, client.hsclient.auth
+        self.metadata = JobMeta(hsclient, self.key, auth, cached=metadata)
+        self.items = Items(hsclient, self.key, auth)
+        self.logs = Logs(hsclient, self.key, auth)
+        self.samples = Samples(hsclient, self.key, auth)
+        self.requests = Requests(hsclient, self.key, auth)
+
+    def update_metadata(self, *args, **kwargs):
+        self.client.hsclient.get_job(self.key).update_metadata(*args, **kwargs)
+
+    def close_writers(self):
+        self.client.hsclient.get_job(self.key).close_writers()
 
     @property
     def _hsproject(self):
