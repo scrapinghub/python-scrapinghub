@@ -118,30 +118,32 @@ class Jobs(object):
             raise ScrapinghubAPIError('Please provide spidername')
         jobq = self._hsproject.jobq
         newjob = jobq.push(spidername or self.spider.name, **params)
-        return Job(self.client, newjob.key.split('/')[1:])
+        return Job(self.client, newjob['key'])
 
     def get(self, jobkey):
         projectid, spiderid, jobid = jobkey.split('/')
-        if projectid != self.projectid:
+        if int(projectid) != self.projectid:
             raise ScrapinghubAPIError('Please use same project id')
-        if self.spider and spiderid != self.spider.id:
+        if self.spider and int(spiderid) != self.spider.id:
             raise ScrapinghubAPIError('Please use same spider id')
         return Job(self.client, jobkey)
 
     def summary(self, **params):
-        return self._hsproject.jobq.summary(spiderid=self.spiderid, **params)
+        spiderid = None if not self.spider else self.spider.id
+        return self._hsproject.jobq.summary(spiderid=spiderid, **params)
 
     def lastjobsummary(self, **params):
-        summ = self._hsproject.spiders.lastjobsummary(self.spiderid, **params)
-        # FIXME original lastjobsummary returns a generator, is it ok?
+        spiderid = None if not self.spider else self.spider.id
+        summ = self._hsproject.spiders.lastjobsummary(spiderid, **params)
+        # FIXME original lastjobsummary returns a generator
         return list(summ)
 
 
 class Job(object):
 
-    def __init__(self, client, projectid, spiderid, jobid):
+    def __init__(self, client, jobkey):
         self.client = client
-        self.jobkey = jobkey
+        self.key = jobkey
         self.projectid = jobkey.split('/')[0]
 
     @property
@@ -150,19 +152,19 @@ class Job(object):
         return self.client.hsclient.get_project(self.projectid)
 
     def start(self, **params):
-        return self._hsproject.jobq.start(self.jobkey, **params)
+        return self._hsproject.jobq.start(self, **params)
 
     def update(self, **params):
-        return self._hsproject.jobq.update(self.jobkey, **params)
+        return self._hsproject.jobq.update(self, **params)
 
     def cancel(self):
-        self._hsproject.jobq.request_cancel(self.jobkey)
+        self._hsproject.jobq.request_cancel(self)
 
     def finish(self, **params):
-        return self._hsproject.jobq.finish(self.jobkey, **params)
+        return self._hsproject.jobq.finish(self, **params)
 
     def delete(self, **params):
-        return self._hsproject.jobq.delete(self.jobkey, **params)
+        return self._hsproject.jobq.delete(self, **params)
 
     def purge(self):
-        self.client.hsclient.get_job(self.jobkey).purged()
+        self.client.hsclient.get_job(self.key).purged()
