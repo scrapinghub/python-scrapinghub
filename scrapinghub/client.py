@@ -50,19 +50,19 @@ class Project(object):
 
     def __init__(self, client, projectid):
         self.client = client
-        self.projectid = projectid
+        self.id = projectid
 
         # sub-resources
-        self.spiders = Spiders(client, self.projectid)
-        self.jobs = Jobs(client, self.projectid)
+        self.spiders = Spiders(client, self.id)
+        self.jobs = Jobs(client, self.id)
 
         # proxied sub-resources
         hsclient, auth = client.hsclient, client.hsclient.auth
-        self.activity = Activity(hsclient, self.projectid, auth=auth)
-        self.collections = Collections(hsclient, self.projectid, auth=auth)
-        self.frontier = Frontier(hsclient, self.projectid, auth=auth)
-        self.settings = Settings(hsclient, self.projectid, auth=auth)
-        self.reports = Reports(hsclient, self.projectid, auth=auth)
+        self.activity = Activity(hsclient, self.id, auth=auth)
+        self.collections = Collections(hsclient, self.id, auth=auth)
+        self.frontier = Frontier(hsclient, self.id, auth=auth)
+        self.settings = Settings(hsclient, self.id, auth=auth)
+        self.reports = Reports(hsclient, self.id, auth=auth)
 
 
 class Spiders(object):
@@ -71,13 +71,10 @@ class Spiders(object):
         self.client = client
         self.projectid = projectid
 
-    def get(self, id=None, name=None):
-        if not id:
-            if not name:
-                raise ScrapinghubAPIError('Please provide spider id or name')
-            project = self.client.hsclient.get_project(self.projectid)
-            id = project.ids.spider(name)
-        return Spider(self.client, self.projectid, spiderid=id)
+    def get(self, spidername):
+        project = self.client.hsclient.get_project(self.projectid)
+        spiderid = project.ids.spider(spidername)
+        return Spider(self.client, self.projectid, spiderid, spidername)
 
     def list(self):
         project = self.client.connection[self.projectid]
@@ -86,19 +83,20 @@ class Spiders(object):
 
 class Spider(object):
 
-    def __init__(self, client, projectid, spiderid):
+    def __init__(self, client, projectid, spiderid, spidername):
         self.client = client
         self.projectid = projectid
-        self.spiderid = spiderid
-        self.jobs = Jobs(client, self.projectid, self.spiderid)
+        self.id = spiderid
+        self.name = spidername
+        self.jobs = Jobs(client, self.projectid, self)
 
 
 class Jobs(object):
 
-    def __init__(self, client, projectid, spiderid=None):
+    def __init__(self, client, projectid, spider=None):
         self.client = client
         self.projectid = projectid
-        self.spiderid = spiderid
+        self.spider = spider
 
     @property
     def _hsproject(self):
@@ -106,32 +104,29 @@ class Jobs(object):
         return self.client.hsclient.get_project(self.projectid)
 
     def count(self, **params):
-        # FIXME we need spidername here!
-        params['spider'] = 'localinfo'
+        if self.spider:
+            params['spider'] = self.spider.name
         return next(self._hsproject.jobq.apiget(('count',), params=params))
 
     def iter(self, **params):
-        # FIXME we need spidername here!
-        params['spider'] = 'localinfo'
+        if self.spider:
+            params['spider'] = self.spider.name
         return self._hsproject.jobq.list(**params)
 
     def create(self, spidername=None, **params):
-        # FIXME we need spidername here as well!
-        if not spidername:
-            if not self.spiderid:
-                raise ScrapinghubAPIError('Please provide spidername')
-            spidername = spiderid  # TODO temporary stub
-        newjob = self._hsproject.jobq.push(spidername, **params)
-        _, projectid, spiderid, jobid = newjob.key.split('/')
-        return Job(self.client. self.projectid, spiderid, jobid)
+        if not spidername and not self.spider:
+            raise ScrapinghubAPIError('Please provide spidername')
+        jobq = self._hsproject.jobq
+        newjob = jobq.push(spidername or self.spider.name, **params)
+        return Job(self.client, newjob.key.split('/')[1:])
 
     def get(self, jobkey):
         projectid, spiderid, jobid = jobkey.split('/')
         if projectid != self.projectid:
             raise ScrapinghubAPIError('Please use same project id')
-        if self.spiderid and spiderid != self.spiderid:
+        if self.spider and spiderid != self.spider.id:
             raise ScrapinghubAPIError('Please use same spider id')
-        return Job(self.client. jobkey)
+        return Job(self.client, jobkey)
 
     def summary(self, **params):
         return self._hsproject.jobq.summary(spiderid=self.spiderid, **params)
@@ -147,7 +142,7 @@ class Job(object):
     def __init__(self, client, projectid, spiderid, jobid):
         self.client = client
         self.jobkey = jobkey
-        self.projectid, self.spiderid, self.jobid = jobkey.split('/')
+        self.projectid = jobkey.split('/')[0]
 
     @property
     def _hsproject(self):
