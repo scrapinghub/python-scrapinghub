@@ -1,4 +1,4 @@
-__all__ = ["APIError", "Connection", "HubstorageClient"]
+__all__ = ["APIError", "Connection", "HubstorageClient", "ScrapinghubClient"]
 
 
 import pkgutil
@@ -9,3 +9,4 @@ del pkgutil
 
 from .legacy import *
 from .hubstorage import HubstorageClient
+from .client import ScrapinghubClient
