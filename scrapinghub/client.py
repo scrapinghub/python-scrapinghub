@@ -7,13 +7,15 @@ from scrapinghub.hubstorage.collectionsrt import Collections
 from scrapinghub.hubstorage.frontier import Frontier
 from scrapinghub.hubstorage.project import Reports
 from scrapinghub.hubstorage.project import Settings
-from scrapinghub.hubstorage.job import Items
 from scrapinghub.hubstorage.job import JobMeta
-from scrapinghub.hubstorage.job import Logs
 from scrapinghub.hubstorage.job import Samples
-from scrapinghub.hubstorage.job import Requests
+
+from scrapinghub.hubstorage.job import Items as _Items
+from scrapinghub.hubstorage.job import Logs as _Logs
+from scrapinghub.hubstorage.job import Requests as _Requests
 
 from scrapinghub.hubstorage.utils import xauth
+from scrapinghub.hubstorage.serialization import jldecode
 
 
 class ScrapinghubAPIError(Exception):
@@ -153,11 +155,11 @@ class Job(object):
 
         # proxied sub-resources
         hsclient, auth = client.hsclient, client.hsclient.auth
+        self.items = Items(self.client, self.key)
+        self.logs = Logs(self.client, self.key)
+        self.requests = Requests(self.client, self.key)
         self.metadata = JobMeta(hsclient, self.key, auth, cached=metadata)
-        self.items = Items(hsclient, self.key, auth)
-        self.logs = Logs(hsclient, self.key, auth)
-        self.samples = Samples(hsclient, self.key, auth)
-        self.requests = Requests(hsclient, self.key, auth)
+        self.samples = Samples(client.hsclient, jobkey, client.hsclient.auth)
 
     def update_metadata(self, *args, **kwargs):
         self.client.hsclient.get_job(self.key).update_metadata(*args, **kwargs)
@@ -187,3 +189,65 @@ class Job(object):
 
     def purge(self):
         self.client.hsclient.get_job(self.key).purged()
+
+
+class BaseEntity(object):
+
+    def __init__(self, client, jobkey):
+        self.client = client
+        self.key = jobkey
+        self._iter_raw_msgpack = self._entity.iter_msgpack
+        self._iter_raw_json = self._entity.iter_json
+        self._allows_mpack = self._entity._allows_mpack
+
+    def iter(self, **params):
+        if self._allows_mpack():
+            return mpdecode(self._iter_raw_msgpack(self.key, params=params))
+        return jldecode(self._iter_raw_json(self.key, params=params))
+
+
+class Logs(BaseEntity):
+
+    def __init__(self, client, jobkey):
+        self._entity = _Logs(client.hsclient, jobkey, client.hsclient.auth)
+        super(Logs, self).__init__(client, jobkey)
+
+        # inherite main logs methods
+        self.log = self._entity.log
+        self.debug = self._entity.debug
+        self.info = self._entity.info
+        self.warn = self._entity.warn
+        self.warning = self._entity.warning
+        self.error = self._entity.error
+        self.batch_write_start = self._entity.batch_write_start
+
+    def iter(self, **params):
+        if 'offset' in params:
+            params['start'] = '%s/%s' % (self._entity._key, params['offset'])
+            del params['offset']
+        if 'level' in params:
+            minlevel = getattr(Log, params.get('level'), None)
+            if minlevel is None:
+                raise ScrapinghubAPIError(
+                    "Unknown log level: %s" % params.get('level'))
+            params['filters'] = ['level', '>=', [minlevel]]
+        return super(Logs, self).iter(**params)
+
+
+class Items(BaseEntity):
+
+    def __init__(self, client, jobkey):
+        self._entity = _Items(client.hsclient, jobkey, client.hsclient.auth)
+        super(Items, self).__init__(client, jobkey)
+
+    def iter(self, **params):
+        if 'offset' in params:
+            params['start'] = '%s/%s' % (self._entity.key, params['offset'])
+            del params['offset']
+        return super(Items, self).iter(**params)
+
+class Requests(BaseEntity):
+
+    def __init__(self, client, jobkey):
+        self._entity = _Requests(client.hsclient, jobkey, client.hsclient.auth)
+        super(Requests, self).__init__(client, jobkey)
