@@ -97,6 +97,14 @@ class Spider(object):
         self.name = spidername
         self.jobs = Jobs(client, projectid, self)
 
+    def update_tags(self, add=None, remove=None):
+        params = get_tags_for_update(add_tag=add, remove_tag=remove)
+        if not params:
+            return
+        params.update({'project': self.projectid, 'spider': self.name})
+        result = self.client.connection._post('jobs_update', 'json', params)
+        return result['count']
+
 
 class Jobs(object):
 
@@ -173,6 +181,14 @@ class Job(object):
 
     def update_metadata(self, *args, **kwargs):
         self.client.hsclient.get_job(self.key).update_metadata(*args, **kwargs)
+
+    def update_tags(self, add=None, remove=None):
+        params = get_tags_for_update(add_tag=add, remove_tag=remove)
+        if not params:
+            return
+        params.update({'project': self.projectid, 'job': self.key})
+        result = self.client.connection._post('jobs_update', 'json', params)
+        return result['count']
 
     def close_writers(self):
         self.client.hsclient.get_job(self.key).close_writers()
@@ -292,3 +308,15 @@ class Collections(EntityProxy):
             'new_collection', 'new_store', 'new_cached_store',
             'new_versioned_store', 'new_versioned_cached_store',
         ])
+
+
+def get_tags_for_update(**kwargs):
+    """Helper to check tags changes"""
+    params = {}
+    for k, v in kwargs.items():
+        if not v:
+            continue
+        if not isinstance(v, list):
+            raise ScrapinghubAPIError("Add/remove field value must be a list")
+        params[k] = v
+    return params
