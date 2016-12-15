@@ -1,3 +1,4 @@
+import logging
 
 from scrapinghub import Connection
 from scrapinghub import HubstorageClient
@@ -21,6 +22,15 @@ class ScrapinghubAPIError(Exception):
 
 class DuplicateJobError(ScrapinghubAPIError):
     pass
+
+
+class LogLevel(object):
+    DEBUG = logging.DEBUG
+    INFO = logging.INFO
+    WARNING = logging.WARNING
+    ERROR = logging.ERROR
+    CRITICAL = logging.CRITICAL
+    SILENT = CRITICAL + 1
 
 
 class ScrapinghubClient(object):
@@ -263,7 +273,7 @@ class Logs(EntityProxy):
             params['start'] = '%s/%s' % (self._entity._key, params['offset'])
             del params['offset']
         if 'level' in params:
-            minlevel = getattr(Logs, params.get('level'), None)
+            minlevel = getattr(LogLevel, params.get('level'), None)
             if minlevel is None:
                 raise ScrapinghubAPIError(
                     "Unknown log level: %s" % params.get('level'))
