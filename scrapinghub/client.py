@@ -200,28 +200,27 @@ class ResourceTypes(object):
 
 
 class EntityProxy(object):
+    """A proxy object to create a class instance and proxy its methods."""
 
     def __init__(self, cls, cls_types, client, key):
         self.client = client
         self.key = key
         self._entity = cls(client.hsclient, key)
         if ResourceTypes.ITEMS_TYPE in cls_types:
-            self._proxy_methods({
-                'iter': 'list', 'get': 'get',
-                'write': 'write', 'flush': 'flush',
-                'close': 'close', 'stats': 'stats',
-            })
+            self._proxy_methods(['get', 'write', 'flush', 'close',
+                                 'stats', ('iter', 'list')])
         # DType iter_values() has more priority than IType list()
         if ResourceTypes.DOWNLOADABLE_TYPE in cls_types:
-            self._proxy_methods({
-                'iter': 'iter_values',
-                'iter_raw_msgpack': 'iter_msgpack',
-                'iter_raw_json': 'iter_json',
-            })
+            self._proxy_methods([('iter', 'iter_values'),
+                                 ('iter_raw_msgpack', 'iter_msgpack'),
+                                 ('iter_raw_json', 'iter_json')])
 
     def _proxy_methods(self, methods):
-        for name, entity_name in methods.items():
-            # save from redefining attribute twice and maintain a proper order
+        for method in methods:
+            if isinstance(method, tuple):
+                name, entity_name = method
+            else:
+                name, entity_name = method, method
             if not hasattr(self, name):
                 setattr(self, name, getattr(self._entity, entity_name))
 
@@ -231,14 +230,8 @@ class Logs(EntityProxy):
     def __init__(self, client, jobkey):
         cls_types = [ResourceTypes.DOWNLOADABLE_TYPE, ResourceTypes.ITEMS_TYPE]
         super(Logs, self).__init__(_Logs, cls_types, client, jobkey)
-
-        # inherite main Logs methods
-        self.log = self._entity.log
-        self.debug = self._entity.debug
-        self.info = self._entity.info
-        self.warn = self._entity.warn
-        self.warning = self._entity.warning
-        self.error = self._entity.error
+        self._proxy_methods(['log', 'debug', 'info',
+                             'warning', 'warn', 'error'])
 
     def iter(self, **params):
         if 'offset' in params:
@@ -283,12 +276,10 @@ class Samples(EntityProxy):
 class Collections(EntityProxy):
 
     def __init__(self, client, jobkey):
-        cls_types = [ResourceTypes.DOWNLOADABLE_TYPE]
         super(Collections, self).__init__(
-            _Collections, cls_types, client, jobkey)
-        methods = {name: name for name in [
-            'create_writer', 'new_collection', 'new_store',
-            'new_cached_store', 'new_versioned_store',
-            'new_versioned_cached_store', 'count', 'get', 'set', 'delete'
-        ]}
-        self._proxy_methods(methods)
+            _Collections, [ResourceTypes.DOWNLOADABLE_TYPE], client, jobkey)
+        self._proxy_methods([
+            'count', 'get', 'set', 'delete', 'create_writer',
+            'new_collection', 'new_store', 'new_cached_store',
+            'new_versioned_store', 'new_versioned_cached_store',
+        ])
