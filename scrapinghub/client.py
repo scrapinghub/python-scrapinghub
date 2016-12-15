@@ -8,14 +8,11 @@ from scrapinghub.hubstorage.frontier import Frontier
 from scrapinghub.hubstorage.project import Reports
 from scrapinghub.hubstorage.project import Settings
 from scrapinghub.hubstorage.job import JobMeta
-from scrapinghub.hubstorage.job import Samples
+from scrapinghub.hubstorage.job import Samples as _Samples
 
 from scrapinghub.hubstorage.job import Items as _Items
 from scrapinghub.hubstorage.job import Logs as _Logs
 from scrapinghub.hubstorage.job import Requests as _Requests
-
-from scrapinghub.hubstorage.utils import xauth
-from scrapinghub.hubstorage.serialization import jldecode
 
 
 class ScrapinghubAPIError(Exception):
@@ -64,6 +61,7 @@ class Project(object):
         self.jobs = Jobs(client, self.id)
 
         # proxied sub-resources
+        # FIXME providing client.hsclient.auth is not necessary!
         hsclient, auth = client.hsclient, client.hsclient.auth
         self.activity = Activity(hsclient, self.id, auth=auth)
         self.collections = Collections(hsclient, self.id, auth=auth)
@@ -123,6 +121,7 @@ class Jobs(object):
     def create(self, spidername=None, **params):
         if not spidername and not self.spider:
             raise ScrapinghubAPIError('Please provide spidername')
+        # FIXME the method should use Dash endpoint, not JobQ
         jobq = self._hsproject.jobq
         newjob = jobq.push(spidername or self.spider.name, **params)
         return Job(self.client, newjob['key'])
@@ -154,12 +153,13 @@ class Job(object):
         self.projectid = jobkey.split('/')[0]
 
         # proxied sub-resources
-        hsclient, auth = client.hsclient, client.hsclient.auth
         self.items = Items(self.client, self.key)
         self.logs = Logs(self.client, self.key)
         self.requests = Requests(self.client, self.key)
+        self.samples = Samples(self.client, self.key)
+
+        hsclient, auth = client.hsclient, client.hsclient.auth
         self.metadata = JobMeta(hsclient, self.key, auth, cached=metadata)
-        self.samples = Samples(client.hsclient, jobkey, client.hsclient.auth)
 
     def update_metadata(self, *args, **kwargs):
         self.client.hsclient.get_job(self.key).update_metadata(*args, **kwargs)
@@ -191,26 +191,47 @@ class Job(object):
         self.client.hsclient.get_job(self.key).purged()
 
 
-class BaseEntity(object):
+class ResourceTypes(object):
+    """Enum to keep different resource types"""
+    DOWNLOADABLE_TYPE = 1
+    ITEMS_TYPE = 2
+    MAPPING_TYPE = 3
 
-    def __init__(self, client, jobkey):
+
+class EntityProxy(object):
+
+    def __init__(self, cls, cls_types, client, key):
         self.client = client
-        self.key = jobkey
-        self._iter_raw_msgpack = self._entity.iter_msgpack
-        self._iter_raw_json = self._entity.iter_json
-        self._allows_mpack = self._entity._allows_mpack
+        self.key = key
+        self._entity = cls(client.hsclient, key)
+        proxy_methods = {}
+        if ResourceTypes.ITEMS_TYPE in cls_types:
+            proxy_methods.update({
+                'iter': 'list', 'get': 'get',
+                'write': 'write', 'flush': 'flush',
+                'close': 'close', 'stats': 'stats',
+            })
+        # DType iter_values() has more priority than IType list()
+        if ResourceTypes.DOWNLOADABLE_TYPE in cls_types:
+            proxy_methods.update({
+                'iter': 'iter_values',
+                'iter_raw_msgpack': 'iter_msgpack',
+                'iter_raw_json': 'iter_json',
+            })
+        self._proxy_methods(proxy_methods)
 
-    def iter(self, **params):
-        if self._allows_mpack():
-            return mpdecode(self._iter_raw_msgpack(self.key, params=params))
-        return jldecode(self._iter_raw_json(self.key, params=params))
+    def _proxy_methods(self, methods):
+        for name, entity_name in methods.items():
+            # save from redefining attribute twice and maintain a proper order
+            if not hasattr(self, name):
+                setattr(self, name, getattr(self._entity, entity_name))
 
 
-class Logs(BaseEntity):
+class Logs(EntityProxy):
 
     def __init__(self, client, jobkey):
-        self._entity = _Logs(client.hsclient, jobkey, client.hsclient.auth)
-        super(Logs, self).__init__(client, jobkey)
+        cls_types = [ResourceTypes.DOWNLOADABLE_TYPE, ResourceTypes.ITEMS_TYPE]
+        super(Logs, self).__init__(_Logs, cls_types, client, jobkey)
 
         # inherite main logs methods
         self.log = self._entity.log
@@ -219,35 +240,42 @@ class Logs(BaseEntity):
         self.warn = self._entity.warn
         self.warning = self._entity.warning
         self.error = self._entity.error
-        self.batch_write_start = self._entity.batch_write_start
 
     def iter(self, **params):
         if 'offset' in params:
             params['start'] = '%s/%s' % (self._entity._key, params['offset'])
             del params['offset']
         if 'level' in params:
-            minlevel = getattr(Log, params.get('level'), None)
+            minlevel = getattr(Logs, params.get('level'), None)
             if minlevel is None:
                 raise ScrapinghubAPIError(
                     "Unknown log level: %s" % params.get('level'))
             params['filters'] = ['level', '>=', [minlevel]]
-        return super(Logs, self).iter(**params)
+        return self._entity.iter_values(**params)
 
 
-class Items(BaseEntity):
+class Items(EntityProxy):
 
     def __init__(self, client, jobkey):
-        self._entity = _Items(client.hsclient, jobkey, client.hsclient.auth)
-        super(Items, self).__init__(client, jobkey)
+        cls_types = [ResourceTypes.DOWNLOADABLE_TYPE, ResourceTypes.ITEMS_TYPE]
+        super(Items, self).__init__(_Items, cls_types, client, jobkey)
 
     def iter(self, **params):
         if 'offset' in params:
             params['start'] = '%s/%s' % (self._entity.key, params['offset'])
             del params['offset']
-        return super(Items, self).iter(**params)
+        return self._entity.iter_values(**params)
 
-class Requests(BaseEntity):
+
+class Requests(EntityProxy):
 
     def __init__(self, client, jobkey):
-        self._entity = _Requests(client.hsclient, jobkey, client.hsclient.auth)
-        super(Requests, self).__init__(client, jobkey)
+        cls_types = [ResourceTypes.DOWNLOADABLE_TYPE, ResourceTypes.ITEMS_TYPE]
+        super(Requests, self).__init__(_Requests, cls_types, client, jobkey)
+
+
+class Samples(EntityProxy):
+
+    def __init__(self, client, jobkey):
+        cls_types = [ResourceTypes.ITEMS_TYPE]
+        super(Samples, self).__init__(_Samples, cls_types, client, jobkey)
