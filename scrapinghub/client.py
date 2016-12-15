@@ -3,16 +3,16 @@ from scrapinghub import Connection
 from scrapinghub import HubstorageClient
 
 from scrapinghub.hubstorage.activity import Activity
-from scrapinghub.hubstorage.collectionsrt import Collections
 from scrapinghub.hubstorage.frontier import Frontier
 from scrapinghub.hubstorage.project import Reports
 from scrapinghub.hubstorage.project import Settings
 from scrapinghub.hubstorage.job import JobMeta
-from scrapinghub.hubstorage.job import Samples as _Samples
 
 from scrapinghub.hubstorage.job import Items as _Items
 from scrapinghub.hubstorage.job import Logs as _Logs
+from scrapinghub.hubstorage.job import Samples as _Samples
 from scrapinghub.hubstorage.job import Requests as _Requests
+from scrapinghub.hubstorage.collectionsrt import Collections as _Collections
 
 
 class ScrapinghubAPIError(Exception):
@@ -57,17 +57,15 @@ class Project(object):
         self.id = projectid
 
         # sub-resources
-        self.spiders = Spiders(client, self.id)
-        self.jobs = Jobs(client, self.id)
+        self.collections = Collections(client, projectid)
+        self.spiders = Spiders(client, projectid)
+        self.jobs = Jobs(client, projectid)
 
         # proxied sub-resources
-        # FIXME providing client.hsclient.auth is not necessary!
-        hsclient, auth = client.hsclient, client.hsclient.auth
-        self.activity = Activity(hsclient, self.id, auth=auth)
-        self.collections = Collections(hsclient, self.id, auth=auth)
-        self.frontier = Frontier(hsclient, self.id, auth=auth)
-        self.settings = Settings(hsclient, self.id, auth=auth)
-        self.reports = Reports(hsclient, self.id, auth=auth)
+        self.activity = Activity(client.hsclient, projectid)
+        self.frontier = Frontier(client.hsclient, projectid)
+        self.settings = Settings(client.hsclient, projectid)
+        self.reports = Reports(client.hsclient, projectid)
 
 
 class Spiders(object):
@@ -93,7 +91,7 @@ class Spider(object):
         self.projectid = projectid
         self.id = spiderid
         self.name = spidername
-        self.jobs = Jobs(client, self.projectid, self)
+        self.jobs = Jobs(client, projectid, self)
 
 
 class Jobs(object):
@@ -114,11 +112,15 @@ class Jobs(object):
         return next(self._hsproject.jobq.apiget(('count',), params=params))
 
     def iter(self, **params):
+        """ Iterate over jobs collection for a given set of params.
+
+        FIXME the endpoint returns
+        """
         if self.spider:
             params['spider'] = self.spider.name
         return self._hsproject.jobq.list(**params)
 
-    def create(self, spidername=None, **params):
+    def schedule(self, spidername=None, **params):
         if not spidername and not self.spider:
             raise ScrapinghubAPIError('Please provide spidername')
         # FIXME the method should use Dash endpoint, not JobQ
@@ -153,13 +155,12 @@ class Job(object):
         self.projectid = jobkey.split('/')[0]
 
         # proxied sub-resources
-        self.items = Items(self.client, self.key)
-        self.logs = Logs(self.client, self.key)
-        self.requests = Requests(self.client, self.key)
-        self.samples = Samples(self.client, self.key)
+        self.items = Items(client, jobkey)
+        self.logs = Logs(client, jobkey)
+        self.requests = Requests(client, jobkey)
+        self.samples = Samples(client, jobkey)
 
-        hsclient, auth = client.hsclient, client.hsclient.auth
-        self.metadata = JobMeta(hsclient, self.key, auth, cached=metadata)
+        self.metadata = JobMeta(client.hsclient, jobkey, cached=metadata)
 
     def update_metadata(self, *args, **kwargs):
         self.client.hsclient.get_job(self.key).update_metadata(*args, **kwargs)
@@ -204,21 +205,19 @@ class EntityProxy(object):
         self.client = client
         self.key = key
         self._entity = cls(client.hsclient, key)
-        proxy_methods = {}
         if ResourceTypes.ITEMS_TYPE in cls_types:
-            proxy_methods.update({
+            self._proxy_methods({
                 'iter': 'list', 'get': 'get',
                 'write': 'write', 'flush': 'flush',
                 'close': 'close', 'stats': 'stats',
             })
         # DType iter_values() has more priority than IType list()
         if ResourceTypes.DOWNLOADABLE_TYPE in cls_types:
-            proxy_methods.update({
+            self._proxy_methods({
                 'iter': 'iter_values',
                 'iter_raw_msgpack': 'iter_msgpack',
                 'iter_raw_json': 'iter_json',
             })
-        self._proxy_methods(proxy_methods)
 
     def _proxy_methods(self, methods):
         for name, entity_name in methods.items():
@@ -233,7 +232,7 @@ class Logs(EntityProxy):
         cls_types = [ResourceTypes.DOWNLOADABLE_TYPE, ResourceTypes.ITEMS_TYPE]
         super(Logs, self).__init__(_Logs, cls_types, client, jobkey)
 
-        # inherite main logs methods
+        # inherite main Logs methods
         self.log = self._entity.log
         self.debug = self._entity.debug
         self.info = self._entity.info
@@ -279,3 +278,17 @@ class Samples(EntityProxy):
     def __init__(self, client, jobkey):
         cls_types = [ResourceTypes.ITEMS_TYPE]
         super(Samples, self).__init__(_Samples, cls_types, client, jobkey)
+
+
+class Collections(EntityProxy):
+
+    def __init__(self, client, jobkey):
+        cls_types = [ResourceTypes.DOWNLOADABLE_TYPE]
+        super(Collections, self).__init__(
+            _Collections, cls_types, client, jobkey)
+        methods = {name: name for name in [
+            'create_writer', 'new_collection', 'new_store',
+            'new_cached_store', 'new_versioned_store',
+            'new_versioned_cached_store', 'count', 'get', 'set', 'delete'
+        ]}
+        self._proxy_methods(methods)
