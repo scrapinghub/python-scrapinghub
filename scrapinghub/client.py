@@ -19,6 +19,10 @@ class ScrapinghubAPIError(Exception):
     pass
 
 
+class DuplicateJobError(ScrapinghubAPIError):
+    pass
+
+
 class ScrapinghubClient(object):
 
     def __init__(self, auth=None, dash_endpoint=None, **kwargs):
@@ -113,8 +117,7 @@ class Jobs(object):
 
     def iter(self, **params):
         """ Iterate over jobs collection for a given set of params.
-
-        FIXME the endpoint returns
+        FIXME the function returns a list of dicts, not a list of Job's.
         """
         if self.spider:
             params['spider'] = self.spider.name
@@ -123,10 +126,16 @@ class Jobs(object):
     def schedule(self, spidername=None, **params):
         if not spidername and not self.spider:
             raise ScrapinghubAPIError('Please provide spidername')
-        # FIXME the method should use Dash endpoint, not JobQ
-        jobq = self._hsproject.jobq
-        newjob = jobq.push(spidername or self.spider.name, **params)
-        return Job(self.client, newjob['key'])
+        params['project'] = self.projectid
+        params['spider'] = spidername or self.spider.name
+        # FIXME JobQ endpoint can schedule multiple jobs with json-lines,
+        # corresponding Dash endpoint - only one job per request
+        response = self.client.connection._post('schedule', 'json', params)
+        if response.get('status') == 'error':
+            if 'already scheduled' in response['message']:
+                raise DuplicateJobError(response['message'])
+            raise ScrapinghubAPIError(response['message'])
+        return Job(self.client, response['jobid'])
 
     def get(self, jobkey):
         projectid, spiderid, jobid = jobkey.split('/')
