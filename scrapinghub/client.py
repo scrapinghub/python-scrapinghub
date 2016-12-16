@@ -9,8 +9,11 @@ from scrapinghub.hubstorage.frontier import Frontier
 from scrapinghub.hubstorage.job import JobMeta
 from scrapinghub.hubstorage.project import Reports
 from scrapinghub.hubstorage.project import Settings
+from scrapinghub.hubstorage.resourcetype import DownloadableResource
+from scrapinghub.hubstorage.resourcetype import ItemsResourceType
 
 from scrapinghub.hubstorage.collectionsrt import Collections as _Collections
+from scrapinghub.hubstorage.collectionsrt import Collection as _Collection
 from scrapinghub.hubstorage.job import Items as _Items
 from scrapinghub.hubstorage.job import Logs as _Logs
 from scrapinghub.hubstorage.job import Samples as _Samples
@@ -234,31 +237,32 @@ class Job(object):
         self.client.hsclient.get_job(self.key).purged()
 
 
-class EntityProxy(object):
+class _Proxy(object):
     """A proxy to create a class instance and proxy its methods to entity."""
 
-    def __init__(self, cls, client, key, download_api=False, items_api=False):
-        self.client = client
+    def __init__(self, cls, client, key):
         self.key = key
+        self.client = client
         self._origin = cls(client.hsclient, key)
-        if items_api:
-            _proxy_methods(self._origin, self, [
-                'get', 'write', 'flush', 'close', 'stats', ('iter', 'list')])
+        if issubclass(cls, ItemsResourceType):
+            self._proxy_methods(['get', 'write', 'flush', 'close',
+                                 'stats', ('iter', 'list')])
         # DType iter_values() has more priority than IType list()
-        if download_api:
-            _proxy_methods(self._origin, self, [
-                ('iter', 'iter_values'),
-                ('iter_raw_msgpack', 'iter_msgpack'),
-                ('iter_raw_json', 'iter_json')])
+        if issubclass(cls, DownloadableResource):
+            self._proxy_methods([('iter', 'iter_values'),
+                                 ('iter_raw_msgpack', 'iter_msgpack'),
+                                 ('iter_raw_json', 'iter_json')])
+
+    def _proxy_methods(self, methods):
+        _proxy_methods(self._origin, self, methods)
 
 
-class Logs(EntityProxy):
+class Logs(_Proxy):
 
     def __init__(self, client, jobkey):
-        super(Logs, self).__init__(_Logs,client, jobkey,
-                                   download_api=True, items_api=True)
-        _proxy_methods(self._origin, self, [
-            'log', 'debug', 'info', 'warning', 'warn', 'error'])
+        super(Logs, self).__init__(_Logs, client, jobkey)
+        self._proxy_methods(['log', 'debug', 'info',
+                             'warning', 'warn', 'error'])
 
     def iter(self, **params):
         if 'offset' in params:
@@ -273,11 +277,10 @@ class Logs(EntityProxy):
         return self._origin.iter_values(**params)
 
 
-class Items(EntityProxy):
+class Items(_Proxy):
 
     def __init__(self, client, jobkey):
-        super(Items, self).__init__(_Items, client, jobkey,
-                                    download_api=True, items_api=True)
+        super(Items, self).__init__(_Items, client, jobkey)
 
     def iter(self, **params):
         if 'offset' in params:
@@ -286,25 +289,23 @@ class Items(EntityProxy):
         return self._origin.iter_values(**params)
 
 
-class Requests(EntityProxy):
+class Requests(_Proxy):
 
     def __init__(self, client, jobkey):
-        super(Requests, self).__init__(_Requests, client, jobkey,
-                                       download_api=True, items_api=True)
+        super(Requests, self).__init__(_Requests, client, jobkey)
 
 
-class Samples(EntityProxy):
-
-    def __init__(self, client, jobkey):
-        super(Samples, self).__init__(_Samples, client, jobkey, items_api=True)
-
-
-class Collections(EntityProxy):
+class Samples(_Proxy):
 
     def __init__(self, client, jobkey):
-        super(Collections, self).__init__(_Collections, client, jobkey,
-                                          download_api=True)
-        _proxy_methods(self._origin, self, [
+        super(Samples, self).__init__(_Samples, client, jobkey)
+
+
+class Collections(_Proxy):
+
+    def __init__(self, client, projectid):
+        super(Collections, self).__init__(_Collections, client, projectid)
+        self._proxy_methods([
             'count', 'get', 'set', 'delete', 'create_writer',
             ('_new_collection', 'new_collection'),
         ])
@@ -323,13 +324,17 @@ class Collections(EntityProxy):
 
     def new_collection(self, coltype, colname):
         collection = self._new_collection(coltype, colname)
-        return Collection(collection)
+        return Collection(self.client, self, coltype, colname)
 
 
 class Collection(object):
 
-    def __init__(self, collection):
-        self._origin = collection
+    def __init__(self, client, collections, coltype, colname):
+        self.client = client
+        # FIXME it'd be nice to reuse _Proxy here, but Collection init is
+        # a bit custom: there's a compound key and required collections
+        # field to create an origin instance
+        self._origin = _Collection(coltype, colname, collections._origin)
         _proxy_methods(self._origin, self, [
             'create_writer', 'get', 'set', 'delete', 'count',
             ('iter', 'iter_values'), ('iter_raw_json', 'iter_json'),
