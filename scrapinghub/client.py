@@ -1,3 +1,4 @@
+import json
 import logging
 
 from scrapinghub import Connection
@@ -146,6 +147,8 @@ class Jobs(object):
             raise ScrapinghubAPIError('Please provide spidername')
         params['project'] = self.projectid
         params['spider'] = spidername or self.spider.name
+        if 'meta' in params:
+            params['meta'] = json.dumps(params['meta'])
         # FIXME JobQ endpoint can schedule multiple jobs with json-lines,
         # corresponding Dash endpoint - only one job per request
         response = self.client.connection._post('schedule', 'json', params)
