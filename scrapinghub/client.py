@@ -6,15 +6,15 @@ from scrapinghub import HubstorageClient
 
 from scrapinghub.hubstorage.activity import Activity
 from scrapinghub.hubstorage.frontier import Frontier
+from scrapinghub.hubstorage.job import JobMeta
 from scrapinghub.hubstorage.project import Reports
 from scrapinghub.hubstorage.project import Settings
-from scrapinghub.hubstorage.job import JobMeta
 
+from scrapinghub.hubstorage.collectionsrt import Collections as _Collections
 from scrapinghub.hubstorage.job import Items as _Items
 from scrapinghub.hubstorage.job import Logs as _Logs
 from scrapinghub.hubstorage.job import Samples as _Samples
 from scrapinghub.hubstorage.job import Requests as _Requests
-from scrapinghub.hubstorage.collectionsrt import Collections as _Collections
 
 
 class ScrapinghubAPIError(Exception):
@@ -48,6 +48,9 @@ class ScrapinghubClient(object):
         # FIXME solve the splitting more gracefully
         projectid = int(jobkey.split('/')[0])
         return self.projects.get(projectid).jobs.get(jobkey)
+
+    def close(self, timeout=None):
+        self.hsclient.close(timeout=timeout)
 
 
 class Projects(object):
@@ -89,9 +92,9 @@ class Spiders(object):
         self.client = client
         self.projectid = projectid
 
-    def get(self, spidername):
+    def get(self, spidername, **params):
         project = self.client.hsclient.get_project(self.projectid)
-        spiderid = project.ids.spider(spidername)
+        spiderid = project.ids.spider(spidername, **params)
         return Spider(self.client, self.projectid, spiderid, spidername)
 
     def list(self):
@@ -166,9 +169,10 @@ class Jobs(object):
             raise ScrapinghubAPIError('Please use same spider id')
         return Job(self.client, jobkey)
 
-    def summary(self, **params):
+    def summary(self, _queuename=None, **params):
         spiderid = None if not self.spider else self.spider.id
-        return self._hsproject.jobq.summary(spiderid=spiderid, **params)
+        return self._hsproject.jobq.summary(
+            _queuename, spiderid=spiderid, **params)
 
     def lastjobsummary(self, **params):
         spiderid = None if not self.spider else self.spider.id
@@ -236,31 +240,16 @@ class EntityProxy(object):
     def __init__(self, cls, client, key, download_api=False, items_api=False):
         self.client = client
         self.key = key
-        self._entity = cls(client.hsclient, key)
+        self._origin = cls(client.hsclient, key)
         if items_api:
-            self._proxy_methods(['get', 'write', 'flush', 'close',
-                                 'stats', ('iter', 'list')])
+            _proxy_methods(self._origin, self, [
+                'get', 'write', 'flush', 'close', 'stats', ('iter', 'list')])
         # DType iter_values() has more priority than IType list()
         if download_api:
-            self._proxy_methods([('iter', 'iter_values'),
-                                 ('iter_raw_msgpack', 'iter_msgpack'),
-                                 ('iter_raw_json', 'iter_json')])
-
-    def _proxy_methods(self, methods):
-        """A helper to proxy methods to self._entity object.
-
-        Accepts a list with strings and tuples:
-        - each string defines a method name to proxy 1:1 with entity
-        - each tuple should consist of 2 strings:
-          object method name and original method name in entity
-        """
-        for method in methods:
-            if isinstance(method, tuple):
-                name, entity_name = method
-            else:
-                name, entity_name = method, method
-            if not hasattr(self, name):
-                setattr(self, name, getattr(self._entity, entity_name))
+            _proxy_methods(self._origin, self, [
+                ('iter', 'iter_values'),
+                ('iter_raw_msgpack', 'iter_msgpack'),
+                ('iter_raw_json', 'iter_json')])
 
 
 class Logs(EntityProxy):
@@ -268,12 +257,12 @@ class Logs(EntityProxy):
     def __init__(self, client, jobkey):
         super(Logs, self).__init__(_Logs,client, jobkey,
                                    download_api=True, items_api=True)
-        self._proxy_methods(['log', 'debug', 'info',
-                             'warning', 'warn', 'error'])
+        _proxy_methods(self._origin, self, [
+            'log', 'debug', 'info', 'warning', 'warn', 'error'])
 
     def iter(self, **params):
         if 'offset' in params:
-            params['start'] = '%s/%s' % (self._entity._key, params['offset'])
+            params['start'] = '%s/%s' % (self._origin._key, params['offset'])
             del params['offset']
         if 'level' in params:
             minlevel = getattr(LogLevel, params.get('level'), None)
@@ -281,7 +270,7 @@ class Logs(EntityProxy):
                 raise ScrapinghubAPIError(
                     "Unknown log level: %s" % params.get('level'))
             params['filters'] = ['level', '>=', [minlevel]]
-        return self._entity.iter_values(**params)
+        return self._origin.iter_values(**params)
 
 
 class Items(EntityProxy):
@@ -292,9 +281,9 @@ class Items(EntityProxy):
 
     def iter(self, **params):
         if 'offset' in params:
-            params['start'] = '%s/%s' % (self._entity.key, params['offset'])
+            params['start'] = '%s/%s' % (self._origin.key, params['offset'])
             del params['offset']
-        return self._entity.iter_values(**params)
+        return self._origin.iter_values(**params)
 
 
 class Requests(EntityProxy):
@@ -315,10 +304,35 @@ class Collections(EntityProxy):
     def __init__(self, client, jobkey):
         super(Collections, self).__init__(_Collections, client, jobkey,
                                           download_api=True)
-        self._proxy_methods([
+        _proxy_methods(self._origin, self, [
             'count', 'get', 'set', 'delete', 'create_writer',
-            'new_collection', 'new_store', 'new_cached_store',
-            'new_versioned_store', 'new_versioned_cached_store',
+            ('_new_collection', 'new_collection'),
+        ])
+
+    def new_store(self, colname):
+        return self.new_collection('s', colname)
+
+    def new_cached_store(self, colname):
+        return self.new_collection('cs', colname)
+
+    def new_versioned_store(self, colname):
+        return self.new_collection('vs', colname)
+
+    def new_versioned_cached_store(self, colname):
+        return self.new_collection('vcs', colname)
+
+    def new_collection(self, coltype, colname):
+        collection = self._new_collection(coltype, colname)
+        return Collection(collection)
+
+
+class Collection(object):
+
+    def __init__(self, collection):
+        self._origin = collection
+        _proxy_methods(self._origin, self, [
+            'create_writer', 'get', 'set', 'delete', 'count',
+            ('iter', 'iter_values'), ('iter_raw_json', 'iter_json'),
         ])
 
 
@@ -332,3 +346,21 @@ def _get_tags_for_update(**kwargs):
             raise ScrapinghubAPIError("Add/remove field value must be a list")
         params[k] = v
     return params
+
+
+def _proxy_methods(origin, successor, methods):
+    """A helper to proxy methods from origin to successor.
+
+    Accepts a list with strings and tuples:
+    - each string defines:
+        a successor method name to proxy 1:1 with origin method
+    - each tuple should consist of 2 strings:
+        a successor method name and an origin method name
+    """
+    for method in methods:
+        if isinstance(method, tuple):
+            successor_name, origin_name = method
+        else:
+            successor_name, origin_name = method, method
+        if not hasattr(successor, successor_name):
+            setattr(successor, successor_name, getattr(origin, origin_name))
