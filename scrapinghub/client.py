@@ -55,7 +55,7 @@ class Projects(object):
         self.client = client
 
     def get(self, projectid):
-        return Project(self.client, projectid)
+        return Project(self.client, int(projectid))
 
     def list(self):
         return self.client.connection.project_ids()
@@ -108,7 +108,7 @@ class Spider(object):
         self.jobs = Jobs(client, projectid, self)
 
     def update_tags(self, add=None, remove=None):
-        params = get_tags_for_update(add_tag=add, remove_tag=remove)
+        params = _get_tags_for_update(add_tag=add, remove_tag=remove)
         if not params:
             return
         params.update({'project': self.projectid, 'spider': self.name})
@@ -193,7 +193,7 @@ class Job(object):
         self.client.hsclient.get_job(self.key).update_metadata(*args, **kwargs)
 
     def update_tags(self, add=None, remove=None):
-        params = get_tags_for_update(add_tag=add, remove_tag=remove)
+        params = _get_tags_for_update(add_tag=add, remove_tag=remove)
         if not params:
             return
         params.update({'project': self.projectid, 'job': self.key})
@@ -227,30 +227,30 @@ class Job(object):
         self.client.hsclient.get_job(self.key).purged()
 
 
-class ResourceTypes(object):
-    """Enum to keep different resource types"""
-    DOWNLOADABLE_TYPE = 1
-    ITEMS_TYPE = 2
-    MAPPING_TYPE = 3
-
-
 class EntityProxy(object):
-    """A proxy object to create a class instance and proxy its methods."""
+    """A proxy to create a class instance and proxy its methods to entity."""
 
-    def __init__(self, cls, cls_types, client, key):
+    def __init__(self, cls, client, key, download_api=False, items_api=False):
         self.client = client
         self.key = key
         self._entity = cls(client.hsclient, key)
-        if ResourceTypes.ITEMS_TYPE in cls_types:
+        if items_api:
             self._proxy_methods(['get', 'write', 'flush', 'close',
                                  'stats', ('iter', 'list')])
         # DType iter_values() has more priority than IType list()
-        if ResourceTypes.DOWNLOADABLE_TYPE in cls_types:
+        if download_api:
             self._proxy_methods([('iter', 'iter_values'),
                                  ('iter_raw_msgpack', 'iter_msgpack'),
                                  ('iter_raw_json', 'iter_json')])
 
     def _proxy_methods(self, methods):
+        """A helper to proxy methods to self._entity object.
+
+        Accepts a list with strings and tuples:
+        - each string defines a method name to proxy 1:1 with entity
+        - each tuple should consist of 2 strings:
+          object method name and original method name in entity
+        """
         for method in methods:
             if isinstance(method, tuple):
                 name, entity_name = method
@@ -263,8 +263,8 @@ class EntityProxy(object):
 class Logs(EntityProxy):
 
     def __init__(self, client, jobkey):
-        cls_types = [ResourceTypes.DOWNLOADABLE_TYPE, ResourceTypes.ITEMS_TYPE]
-        super(Logs, self).__init__(_Logs, cls_types, client, jobkey)
+        super(Logs, self).__init__(_Logs,client, jobkey,
+                                   download_api=True, items_api=True)
         self._proxy_methods(['log', 'debug', 'info',
                              'warning', 'warn', 'error'])
 
@@ -284,8 +284,8 @@ class Logs(EntityProxy):
 class Items(EntityProxy):
 
     def __init__(self, client, jobkey):
-        cls_types = [ResourceTypes.DOWNLOADABLE_TYPE, ResourceTypes.ITEMS_TYPE]
-        super(Items, self).__init__(_Items, cls_types, client, jobkey)
+        super(Items, self).__init__(_Items, client, jobkey,
+                                    download_api=True, items_api=True)
 
     def iter(self, **params):
         if 'offset' in params:
@@ -297,22 +297,21 @@ class Items(EntityProxy):
 class Requests(EntityProxy):
 
     def __init__(self, client, jobkey):
-        cls_types = [ResourceTypes.DOWNLOADABLE_TYPE, ResourceTypes.ITEMS_TYPE]
-        super(Requests, self).__init__(_Requests, cls_types, client, jobkey)
+        super(Requests, self).__init__(_Requests, client, jobkey,
+                                       download_api=True, items_api=True)
 
 
 class Samples(EntityProxy):
 
     def __init__(self, client, jobkey):
-        cls_types = [ResourceTypes.ITEMS_TYPE]
-        super(Samples, self).__init__(_Samples, cls_types, client, jobkey)
+        super(Samples, self).__init__(_Samples, client, jobkey, items_api=True)
 
 
 class Collections(EntityProxy):
 
     def __init__(self, client, jobkey):
-        super(Collections, self).__init__(
-            _Collections, [ResourceTypes.DOWNLOADABLE_TYPE], client, jobkey)
+        super(Collections, self).__init__(_Collections, client, jobkey,
+                                          download_api=True)
         self._proxy_methods([
             'count', 'get', 'set', 'delete', 'create_writer',
             'new_collection', 'new_store', 'new_cached_store',
@@ -320,7 +319,7 @@ class Collections(EntityProxy):
         ])
 
 
-def get_tags_for_update(**kwargs):
+def _get_tags_for_update(**kwargs):
     """Helper to check tags changes"""
     params = {}
     for k, v in kwargs.items():
