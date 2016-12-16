@@ -84,8 +84,8 @@ def project(client):
 
 @my_vcr.use_cassette()
 @pytest.fixture(scope='session')
-def spiderid(project):
-    return str(project.spiders.get(TEST_SPIDER_NAME, create=1))
+def spider(project):
+    return project.spiders.get(TEST_SPIDER_NAME, create=1)
 
 
 @pytest.fixture(scope='session')

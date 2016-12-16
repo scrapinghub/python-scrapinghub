@@ -1,15 +1,12 @@
-
 from scrapinghub import Connection
 from scrapinghub import HubstorageClient
 from scrapinghub import ScrapinghubClient
 
 from scrapinghub.client import Projects, Project, Job
+
 from scrapinghub.hubstorage.utils import apipoll
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import TEST_USER_AUTH, TEST_DASH_ENDPOINT
-
-
-# client tests
 
 
 def test_client_base(client):
@@ -33,9 +30,7 @@ def test_client_get_job(client):
     assert isinstance(fake_job, Job)
 
 
-# project tests
-
-def test_projects_get_project(client):
+def test_client_projects_get_project(client):
     projects = client.projects
     # testing with int project id
     p1 = projects.get(int(TEST_PROJECT_ID))
@@ -46,7 +41,7 @@ def test_projects_get_project(client):
     assert p1.id == p2.id
 
 
-def test_projects_list_projects():
+def test_client_projects_list_projects():
     # use user apikey to list projects properly
     client = ScrapinghubClient(TEST_USER_AUTH, TEST_DASH_ENDPOINT)
     projects = client.projects.list()
@@ -54,7 +49,7 @@ def test_projects_list_projects():
     assert int(TEST_PROJECT_ID) in projects
 
 
-def test_projects_summary(client, project):
+def test_client_projects_summary(client, project):
     # add at least one running or pending job to ensure summary is returned
     project.jobs.schedule(TEST_SPIDER_NAME, state='running')
 
