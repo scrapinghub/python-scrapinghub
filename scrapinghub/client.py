@@ -78,7 +78,7 @@ class Project(object):
         self.id = projectid
 
         # sub-resources
-        self.collections = Collections(client, projectid)
+        self.collections = Collections(_Collections, client, projectid)
         self.spiders = Spiders(client, projectid)
         self.jobs = Jobs(client, projectid)
 
@@ -192,10 +192,10 @@ class Job(object):
         self.projectid = jobkey.split('/')[0]
 
         # proxied sub-resources
-        self.items = Items(client, jobkey)
-        self.logs = Logs(client, jobkey)
-        self.requests = Requests(client, jobkey)
-        self.samples = Samples(client, jobkey)
+        self.items = Items(_Items, client, jobkey)
+        self.logs = Logs(_Logs, client, jobkey)
+        self.requests = Requests(_Requests, client, jobkey)
+        self.samples = Samples(_Samples, client, jobkey)
 
         self.metadata = JobMeta(client.hsclient, jobkey, cached=metadata)
 
@@ -259,8 +259,8 @@ class _Proxy(object):
 
 class Logs(_Proxy):
 
-    def __init__(self, client, jobkey):
-        super(Logs, self).__init__(_Logs, client, jobkey)
+    def __init__(self, *args, **kwargs):
+        super(Logs, self).__init__(*args, **kwargs)
         self._proxy_methods(['log', 'debug', 'info',
                              'warning', 'warn', 'error'])
 
@@ -279,9 +279,6 @@ class Logs(_Proxy):
 
 class Items(_Proxy):
 
-    def __init__(self, client, jobkey):
-        super(Items, self).__init__(_Items, client, jobkey)
-
     def iter(self, **params):
         if 'offset' in params:
             params['start'] = '%s/%s' % (self._origin.key, params['offset'])
@@ -290,21 +287,17 @@ class Items(_Proxy):
 
 
 class Requests(_Proxy):
-
-    def __init__(self, client, jobkey):
-        super(Requests, self).__init__(_Requests, client, jobkey)
+    pass
 
 
 class Samples(_Proxy):
-
-    def __init__(self, client, jobkey):
-        super(Samples, self).__init__(_Samples, client, jobkey)
+    pass
 
 
 class Collections(_Proxy):
 
-    def __init__(self, client, projectid):
-        super(Collections, self).__init__(_Collections, client, projectid)
+    def __init__(self, *args, **kwargs):
+        super(Collections, self).__init__(*args, **kwargs)
         self._proxy_methods([
             'count', 'get', 'set', 'delete', 'create_writer',
             ('_new_collection', 'new_collection'),
