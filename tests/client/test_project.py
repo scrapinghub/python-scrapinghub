@@ -8,7 +8,7 @@ from scrapinghub.client import Activity, Collections, Spiders
 from scrapinghub.client import Frontier, Settings, Reports
 
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
-from .conftest import TEST_DASH_ENDPOINT
+from .utils import validate_default_meta
 
 
 def test_project_subresources(project):
@@ -22,9 +22,8 @@ def test_project_subresources(project):
     assert isinstance(project.reports, Reports)
 
 
-def test_project_jobs(client, project):
+def test_project_jobs(project):
     jobs = project.jobs
-    assert jobs.client == client
     assert jobs.projectid == int(TEST_PROJECT_ID)
     assert jobs.spider is None
 
@@ -91,7 +90,7 @@ def test_project_jobs_schedule(project):
 
     job0 = project.jobs.schedule(TEST_SPIDER_NAME)
     assert isinstance(job0, Job)
-    _assert_common_meta(job0.metadata, state='pending')
+    validate_default_meta(job0.metadata, state='pending')
     assert isinstance(job0.metadata.get('pending_time'), int)
     assert job0.metadata['pending_time'] > 0
     assert job0.metadata.get('scheduled_by')
@@ -100,25 +99,13 @@ def test_project_jobs_schedule(project):
                                  priority=3, units=3, add_tag=['tagA', 'tagB'],
                                  meta={'state': 'running', 'meta1': 'val1'})
     assert isinstance(job1, Job)
-    _assert_common_meta(job1.metadata, state='running', units=3, priority=3,
-                        tags=['tagA', 'tagB'])
+    validate_default_meta(job1.metadata, state='running', units=3, priority=3,
+                          tags=['tagA', 'tagB'])
     assert job1.metadata.get('meta1') == 'val1'
     assert job1.metadata.get('spider_args') == {'arg1': 'val1', 'arg2': 'val2'}
     assert isinstance(job1.metadata.get('running_time'), int)
     assert job1.metadata['running_time'] > 0
     assert job1.metadata.get('started_by')
-
-
-def _assert_common_meta(meta, state='pending', units=1, priority=2, tags=None):
-    assert meta.get('project') == int(TEST_PROJECT_ID)
-    assert meta.get('spider') == TEST_SPIDER_NAME
-    assert meta.get('state') == state
-    assert meta.get('priority') == priority
-    assert meta.get('spider_type') == 'manual'
-    assert meta.get('tags') == (tags or [])
-    assert meta.get('units') == units
-    assert meta.get('api_url') == TEST_DASH_ENDPOINT
-    assert meta.get('portia_url')
 
 
 def test_project_jobs_get(project):

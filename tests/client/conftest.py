@@ -85,7 +85,9 @@ def project(client):
 @my_vcr.use_cassette()
 @pytest.fixture(scope='session')
 def spider(project):
-    return project.spiders.get(TEST_SPIDER_NAME, create=1)
+    # on normal conditions you can't create a new spider this way:
+    # it can only be created on project deploy as usual
+    return project.spiders.get(TEST_SPIDER_NAME, create=True)
 
 
 @pytest.fixture(scope='session')
