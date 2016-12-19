@@ -1,6 +1,7 @@
 import json
 import logging
 
+from scrapinghub import APIError
 from scrapinghub import Connection
 from scrapinghub import HubstorageClient
 
@@ -20,11 +21,8 @@ from scrapinghub.hubstorage.job import Samples as _Samples
 from scrapinghub.hubstorage.job import Requests as _Requests
 
 
-class ScrapinghubAPIError(Exception):
-    pass
 
-
-class DuplicateJobError(ScrapinghubAPIError):
+class DuplicateJobError(APIError):
     pass
 
 
@@ -150,7 +148,7 @@ class Jobs(object):
 
     def schedule(self, spidername=None, **params):
         if not spidername and not self.spider:
-            raise ScrapinghubAPIError('Please provide spidername')
+            raise APIError('Please provide spidername')
         params['project'] = self.projectid
         params['spider'] = spidername or self.spider.name
         if 'meta' in params:
@@ -161,15 +159,15 @@ class Jobs(object):
         if response.get('status') == 'error':
             if 'already scheduled' in response['message']:
                 raise DuplicateJobError(response['message'])
-            raise ScrapinghubAPIError(response['message'])
+            raise APIError(response['message'])
         return Job(self.client, response['jobid'])
 
     def get(self, jobkey):
         projectid, spiderid, jobid = jobkey.split('/')
         if int(projectid) != self.projectid:
-            raise ScrapinghubAPIError('Please use same project id')
+            raise APIError('Please use same project id')
         if self.spider and int(spiderid) != self.spider.id:
-            raise ScrapinghubAPIError('Please use same spider id')
+            raise APIError('Please use same spider id')
         return Job(self.client, jobkey)
 
     def summary(self, _queuename=None, **params):
@@ -271,7 +269,7 @@ class Logs(_Proxy):
         if 'level' in params:
             minlevel = getattr(LogLevel, params.get('level'), None)
             if minlevel is None:
-                raise ScrapinghubAPIError(
+                raise APIError(
                     "Unknown log level: %s" % params.get('level'))
             params['filters'] = ['level', '>=', [minlevel]]
         return self._origin.iter_values(**params)
@@ -300,7 +298,7 @@ class Collections(_Proxy):
         super(Collections, self).__init__(*args, **kwargs)
         self._proxy_methods([
             'count', 'get', 'set', 'delete', 'create_writer',
-            ('_new_collection', 'new_collection'),
+            '_validate_collection',
         ])
 
     def new_store(self, colname):
@@ -316,7 +314,7 @@ class Collections(_Proxy):
         return self.new_collection('vcs', colname)
 
     def new_collection(self, coltype, colname):
-        collection = self._new_collection(coltype, colname)
+        self._validate_collection(coltype, colname)
         return Collection(self.client, self, coltype, colname)
 
 
@@ -341,7 +339,7 @@ def _get_tags_for_update(**kwargs):
         if not v:
             continue
         if not isinstance(v, list):
-            raise ScrapinghubAPIError("Add/remove field value must be a list")
+            raise APIError("Add/remove field value must be a list")
         params[k] = v
     return params
 

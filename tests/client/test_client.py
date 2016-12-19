@@ -9,6 +9,9 @@ from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import TEST_USER_AUTH, TEST_DASH_ENDPOINT
 
 
+# ScrapinghubClient class tests
+
+
 def test_client_base(client):
     """Base tests for client instance"""
     assert isinstance(client, ScrapinghubClient)
@@ -28,6 +31,9 @@ def test_client_get_project(client):
 def test_client_get_job(client):
     fake_job = client.get_job('1/2/3')
     assert isinstance(fake_job, Job)
+
+
+# Projects class tests
 
 
 def test_client_projects_get_project(client):
@@ -51,7 +57,7 @@ def test_client_projects_list_projects():
 
 def test_client_projects_summary(client, project):
     # add at least one running or pending job to ensure summary is returned
-    project.jobs.schedule(TEST_SPIDER_NAME, state='running')
+    project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'running'})
 
     def _get_summary():
         summaries = {str(js['project']): js
