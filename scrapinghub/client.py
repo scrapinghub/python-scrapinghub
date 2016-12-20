@@ -76,7 +76,6 @@ class Project(object):
         self.id = projectid
 
         # sub-resources
-        self.collections = Collections(_Collections, client, projectid)
         self.spiders = Spiders(client, projectid)
         self.jobs = Jobs(client, projectid)
 
@@ -85,6 +84,7 @@ class Project(object):
         self.frontier = Frontier(client.hsclient, projectid)
         self.settings = Settings(client.hsclient, projectid)
         self.reports = Reports(client.hsclient, projectid)
+        self.collections = Collections(_Collections, client, projectid)
 
 
 class Spiders(object):
@@ -187,7 +187,7 @@ class Job(object):
     def __init__(self, client, jobkey, metadata=None):
         self.client = client
         self.key = jobkey
-        self.projectid = jobkey.split('/')[0]
+        self.projectid = int(jobkey.split('/')[0])
 
         # proxied sub-resources
         self.items = Items(_Items, client, jobkey)
@@ -233,6 +233,7 @@ class Job(object):
 
     def purge(self):
         self.client.hsclient.get_job(self.key).purged()
+        self.metadata.expire()
 
 
 class _Proxy(object):
@@ -259,8 +260,8 @@ class Logs(_Proxy):
 
     def __init__(self, *args, **kwargs):
         super(Logs, self).__init__(*args, **kwargs)
-        self._proxy_methods(['log', 'debug', 'info',
-                             'warning', 'warn', 'error'])
+        self._proxy_methods(['log', 'debug', 'info', 'warning', 'warn',
+                             'error', 'batch_write_start'])
 
     def iter(self, **params):
         if 'offset' in params:
@@ -285,7 +286,10 @@ class Items(_Proxy):
 
 
 class Requests(_Proxy):
-    pass
+
+    def __init__(self, *args, **kwargs):
+        super(Requests, self).__init__(*args, **kwargs)
+        self._proxy_methods(['add'])
 
 
 class Samples(_Proxy):

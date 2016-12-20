@@ -38,8 +38,6 @@ def test_spider_base(project, spider):
 
 
 def test_spider_update_tags(project, spider):
-    summary = project.jobs.summary()
-    assert not all([row['count'] for row in summary])
     # empty updates
     assert spider.update_tags() is None
     assert spider.update_tags(
