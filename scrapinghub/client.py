@@ -264,25 +264,49 @@ class Logs(_Proxy):
                              'error', 'batch_write_start'])
 
     def iter(self, **params):
-        if 'offset' in params:
-            params['start'] = '%s/%s' % (self._origin._key, params['offset'])
-            del params['offset']
-        if 'level' in params:
-            minlevel = getattr(LogLevel, params.get('level'), None)
-            if minlevel is None:
-                raise APIError(
-                    "Unknown log level: %s" % params.get('level'))
-            params['filters'] = ['level', '>=', [minlevel]]
+        params = self._apply_iter_filters(params)
         return self._origin.iter_values(**params)
+
+    def iter_raw_json(self, **params):
+        params = self._apply_iter_filters(params)
+        return self._origin.iter_json(**params)
+
+    def iter_raw_msgpack(self, **params):
+        params = self._apply_iter_filters(params)
+        return self._origin.iter_msgpack(**params)
+
+    def _apply_iter_filters(self, params):
+        offset = params.pop('offset', None)
+        if offset:
+            params['start'] = '%s/%s' % (self.key, offset)
+        level = params.pop('level', None)
+        if level:
+            minlevel = getattr(LogLevel, level, None)
+            if minlevel is None:
+                raise APIError("Unknown log level: %s" % level)
+            params['filter'] = json.dumps(['level', '>=', [minlevel]])
+        return params
 
 
 class Items(_Proxy):
 
     def iter(self, **params):
-        if 'offset' in params:
-            params['start'] = '%s/%s' % (self._origin.key, params['offset'])
-            del params['offset']
+        params = self._apply_iter_filters(params)
         return self._origin.iter_values(**params)
+
+    def iter_raw_json(self, **params):
+        params = self._apply_filters(params)
+        return self._origin.iter_json(**params)
+
+    def iter_raw_msgpack(self, **params):
+        params = self._apply_filters(params)
+        return self._origin.iter_msgpack(**params)
+
+    def _apply_iter_filters(self, params):
+        offset = params.pop('offset', None)
+        if offset:
+            params['start'] = '%s/%s' % (self.key, params['offset'])
+        return params
 
 
 class Requests(_Proxy):

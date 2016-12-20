@@ -90,6 +90,20 @@ def spider(project):
     return project.spiders.get(TEST_SPIDER_NAME, create=True)
 
 
+@my_vcr.use_cassette()
+@pytest.fixture(scope='session')
+def job(spider):
+    job = spider.jobs.schedule()
+    job.logs.info('info-log')
+    job.logs.warn('warn-log')
+    job.items.write({'itemid': 1, 'data': 'data1'})
+    job.items.write({'itemid': 2, 'data': 'data2'})
+    job.requests.add('some-url', 200, 'GET', 0, None, 10, 0)
+    job.samples.write([1, 2, 3, 4])
+    job.close_writers()
+    return job
+
+
 @pytest.fixture(scope='session')
 def collection(project, request):
     collection = get_test_collection(project)
