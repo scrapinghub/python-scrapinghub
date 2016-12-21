@@ -127,8 +127,8 @@ def test_project_jobs_summary(project):
 
     counts = {'pending': 1, 'running': 2, 'finished': 3}
     jobs = defaultdict(list)
-    for state, n in counts.items():
-        for i in range(n):
+    for state in sorted(counts):
+        for i in range(counts[state]):
             job = project.jobs.schedule(TEST_SPIDER_NAME,
                                         subid=state + str(i),
                                         meta={'state': state})

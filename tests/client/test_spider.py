@@ -160,8 +160,8 @@ def test_spider_jobs_summary(spider):
 
     counts = {'pending': 1, 'running': 2, 'finished': 3}
     jobs = defaultdict(list)
-    for state, n in counts.items():
-        for i in range(n):
+    for state in sorted(counts):
+        for i in range(counts[state]):
             job = spider.jobs.schedule(subid=state + str(i),
                                        meta={'state': state})
             jobs[state].append(job.key)
