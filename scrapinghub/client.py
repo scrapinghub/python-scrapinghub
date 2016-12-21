@@ -56,22 +56,22 @@ class ScrapinghubClient(object):
 class Projects(object):
 
     def __init__(self, client):
-        self.client = client
+        self._client = client
 
     def get(self, projectid):
-        return Project(self.client, int(projectid))
+        return Project(self._client, int(projectid))
 
     def list(self):
-        return self.client.connection.project_ids()
+        return self._client.connection.project_ids()
 
     def summary(self, **params):
-        return self.client.hsclient.projects.jobsummaries(**params)
+        return self._client.hsclient.projects.jobsummaries(**params)
 
 
 class Project(object):
 
     def __init__(self, client, projectid):
-        self.client = client
+        self._client = client
         self.id = projectid
 
         # sub-resources
@@ -89,23 +89,23 @@ class Project(object):
 class Spiders(object):
 
     def __init__(self, client, projectid):
-        self.client = client
+        self._client = client
         self.projectid = projectid
 
     def get(self, spidername, **params):
-        project = self.client.hsclient.get_project(self.projectid)
+        project = self._client.hsclient.get_project(self.projectid)
         spiderid = project.ids.spider(spidername, **params)
-        return Spider(self.client, self.projectid, spiderid, spidername)
+        return Spider(self._client, self.projectid, spiderid, spidername)
 
     def list(self):
-        project = self.client.connection[self.projectid]
+        project = self._client.connection[self.projectid]
         return project.spiders()
 
 
 class Spider(object):
 
     def __init__(self, client, projectid, spiderid, spidername):
-        self.client = client
+        self._client = client
         self.projectid = projectid
         self.id = spiderid
         self.name = spidername
@@ -116,21 +116,21 @@ class Spider(object):
         if not params:
             return
         params.update({'project': self.projectid, 'spider': self.name})
-        result = self.client.connection._post('jobs_update', 'json', params)
+        result = self._client.connection._post('jobs_update', 'json', params)
         return result['count']
 
 
 class Jobs(object):
 
     def __init__(self, client, projectid, spider=None):
-        self.client = client
+        self._client = client
         self.projectid = projectid
         self.spider = spider
 
     @property
     def _hsproject(self):
         """Shortcut to hsclient.project for internal uses"""
-        return self.client.hsclient.get_project(self.projectid)
+        return self._client.hsclient.get_project(self.projectid)
 
     def count(self, **params):
         if self.spider:
@@ -154,12 +154,12 @@ class Jobs(object):
             params['meta'] = json.dumps(params['meta'])
         # FIXME JobQ endpoint can schedule multiple jobs with json-lines,
         # corresponding Dash endpoint - only one job per request
-        response = self.client.connection._post('schedule', 'json', params)
+        response = self._client.connection._post('schedule', 'json', params)
         if response.get('status') == 'error':
             if 'already scheduled' in response['message']:
                 raise DuplicateJobError(response['message'])
             raise APIError(response['message'])
-        return Job(self.client, response['jobid'])
+        return Job(self._client, response['jobid'])
 
     def get(self, jobkey):
         projectid, spiderid, jobid = jobkey.split('/')
@@ -167,7 +167,7 @@ class Jobs(object):
             raise APIError('Please use same project id')
         if self.spider and int(spiderid) != self.spider.id:
             raise APIError('Please use same spider id')
-        return Job(self.client, jobkey)
+        return Job(self._client, jobkey)
 
     def summary(self, _queuename=None, **params):
         spiderid = None if not self.spider else self.spider.id
@@ -182,7 +182,7 @@ class Jobs(object):
 class Job(object):
 
     def __init__(self, client, jobkey, metadata=None):
-        self.client = client
+        self._client = client
         self.key = jobkey
         self.projectid = int(jobkey.split('/')[0])
 
@@ -195,23 +195,23 @@ class Job(object):
         self.metadata = JobMeta(client.hsclient, jobkey, cached=metadata)
 
     def update_metadata(self, *args, **kwargs):
-        self.client.hsclient.get_job(self.key).update_metadata(*args, **kwargs)
+        self._client.hsclient.get_job(self.key).update_metadata(*args, **kwargs)
 
     def update_tags(self, add=None, remove=None):
         params = _get_tags_for_update(add_tag=add, remove_tag=remove)
         if not params:
             return
         params.update({'project': self.projectid, 'job': self.key})
-        result = self.client.connection._post('jobs_update', 'json', params)
+        result = self._client.connection._post('jobs_update', 'json', params)
         return result['count']
 
     def close_writers(self):
-        self.client.hsclient.get_job(self.key).close_writers()
+        self._client.hsclient.get_job(self.key).close_writers()
 
     @property
     def _hsproject(self):
         """Shortcut to hsclient.project for internal uses"""
-        return self.client.hsclient.get_project(self.projectid)
+        return self._client.hsclient.get_project(self.projectid)
 
     def start(self, **params):
         return self._hsproject.jobq.start(self, **params)
@@ -229,7 +229,7 @@ class Job(object):
         return self._hsproject.jobq.delete(self, **params)
 
     def purge(self):
-        self.client.hsclient.get_job(self.key).purged()
+        self._client.hsclient.get_job(self.key).purged()
         self.metadata.expire()
 
 
@@ -238,7 +238,7 @@ class _Proxy(object):
 
     def __init__(self, cls, client, key):
         self.key = key
-        self.client = client
+        self._client = client
         self._origin = cls(client.hsclient, key)
         if issubclass(cls, ItemsResourceType):
             self._proxy_methods(['get', 'write', 'flush', 'close',
@@ -251,8 +251,8 @@ class _Proxy(object):
             self._proxy_methods(methods)
             # apply_iter_filters is responsible to modify filter params for all
             # iter* calls: should be used only if defined for a child class
-            if hasattr(self, '_apply_iter_filters'):
-                apply_fn = getattr(self, '_apply_iter_filters')
+            if hasattr(self, '_modify_iter_filters'):
+                apply_fn = getattr(self, '_modify_iter_filters')
                 for method in [method[0] for method in methods]:
                     wrapped = _wrap_kwargs(getattr(self, method), apply_fn)
                     setattr(self, method, wrapped)
@@ -268,7 +268,7 @@ class Logs(_Proxy):
         self._proxy_methods(['log', 'debug', 'info', 'warning', 'warn',
                              'error', 'batch_write_start'])
 
-    def _apply_iter_filters(self, params):
+    def _modify_iter_filters(self, params):
         offset = params.pop('offset', None)
         if offset:
             params['start'] = '{}/{}'.format(self.key, offset)
@@ -283,7 +283,7 @@ class Logs(_Proxy):
 
 class Items(_Proxy):
 
-    def _apply_iter_filters(self, params):
+    def _modify_iter_filters(self, params):
         offset = params.pop('offset', None)
         if offset:
             params['start'] = '{}/{}'.format(self.key, offset)
@@ -324,13 +324,13 @@ class Collections(_Proxy):
 
     def new_collection(self, coltype, colname):
         self._validate_collection(coltype, colname)
-        return Collection(self.client, self, coltype, colname)
+        return Collection(self._client, self, coltype, colname)
 
 
 class Collection(object):
 
     def __init__(self, client, collections, coltype, colname):
-        self.client = client
+        self._client = client
         # FIXME it'd be nice to reuse _Proxy here, but Collection init is
         # a bit custom: there's a compound key and required collections
         # field to create an origin instance

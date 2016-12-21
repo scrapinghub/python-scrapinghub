@@ -1,6 +1,8 @@
 import types
-import pytest
 from collections import defaultdict
+
+import pytest
+from six.moves import range
 
 from scrapinghub import APIError
 from scrapinghub.client import Jobs, Job

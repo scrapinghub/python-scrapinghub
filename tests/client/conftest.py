@@ -161,7 +161,7 @@ def _remove_job(project, jobkey):
     job.delete()
     # delete job
     assert jobkey.startswith(TEST_PROJECT_ID), jobkey
-    hsproject = project.client.hsclient.get_project(TEST_PROJECT_ID)
+    hsproject = project._client.hsclient.get_project(TEST_PROJECT_ID)
     hsproject.jobs.apidelete(jobkey.partition('/')[2])
 
 # Collection helpers section
@@ -189,7 +189,7 @@ def set_testbotgroup(project):
     # Additional step to populate JobQ's botgroups table
     url = urlpathjoin(TEST_HS_ENDPOINT, 'botgroups',
                       TEST_BOTGROUP, 'max_running')
-    requests.post(url, auth=project.client.hsclient.auth, data='null')
+    requests.post(url, auth=project._client.hsclient.auth, data='null')
     project.settings.expire()
 
 
@@ -198,4 +198,4 @@ def unset_testbotgroup(project):
     project.settings.expire()
     # Additional step to delete botgroups in JobQ
     url = urlpathjoin(TEST_HS_ENDPOINT, 'botgroups', TEST_BOTGROUP)
-    requests.delete(url, auth=project.client.hsclient.auth)
+    requests.delete(url, auth=project._client.hsclient.auth)

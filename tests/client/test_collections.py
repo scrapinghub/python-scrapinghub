@@ -23,7 +23,7 @@ def test_simple_count(project, collection):
     assert collection.count() == 1
 
 
-def post_get_delete_test(project):
+def test_post_get_delete(project):
     test_item = _mkitem()
     item_to_send = dict(test_item)
     item_to_send['_key'] = test_key = 'insert_test_key'
@@ -48,7 +48,7 @@ def post_get_delete_test(project):
             col.get(test_key)
 
 
-def post_scan_test(project, collection):
+def test_post_scan(project, collection):
     # populate with 20 items
     test_item = _mkitem()
     last_key = None

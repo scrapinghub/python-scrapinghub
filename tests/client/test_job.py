@@ -1,5 +1,3 @@
-import six
-
 from scrapinghub.client import Job
 from scrapinghub.client import Items, Logs, Requests
 from scrapinghub.client import Samples, JobMeta
@@ -76,7 +74,7 @@ def test_job_start_extras(spider):
     }
     started = next(job.start(**extras))
     assert job.key == started['key']
-    for k, v in six.iteritems(extras):
+    for k, v in extras.items():
         if type(v) is float:
             assert abs(job.metadata.get(k) - v) < 0.0001
         else:
