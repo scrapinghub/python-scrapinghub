@@ -15,10 +15,10 @@ from .conftest import TEST_USER_AUTH, TEST_DASH_ENDPOINT
 def test_client_base(client):
     """Base tests for client instance"""
     assert isinstance(client, ScrapinghubClient)
-    assert client.hsclient
-    assert isinstance(client.hsclient, HubstorageClient)
-    assert client.connection
-    assert isinstance(client.connection, Connection)
+    assert client._hsclient
+    assert isinstance(client._hsclient, HubstorageClient)
+    assert client._connection
+    assert isinstance(client._connection, Connection)
     assert client.projects
     assert isinstance(client.projects, Projects)
 

@@ -29,7 +29,7 @@ def test_spiders_get(project):
 
 def test_spiders_list(project):
     expected_spiders = [{'id': 'hs-test-spider', 'tags': [],
-                        'type': 'manual', 'version': None}]
+                         'type': 'manual', 'version': None}]
     assert project.spiders.list() == expected_spiders
 
 
