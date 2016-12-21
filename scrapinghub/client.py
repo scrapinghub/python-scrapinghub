@@ -176,9 +176,7 @@ class Jobs(object):
 
     def lastjobsummary(self, **params):
         spiderid = None if not self.spider else self.spider.id
-        summ = self._hsproject.spiders.lastjobsummary(spiderid, **params)
-        # FIXME original lastjobsummary returns a generator
-        return list(summ)
+        return self._hsproject.spiders.lastjobsummary(spiderid, **params)
 
 
 class Job(object):
@@ -273,12 +271,12 @@ class Logs(_Proxy):
     def _apply_iter_filters(self, params):
         offset = params.pop('offset', None)
         if offset:
-            params['start'] = '%s/%s' % (self.key, offset)
+            params['start'] = '{}/{}'.format(self.key, offset)
         level = params.pop('level', None)
         if level:
             minlevel = getattr(LogLevel, level, None)
             if minlevel is None:
-                raise APIError("Unknown log level: %s" % level)
+                raise APIError("Unknown log level: {}".format(level))
             params['filter'] = json.dumps(['level', '>=', [minlevel]])
         return params
 
@@ -288,7 +286,7 @@ class Items(_Proxy):
     def _apply_iter_filters(self, params):
         offset = params.pop('offset', None)
         if offset:
-            params['start'] = '%s/%s' % (self.key, params['offset'])
+            params['start'] = '{}/{}'.format(self.key, offset)
         return params
 
 

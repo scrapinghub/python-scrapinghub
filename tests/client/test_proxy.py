@@ -10,7 +10,7 @@ from scrapinghub.hubstorage.serialization import mpdecode
 TEST_TS = 1476803148638
 
 
-def _write_test_logs(job):
+def _add_test_logs(job):
     job.logs.log('simple-msg1')
     job.logs.log('simple-msg2', ts=TEST_TS)
     job.logs.log('simple-msg3', level=LogLevel.DEBUG)
@@ -32,7 +32,7 @@ def test_logs_base(spider):
     job = spider.jobs.schedule()
     assert list(job.logs.iter()) == []
     assert job.logs.batch_write_start() == 0
-    _write_test_logs(job)
+    _add_test_logs(job)
     log1 = job.logs.get(0)
     assert log1['level'] == 20
     assert log1['message'] == 'simple-msg1'
@@ -46,7 +46,7 @@ def test_logs_base(spider):
 
 def test_logs_iter(spider):
     job = spider.jobs.schedule()
-    _write_test_logs(job)
+    _add_test_logs(job)
 
     logs = job.logs.iter()
     assert isinstance(logs, types.GeneratorType)
@@ -68,7 +68,7 @@ def test_logs_iter(spider):
 
 def test_logs_iter_raw_json(spider):
     job = spider.jobs.schedule()
-    _write_test_logs(job)
+    _add_test_logs(job)
 
     logs = job.logs.iter_raw_json(offset=2)
     raw_log = next(logs)
@@ -86,7 +86,7 @@ def test_logs_iter_raw_json(spider):
 
 def test_logs_iter_raw_msgpack(spider):
     job = spider.jobs.schedule()
-    _write_test_logs(job)
+    _add_test_logs(job)
 
     logs = job.logs.iter_raw_msgpack(offset=2)
     assert isinstance(logs, types.GeneratorType)
@@ -98,8 +98,7 @@ def test_logs_iter_raw_msgpack(spider):
     assert unpacked_logs[0].get('message') == 'error-msg'
 
 
-def test_requests_iter(spider):
-    job = spider.jobs.schedule(meta={'state': 'running'})
+def _add_test_requests(job):
     r1 = job.requests.add(
         url='http://test.com/', status=200, method='GET',
         rs=1337, duration=5, parent=None, ts=TEST_TS)
@@ -109,6 +108,12 @@ def test_requests_iter(spider):
     job.requests.add(
         url='http://test.com/3', status=400, method='PUT',
         rs=0, duration=1, parent=r1, ts=TEST_TS + 2, fp='1234')
+    job.requests.flush()
+
+
+def test_requests_iter(spider):
+    job = spider.jobs.schedule(meta={'state': 'running'})
+    _add_test_requests(job)
     job.requests.close()
     rr = job.requests.iter()
     assert next(rr) == {
@@ -129,21 +134,63 @@ def test_requests_iter(spider):
         next(rr)
 
 
+def test_requests_iter_raw_json(spider):
+    job = spider.jobs.schedule()
+    _add_test_requests(job)
+    job.requests.close()
+
+    rr = job.requests.iter_raw_json()
+    raw_req = next(rr)
+    req = json.loads(raw_req)
+    assert req.get('url') == 'http://test.com/'
+    assert req.get('status') == 200
+    next(rr)
+    next(rr)
+    with pytest.raises(StopIteration):
+        next(rr)
+
+
 def test_samples_iter(spider):
     job = spider.jobs.schedule(meta={'state': 'running'})
     assert list(job.samples.iter()) == []
     job.samples.write([TEST_TS, 1, 2, 3])
     job.samples.write([TEST_TS + 1, 5, 9, 4])
     job.samples.flush()
-    o = list(job.samples.iter())
-    assert len(o) == 2
-    assert o[0] == [TEST_TS, 1, 2, 3]
-    assert o[1] == [TEST_TS + 1, 5, 9, 4]
+    job.samples.close()
+    o = job.samples.iter()
+    assert next(o) == [TEST_TS, 1, 2, 3]
+    assert next(o) == [TEST_TS + 1, 5, 9, 4]
+    with pytest.raises(StopIteration):
+        next(o)
 
 
-def test_items_instance(job):
-    pass
+def test_items_iter(spider):
+    job = spider.jobs.schedule(meta={'state': 'running'})
+    for i in range(3):
+        job.items.write({'id': i, 'data': 'data' + str(i)})
+    job.items.flush()
+    job.items.close()
 
+    o = job.items.iter()
+    assert next(o) == {'id': 0, 'data': 'data0'}
+    assert next(o) == {'id': 1, 'data': 'data1'}
+    next(o)
+    with pytest.raises(StopIteration):
+        next(o)
 
-def test_items_iter(job):
-    pass
+    o = job.items.iter(offset=2)
+    assert next(o) == {'id': 2, 'data': 'data2'}
+    with pytest.raises(StopIteration):
+        next(o)
+
+    o = job.items.iter_raw_json(offset=2)
+    item = json.loads(next(o))
+    assert item['id'] == 2
+    assert item['data'] == 'data2'
+    with pytest.raises(StopIteration):
+        next(o)
+
+    msgpacked_o = job.items.iter_raw_msgpack(offset=2)
+    o = mpdecode(msgpacked_o)
+    assert item['id'] == 2
+    assert item['data'] == 'data2'

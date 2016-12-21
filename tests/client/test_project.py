@@ -157,11 +157,11 @@ def test_project_jobs_summary(project):
 
 
 def test_project_jobs_lastjobsummary(project):
-    lastsumm0 = project.jobs.lastjobsummary()
+    lastsumm0 = list(project.jobs.lastjobsummary())
     assert lastsumm0 == []
 
     job1 = project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'finished'})
-    lastsumm1 = project.jobs.lastjobsummary()
+    lastsumm1 = list(project.jobs.lastjobsummary())
     assert len(lastsumm1) == 1
     assert lastsumm1[0].get('key') == job1.key
     assert lastsumm1[0].get('spider') == TEST_SPIDER_NAME
@@ -173,6 +173,6 @@ def test_project_jobs_lastjobsummary(project):
     # next lastjobsummary should return last spider's job again
     job2 = project.jobs.schedule(TEST_SPIDER_NAME, subid=1,
                                  meta={'state': 'finished'})
-    lastsumm2 = project.jobs.lastjobsummary()
+    lastsumm2 = list(project.jobs.lastjobsummary())
     assert len(lastsumm2) == 1
     assert lastsumm2[0].get('key') == job2.key
