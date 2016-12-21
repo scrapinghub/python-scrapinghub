@@ -6,6 +6,7 @@ from six.moves import range
 
 from scrapinghub import APIError
 from scrapinghub.client import Jobs, Job
+from scrapinghub.client import DuplicateJobError
 from scrapinghub.client import Activity, Collections, Spiders
 from scrapinghub.client import Frontier, Settings, Reports
 
@@ -96,6 +97,9 @@ def test_project_jobs_schedule(project):
     assert isinstance(job0.metadata.get('pending_time'), int)
     assert job0.metadata['pending_time'] > 0
     assert job0.metadata.get('scheduled_by')
+
+    with pytest.raises(DuplicateJobError):
+        project.jobs.schedule(TEST_SPIDER_NAME)
 
     job1 = project.jobs.schedule(TEST_SPIDER_NAME, arg1='val1', arg2='val2',
                                  priority=3, units=3, add_tag=['tagA', 'tagB'],

@@ -5,14 +5,17 @@ from scrapinghub import APIError
 from scrapinghub import Connection
 from scrapinghub import HubstorageClient
 
+from scrapinghub.hubstorage.resourcetype import DownloadableResource
+from scrapinghub.hubstorage.resourcetype import ItemsResourceType
+
+# scrapinghub.hubstorage classes to use as-is
 from scrapinghub.hubstorage.activity import Activity
 from scrapinghub.hubstorage.frontier import Frontier
 from scrapinghub.hubstorage.job import JobMeta
 from scrapinghub.hubstorage.project import Reports
 from scrapinghub.hubstorage.project import Settings
-from scrapinghub.hubstorage.resourcetype import DownloadableResource
-from scrapinghub.hubstorage.resourcetype import ItemsResourceType
 
+# scrapinghub.hubstorage proxied classes
 from scrapinghub.hubstorage.collectionsrt import Collections as _Collections
 from scrapinghub.hubstorage.collectionsrt import Collection as _Collection
 from scrapinghub.hubstorage.job import Items as _Items
@@ -154,11 +157,13 @@ class Jobs(object):
             params['meta'] = json.dumps(params['meta'])
         # FIXME JobQ endpoint can schedule multiple jobs with json-lines,
         # corresponding Dash endpoint - only one job per request
-        response = self._client.connection._post('schedule', 'json', params)
-        if response.get('status') == 'error':
-            if 'already scheduled' in response['message']:
-                raise DuplicateJobError(response['message'])
-            raise APIError(response['message'])
+        try:
+            response = self._client.connection._post(
+                'schedule', 'json', params)
+        except APIError as exc:
+            if 'already scheduled' in str(exc):
+                raise DuplicateJobError(str(exc))
+            raise
         return Job(self._client, response['jobid'])
 
     def get(self, jobkey):

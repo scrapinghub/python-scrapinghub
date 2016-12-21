@@ -5,6 +5,7 @@ import pytest
 from six.moves import range
 
 from scrapinghub import APIError
+from scrapinghub.client import DuplicateJobError
 from scrapinghub.client import Jobs, Job
 from scrapinghub.client import Spider
 
@@ -124,6 +125,9 @@ def test_spider_jobs_schedule(spider):
     assert isinstance(job0.metadata.get('pending_time'), int)
     assert job0.metadata['pending_time'] > 0
     assert job0.metadata.get('scheduled_by')
+
+    with pytest.raises(DuplicateJobError):
+        spider.jobs.schedule()
 
     job1 = spider.jobs.schedule(arg1='val1', arg2='val2', priority=3, units=3,
                                 meta={'state': 'running', 'meta1': 'val1'},
