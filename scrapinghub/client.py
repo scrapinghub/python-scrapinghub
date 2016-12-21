@@ -21,7 +21,6 @@ from scrapinghub.hubstorage.job import Samples as _Samples
 from scrapinghub.hubstorage.job import Requests as _Requests
 
 
-
 class DuplicateJobError(APIError):
     pass
 
@@ -248,9 +247,17 @@ class _Proxy(object):
                                  'stats', ('iter', 'list')])
         # DType iter_values() has more priority than IType list()
         if issubclass(cls, DownloadableResource):
-            self._proxy_methods([('iter', 'iter_values'),
-                                 ('iter_raw_msgpack', 'iter_msgpack'),
-                                 ('iter_raw_json', 'iter_json')])
+            methods = [('iter', 'iter_values'),
+                       ('iter_raw_msgpack', 'iter_msgpack'),
+                       ('iter_raw_json', 'iter_json')]
+            self._proxy_methods(methods)
+            # apply_iter_filters is responsible to modify filter params for all
+            # iter* calls: should be used only if defined for a child class
+            if hasattr(self, '_apply_iter_filters'):
+                apply_fn = getattr(self, '_apply_iter_filters')
+                for method in [method[0] for method in methods]:
+                    wrapped = _wrap_kwargs(getattr(self, method), apply_fn)
+                    setattr(self, method, wrapped)
 
     def _proxy_methods(self, methods):
         _proxy_methods(self._origin, self, methods)
@@ -262,18 +269,6 @@ class Logs(_Proxy):
         super(Logs, self).__init__(*args, **kwargs)
         self._proxy_methods(['log', 'debug', 'info', 'warning', 'warn',
                              'error', 'batch_write_start'])
-
-    def iter(self, **params):
-        params = self._apply_iter_filters(params)
-        return self._origin.iter_values(**params)
-
-    def iter_raw_json(self, **params):
-        params = self._apply_iter_filters(params)
-        return self._origin.iter_json(**params)
-
-    def iter_raw_msgpack(self, **params):
-        params = self._apply_iter_filters(params)
-        return self._origin.iter_msgpack(**params)
 
     def _apply_iter_filters(self, params):
         offset = params.pop('offset', None)
@@ -289,18 +284,6 @@ class Logs(_Proxy):
 
 
 class Items(_Proxy):
-
-    def iter(self, **params):
-        params = self._apply_iter_filters(params)
-        return self._origin.iter_values(**params)
-
-    def iter_raw_json(self, **params):
-        params = self._apply_filters(params)
-        return self._origin.iter_json(**params)
-
-    def iter_raw_msgpack(self, **params):
-        params = self._apply_filters(params)
-        return self._origin.iter_msgpack(**params)
 
     def _apply_iter_filters(self, params):
         offset = params.pop('offset', None)
@@ -388,3 +371,11 @@ def _proxy_methods(origin, successor, methods):
             successor_name, origin_name = method, method
         if not hasattr(successor, successor_name):
             setattr(successor, successor_name, getattr(origin, origin_name))
+
+
+def _wrap_kwargs(fn, kwargs_fn):
+    """Tiny wrapper to prepare modified version of function kwargs"""
+    def wrapped(*args, **kwargs):
+        kwargs = kwargs_fn(kwargs)
+        return fn(*args, **kwargs)
+    return wrapped

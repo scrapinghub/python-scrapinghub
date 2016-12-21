@@ -10,14 +10,6 @@ from scrapinghub.hubstorage.serialization import mpdecode
 TEST_TS = 1476803148638
 
 
-def test_items_instance(job):
-    pass
-
-
-def test_items_iter(job):
-    pass
-
-
 def _write_test_logs(job):
     job.logs.log('simple-msg1')
     job.logs.log('simple-msg2', ts=TEST_TS)
@@ -149,5 +141,9 @@ def test_samples_iter(spider):
     assert o[1] == [TEST_TS + 1, 5, 9, 4]
 
 
-def test_collections(collection):
+def test_items_instance(job):
+    pass
+
+
+def test_items_iter(job):
     pass
