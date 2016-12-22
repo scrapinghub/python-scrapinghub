@@ -135,7 +135,7 @@ The library can also be used for interaction with spiders, jobs and scraped data
 First, use your API key for authorization::
 
     >>> from scrapinghub import HubstorageClient
-    >>> hс = HubstorageClient(auth='apikey')
+    >>> hc = HubstorageClient(auth='apikey')
     >>> hc.server_timestamp()
     1446222762611
 
