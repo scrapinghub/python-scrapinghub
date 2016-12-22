@@ -1,6 +1,8 @@
 import json
 import types
+
 import pytest
+from six.moves import range
 
 from scrapinghub.client import LogLevel
 from scrapinghub.hubstorage.serialization import mpdecode
@@ -48,11 +50,11 @@ def test_logs_iter(spider):
     job = spider.jobs.schedule()
     _add_test_logs(job)
 
-    logs = job.logs.iter()
-    assert isinstance(logs, types.GeneratorType)
-    assert next(logs).get('message') == 'simple-msg1'
-    assert next(logs).get('message') == 'simple-msg2'
-    assert next(logs).get('message') == 'simple-msg3'
+    logs1 = job.logs.iter()
+    assert isinstance(logs1, types.GeneratorType)
+    assert next(logs1).get('message') == 'simple-msg1'
+    assert next(logs1).get('message') == 'simple-msg2'
+    assert next(logs1).get('message') == 'simple-msg3'
 
     # testing offset
     logs2 = job.logs.iter(offset=3)
@@ -70,32 +72,32 @@ def test_logs_iter_raw_json(spider):
     job = spider.jobs.schedule()
     _add_test_logs(job)
 
-    logs = job.logs.iter_raw_json(offset=2)
-    raw_log = next(logs)
-    log = json.loads(raw_log)
-    assert log.get('message') == 'simple-msg3'
-    assert log.get('_key')
-    assert isinstance(log.get('time'), int)
-    assert log.get('level') == 10
+    logs0 = job.logs.iter_raw_json(offset=2)
+    raw_log0 = next(logs0)
+    log0 = json.loads(raw_log0)
+    assert log0.get('message') == 'simple-msg3'
+    assert log0.get('_key')
+    assert isinstance(log0.get('time'), int)
+    assert log0.get('level') == 10
 
-    logs = job.logs.iter_raw_json(level='ERROR')
-    raw_log = next(logs)
-    log = json.loads(raw_log)
-    assert log.get('message') == 'error-msg'
+    logs1 = job.logs.iter_raw_json(level='ERROR')
+    raw_log1 = next(logs1)
+    log1 = json.loads(raw_log1)
+    assert log1.get('message') == 'error-msg'
 
 
 def test_logs_iter_raw_msgpack(spider):
     job = spider.jobs.schedule()
     _add_test_logs(job)
 
-    logs = job.logs.iter_raw_msgpack(offset=2)
-    assert isinstance(logs, types.GeneratorType)
-    unpacked_logs = list(mpdecode(logs))
-    assert unpacked_logs[0].get('message') == 'simple-msg3'
+    logs1 = job.logs.iter_raw_msgpack(offset=2)
+    assert isinstance(logs1, types.GeneratorType)
+    unpacked_logs1 = list(mpdecode(logs1))
+    assert unpacked_logs1[0].get('message') == 'simple-msg3'
 
-    logs = job.logs.iter_raw_msgpack(level='ERROR')
-    unpacked_logs = list(mpdecode(logs))
-    assert unpacked_logs[0].get('message') == 'error-msg'
+    logs2 = job.logs.iter_raw_msgpack(level='ERROR')
+    unpacked_logs2 = list(mpdecode(logs2))
+    assert unpacked_logs2[0].get('message') == 'error-msg'
 
 
 def _add_test_requests(job):
@@ -144,8 +146,7 @@ def test_requests_iter_raw_json(spider):
     req = json.loads(raw_req)
     assert req.get('url') == 'http://test.com/'
     assert req.get('status') == 200
-    next(rr)
-    next(rr)
+    next(rr), next(rr)
     with pytest.raises(StopIteration):
         next(rr)
 

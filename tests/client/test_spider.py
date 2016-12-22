@@ -8,6 +8,7 @@ from scrapinghub import APIError
 from scrapinghub.client import DuplicateJobError
 from scrapinghub.client import Jobs, Job
 from scrapinghub.client import Spider
+from scrapinghub.utils import NonExistingSpider, JobKey
 
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .utils import validate_default_meta
@@ -21,16 +22,14 @@ def test_spiders_get(project):
     assert spider.projectid == int(TEST_PROJECT_ID)
     assert isinstance(spider.jobs, Jobs)
 
-    new_spider = project.spiders.get('not-existing')
-    assert new_spider.projectid == int(TEST_PROJECT_ID)
-    assert new_spider.id != spider.id
-    assert new_spider.name == 'not-existing'
+    with pytest.raises(NonExistingSpider):
+        project.spiders.get('non-existing')
 
 
 def test_spiders_list(project):
-    expected_spiders = [{'id': 'hs-test-spider', 'tags': [],
-                         'type': 'manual', 'version': None}]
-    assert project.spiders.list() == expected_spiders
+    assert project.spiders.list() == [
+        {'id': 'hs-test-spider', 'tags': [],
+         'type': 'manual', 'version': None}]
 
 
 def test_spider_base(project, spider):
@@ -102,16 +101,13 @@ def test_spider_jobs_iter(spider):
     jobs1 = spider.jobs.iter(state='running')
     job = next(jobs1)
     assert isinstance(job, dict)
-    # check: ts/running ts
     ts = job.get('ts')
     assert isinstance(ts, int) and ts > 0
     running_time = job.get('running_time')
     assert isinstance(running_time, int) and running_time > 0
-    # check: elapsed time
     elapsed = job.get('elapsed')
     assert isinstance(elapsed, int) and elapsed > 0
-    jobkey = job.get('key')
-    assert jobkey and jobkey.startswith(TEST_PROJECT_ID)
+    assert job.get('key').startswith(TEST_PROJECT_ID)
     assert job.get('spider') == TEST_SPIDER_NAME
     assert job.get('state') == 'running'
     with pytest.raises(StopIteration):
@@ -123,17 +119,19 @@ def test_spider_jobs_schedule(spider):
     assert isinstance(job0, Job)
     validate_default_meta(job0.metadata, state='pending')
     assert isinstance(job0.metadata.get('pending_time'), int)
-    assert job0.metadata['pending_time'] > 0
+    assert job0.metadata.get('pending_time') > 0
     assert job0.metadata.get('scheduled_by')
 
     with pytest.raises(DuplicateJobError):
         spider.jobs.schedule()
 
-    job1 = spider.jobs.schedule(arg1='val1', arg2='val2', priority=3, units=3,
+    job1 = spider.jobs.schedule(arg1='val1', arg2='val2',
+                                priority=3, units=3,
                                 meta={'state': 'running', 'meta1': 'val1'},
                                 add_tag=['tagA', 'tagB'])
     assert isinstance(job1, Job)
-    validate_default_meta(job1.metadata, state='running', units=3, priority=3,
+    validate_default_meta(job1.metadata, state='running',
+                          units=3, priority=3,
                           tags=['tagA', 'tagB'])
     assert job1.metadata.get('meta1') == 'val1'
     assert job1.metadata.get('spider_args') == {'arg1': 'val1', 'arg2': 'val2'}
@@ -143,6 +141,10 @@ def test_spider_jobs_schedule(spider):
 
 
 def test_spider_jobs_get(spider):
+    # error on wrong jobkey format
+    with pytest.raises(APIError):
+        spider.jobs.get('wrongg')
+
     # error when using different project id in jobkey
     with pytest.raises(APIError):
         spider.jobs.get('1/2/3')
@@ -151,7 +153,7 @@ def test_spider_jobs_get(spider):
     with pytest.raises(APIError):
         spider.jobs.get(TEST_PROJECT_ID + '/2/3')
 
-    fake_job_id = '/'.join([TEST_PROJECT_ID, str(spider.id), '3'])
+    fake_job_id = str(JobKey(TEST_PROJECT_ID, spider.id, 3))
     fake_job = spider.jobs.get(fake_job_id)
     assert isinstance(fake_job, Job)
 
@@ -171,12 +173,12 @@ def test_spider_jobs_summary(spider):
             jobs[state].append(job.key)
     summary1 = spider.jobs.summary()
     for summ in summary1:
-        assert summ['count'] == counts[summ['name']]
-        summ_data = summ['summary']
+        summ_name, summ_data = summ['name'], summ['summary']
+        assert summ['count'] == counts[summ_name]
         assert isinstance(summ_data, list)
-        assert len(summ_data) == counts[summ['name']]
+        assert len(summ_data) == counts[summ_name]
         summ_jobkeys = sorted([d['key'] for d in summ_data])
-        assert summ_jobkeys == sorted(jobs[summ['name']])
+        assert summ_jobkeys == sorted(jobs[summ_name])
 
     # filter by queuename
     summary2 = spider.jobs.summary('running')
@@ -195,8 +197,9 @@ def test_spider_jobs_summary(spider):
 
 
 def test_spider_jobs_lastjobsummary(spider):
-    lastsumm0 = list(spider.jobs.lastjobsummary())
-    assert lastsumm0 == []
+    lastsumm0 = spider.jobs.lastjobsummary()
+    assert isinstance(lastsumm0, types.GeneratorType)
+    assert list(lastsumm0) == []
 
     job1 = spider.jobs.schedule(meta={'state': 'finished'})
     lastsumm1 = list(spider.jobs.lastjobsummary())
@@ -209,8 +212,7 @@ def test_spider_jobs_lastjobsummary(spider):
     assert lastsumm1[0].get('ts') > 0
 
     # next lastjobsummary should return last spider's job again
-    job2 = spider.jobs.schedule(subid=1,
-                                meta={'state': 'finished'})
+    job2 = spider.jobs.schedule(subid=1, meta={'state': 'finished'})
     lastsumm2 = list(spider.jobs.lastjobsummary())
     assert len(lastsumm2) == 1
     assert lastsumm2[0].get('key') == job2.key

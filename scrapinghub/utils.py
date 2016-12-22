@@ -17,6 +17,10 @@ class WrongJobKey(APIError):
     pass
 
 
+class NonExistingSpider(APIError):
+    pass
+
+
 class LogLevel(object):
     DEBUG = logging.DEBUG
     INFO = logging.INFO

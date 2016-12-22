@@ -47,8 +47,11 @@ def test_client_projects_get_project(client):
     assert p1.id == p2.id
 
 
-def test_client_projects_list_projects():
-    # use user apikey to list projects properly
+def test_client_projects_list_projects(client):
+    projects = client.projects.list()
+    assert client.projects.list() == []
+
+    # use user apikey to list test projects
     client = ScrapinghubClient(TEST_USER_AUTH, TEST_DASH_ENDPOINT)
     projects = client.projects.list()
     assert isinstance(projects, list)

@@ -22,7 +22,8 @@ from .hubstorage.job import Logs as _Logs
 from .hubstorage.job import Samples as _Samples
 from .hubstorage.job import Requests as _Requests
 
-from .utils import DuplicateJobError, LogLevel
+from .utils import DuplicateJobError, NonExistingSpider
+from .utils import LogLevel
 from .utils import get_tags_for_update
 from .utils import parse_project_id, parse_job_key
 from .utils import proxy_methods
@@ -89,6 +90,9 @@ class Spiders(object):
     def get(self, spidername, **params):
         project = self._client._hsclient.get_project(self.projectid)
         spiderid = project.ids.spider(spidername, **params)
+        if spiderid is None:
+            raise NonExistingSpider("Spider {} doesn't exist."
+                                    .format(spidername))
         return Spider(self._client, self.projectid, spiderid, spidername)
 
     def list(self):
@@ -171,6 +175,7 @@ class Jobs(object):
 
     def lastjobsummary(self, **params):
         spiderid = None if not self.spider else self.spider.id
+        # FIXME returns a generator, not a list
         return self._hsproject.spiders.lastjobsummary(spiderid, **params)
 
 
@@ -338,5 +343,6 @@ class Collection(object):
         self._origin = _Collection(coltype, colname, collections._origin)
         proxy_methods(self._origin, self, [
             'create_writer', 'get', 'set', 'delete', 'count',
-            ('iter', 'iter_values'), ('iter_raw_json', 'iter_json'),
+            ('iter', 'iter_values'),
+            ('iter_raw_json', 'iter_json'),
         ])

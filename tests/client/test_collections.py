@@ -1,7 +1,3 @@
-"""
-Test Collections
-"""
-import random
 from contextlib import closing
 
 import pytest
@@ -70,7 +66,7 @@ def test_post_scan(project, collection):
 
     # combining with normal filters
     result = list(collection.get(filter='["counter", ">", [5]]',
-                          prefix='post_scan_test1'))
+                                 prefix='post_scan_test1'))
     # 10-19
     assert len(result) == 10
 
