@@ -1,5 +1,6 @@
 import json
 import types
+from numbers import Integral
 
 import pytest
 from six.moves import range
@@ -38,7 +39,7 @@ def test_logs_base(spider):
     log1 = job.logs.get(0)
     assert log1['level'] == 20
     assert log1['message'] == 'simple-msg1'
-    assert isinstance(log1['time'], int) and log1['time'] > 0
+    assert isinstance(log1['time'], Integral) and log1['time'] > 0
     assert job.logs.stats() == {
         'counts': {'10': 2, '20': 4, '30': 2, '40': 1},
         'totals': {'input_bytes': 91, 'input_values': 9}
@@ -77,7 +78,7 @@ def test_logs_iter_raw_json(spider):
     log0 = json.loads(raw_log0)
     assert log0.get('message') == 'simple-msg3'
     assert log0.get('_key')
-    assert isinstance(log0.get('time'), int)
+    assert isinstance(log0.get('time'), Integral)
     assert log0.get('level') == 10
 
     logs1 = job.logs.iter_raw_json(level='ERROR')

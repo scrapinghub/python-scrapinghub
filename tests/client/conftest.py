@@ -6,11 +6,9 @@ import pickle
 import vcr
 import pytest
 import shutil
-import requests
 from requests import HTTPError
 
 from scrapinghub import ScrapinghubClient
-from scrapinghub.hubstorage.utils import urlpathjoin
 
 
 TEST_PROJECT_ID = "2222222"
@@ -101,7 +99,6 @@ def collection(project, request):
 @pytest.fixture(autouse=True, scope='session')
 def setup_session(client, project, collection, request):
     if is_using_real_services(request):
-        set_testbotgroup(project)
         remove_all_jobs(project)
     yield
     client.close()
@@ -165,23 +162,3 @@ def clean_collection(collection):
         # if collection doesn't exist yet service responds 404
         if e.response.status_code != 404:
             raise
-
-
-# Botgroups helpers section
-
-
-def set_testbotgroup(project):
-    project.settings.apipost(jl={'botgroups': [TEST_BOTGROUP]})
-    # Additional step to populate JobQ's botgroups table
-    url = urlpathjoin(TEST_HS_ENDPOINT, 'botgroups',
-                      TEST_BOTGROUP, 'max_running')
-    requests.post(url, auth=project._client._hsclient.auth, data='null')
-    project.settings.expire()
-
-
-def unset_testbotgroup(project):
-    project.settings.apidelete('botgroups')
-    project.settings.expire()
-    # Additional step to delete botgroups in JobQ
-    url = urlpathjoin(TEST_HS_ENDPOINT, 'botgroups', TEST_BOTGROUP)
-    requests.delete(url, auth=project._client._hsclient.auth)

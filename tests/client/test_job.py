@@ -155,14 +155,3 @@ def test_job_purge(spider):
     job.purge()
     assert job.metadata['state'] == 'deleted'
     assert job.metadata['meta1'] == 'val1'
-
-
-def test_job_close_writers(spider):
-    job = spider.jobs.schedule()
-    job.close_writers()
-
-    job.logs.info('test-log')
-    job.items.write({'item_data': 'value'})
-    job.requests.add('some-url', 200, 'GET', 0, None, 10, 0)
-    job.samples.write([1, 2, 3, 4])
-    job.close_writers()
