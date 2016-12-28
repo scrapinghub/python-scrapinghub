@@ -11,8 +11,8 @@ with the `Scrapinghub API`_. It takes best from ``scrapinghub.Connection`` and
 .. contents:: :depth: 3
 
 
-Usage
-=====
+Basic usage
+===========
 
 First, you connect to Scrapinghub::
 
@@ -23,8 +23,8 @@ First, you connect to Scrapinghub::
 
 Client instance has ``projects`` field for access to client projects collection.
 
-Projects (client level)
------------------------
+Projects
+--------
 
 You can list the projects available to your account::
 
@@ -55,8 +55,8 @@ And select a particular project to work with::
 
 (The above is a shortcut for ``client.projects.get(123)``.)
 
-Project (projects level)
-------------------------
+Project
+~~~~~~~
 
 Project instance has ``jobs`` field to work with the project jobs.
 
@@ -77,8 +77,8 @@ Project instance also has the following fields:
 - spiders - access to spiders collection (see ``Spiders`` section)
 
 
-Spiders (project level)
------------------------
+Spiders
+-------
 
 To get the list of spiders in the project::
 
@@ -98,8 +98,8 @@ To select a particular spider to work with::
     >>> spider.name
     spider2
 
-Spider (spiders level)
-----------------------
+Spider
+~~~~~~
 
 Like project instance, spider instance has ``jobs`` field to work with the spider's jobs.
 
@@ -108,8 +108,10 @@ To schedule a spider run (you don't need to specify spider name explicitly)::
     >>> spider.jobs.schedule(arg1='val1')
     <scrapinghub.client.Job at 0x106ee12e8>>
 
-Jobs (project/spider level)
----------------------------
+Jobs
+----
+
+Jobs collection is available on project/spider level.
 
 To select a specific job for a project::
 
@@ -210,7 +212,7 @@ It's also possible to get last job summary (for each spider)::
 (Note that there can be a lot of spiders, so the method above returns an iterator.)
 
 Job
----
+~~~
 
 Job instance provides access to job data:
 
@@ -230,7 +232,7 @@ To delete a job::
 
 
 Metadata
-~~~~~~~~
+^^^^^^^^
 
 Job details can be found in jobs metadata and it's scrapystats::
 
@@ -255,7 +257,7 @@ Anything can be stored in metadata, here is example how to add tags::
     >>> job.update_metadata({'tags': 'obsolete'})
 
 Items
-~~~~~
+^^^^^
 
 To retrieve all scraped items from a job::
 
@@ -263,7 +265,7 @@ To retrieve all scraped items from a job::
     ...     # do something with item (it's just a dict)
 
 Logs
-~~~~
+^^^^
 
 To retrieve all log entries from a job::
 
@@ -277,7 +279,7 @@ To retrieve all log entries from a job::
     }
 
 Requests
-~~~~~~~~
+^^^^^^^^
 
 To retrieve all requests from a job::
 
@@ -295,7 +297,7 @@ To retrieve all requests from a job::
     }]
 
 Samples
-~~~~~~~
+^^^^^^^
 
 To retrieve all samples for a job::
 
