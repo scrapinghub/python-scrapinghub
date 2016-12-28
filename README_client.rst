@@ -8,7 +8,7 @@ with the `Scrapinghub API`_. It takes best from ``scrapinghub.Connection`` and
 ``scrapinghub.HubstorageClient`` and combines it under single interface.
 
 
-.. contents:: :depth: 3
+.. contents:: :depth: 2
 
 
 Basic usage
