@@ -56,7 +56,7 @@ And select a particular project to work with::
 (The above is a shortcut for ``client.projects.get(123)``.)
 
 Project
-~~~~~~~
+-------
 
 Project instance has ``jobs`` field to work with the project jobs.
 
@@ -99,7 +99,7 @@ To select a particular spider to work with::
     spider2
 
 Spider
-~~~~~~
+------
 
 Like project instance, spider instance has ``jobs`` field to work with the spider's jobs.
 
@@ -212,7 +212,7 @@ It's also possible to get last job summary (for each spider)::
 (Note that there can be a lot of spiders, so the method above returns an iterator.)
 
 Job
-~~~
+---
 
 Job instance provides access to job data:
 
