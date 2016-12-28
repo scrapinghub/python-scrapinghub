@@ -148,6 +148,8 @@ class Jobs(object):
             raise APIError('Please provide spidername')
         params['project'] = self.projectid
         params['spider'] = spidername or self.spider.name
+        if 'job_settings' in params:
+            params['job_settings'] = json.dumps(params['job_settings'])
         if 'meta' in params:
             params['meta'] = json.dumps(params['meta'])
         # FIXME improve to have an option to schedule multiple jobs
