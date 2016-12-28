@@ -115,6 +115,9 @@ Jobs
 
 Jobs collection is available on project/spider level.
 
+get
+^^^
+
 To select a specific job for a project::
 
     >>> job = project.jobs.get('123/1/2')
@@ -125,9 +128,32 @@ Also there's a shortcut to get same job with client instance::
 
     >>> job = client.get_job('123/1/2')
 
+schedule
+^^^^^^^^
+
 Use ``schedule`` method to schedule a new job for project/spider::
 
     >>> job = spider.jobs.schedule()
+
+Scheduling logic supports different options, like
+
+- units to specify amount of units to schedule the job
+- job_settings to pass additional settings for the job
+- priority to set higher/lower priority of the job
+- add_tag to create a job with a set of initial tags
+- meta to pass additional custom metadata
+
+For example, to schedule a new job for a given spider with custom params::
+
+    >>> job = spider.jobs.schedule(units=2, job_settings={'SETTING': 'VALUE'},
+        priority=1, add_tag=['tagA','tagB'], meta={'custom-data': 'val1'})
+
+Note that if you schedule a job on project level, spider name is required::
+
+    >>> job = project.jobs.schedule('spider1')
+
+count
+^^^^^
 
 It's also possible to count jobs for a given project/spider::
 
@@ -137,14 +163,14 @@ It's also possible to count jobs for a given project/spider::
 Count logic supports different filters, as described for `count endpoint`_.
 
 
-List jobs
-^^^^^^^^^
+iter
+^^^^
 
 To iterate through the spider jobs (descending order)::
 
     >>> jobs_metadata = spider.jobs.iter()
     >>> [j['key'] for j in jobs_metadata]
-    ['1111111/1/3', '1111111/1/2', '1111111/1/1']
+    ['123/1/3', '123/1/2', '123/1/1']
 
 ``jobs_metadata`` is an iterator and, when iterated, returns an iterable
 of dict objects, so you typically use it like this::
@@ -154,8 +180,8 @@ of dict objects, so you typically use it like this::
 
 Or, if you just want to get the job ids::
 
-    >>> [x['key'] for x in jobs]
-    ['123/1/1', '123/1/2', '123/1/3']
+    >>> [x['key'] for x in jobs_metadata]
+    ['123/1/3', '123/1/2', '123/1/1']
 
 Job metadata fieldset from ``iter()`` is less detailed than ``job.metadata``,
 but contains few new fields as well. Additional fields can be requested using
@@ -210,8 +236,8 @@ but can be easily converted to ``Job`` instances with::
       <scrapinghub.client.Job at 0x106e26a20>,
     ]
 
-Show summaries
-^^^^^^^^^^^^^^
+summary
+^^^^^^^
 
 To check jobs summary::
 
