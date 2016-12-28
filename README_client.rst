@@ -21,7 +21,7 @@ First, you connect to Scrapinghub::
     >>> client
     <scrapinghub.client.ScrapinghubClient at 0x1047af2e8>
 
-Client instance has ``projects`` field for access to client projects collection.
+Client instance has ``projects`` field for access to client projects.
 
 Projects
 --------
@@ -53,19 +53,19 @@ And select a particular project to work with::
     >>> project.id
     123
 
-(The above is a shortcut for ``client.projects.get(123)``.)
+The above is a shortcut for ``client.projects.get(123)``.
 
 Project
 -------
 
 Project instance has ``jobs`` field to work with the project jobs.
 
-To schedule a spider run (it returns a job object)::
+Jobs instance is described well in ``Jobs`` section below.
+
+For example, to schedule a spider run (it returns a job object)::
 
     >>> project.jobs.schedule('spider1', arg1='val1')
     <scrapinghub.client.Job at 0x106ee12e8>>
-
-(Check ``Jobs`` section below for other features.)
 
 Project instance also has the following fields:
 
@@ -80,7 +80,7 @@ Project instance also has the following fields:
 Spiders
 -------
 
-To get the list of spiders in the project::
+To get the list of spiders of the project::
 
     >>> project.spiders.list()
     [
@@ -103,10 +103,12 @@ Spider
 
 Like project instance, spider instance has ``jobs`` field to work with the spider's jobs.
 
-To schedule a spider run (you don't need to specify spider name explicitly)::
+To schedule a spider run::
 
     >>> spider.jobs.schedule(arg1='val1')
     <scrapinghub.client.Job at 0x106ee12e8>>
+
+Note that you don't need to specify spider name explicitly.
 
 Jobs
 ----
@@ -127,27 +129,27 @@ Use ``schedule`` method to schedule a new job for project/spider::
 
     >>> job = spider.jobs.schedule()
 
-It's possible to count jobs for a given project/spider::
+It's also possible to count jobs for a given project/spider::
 
     >> spider.jobs.count()
     5
 
 Count logic supports different filters, as described for `count endpoint`_.
 
-To get a list of jobs for a spider::
 
-    >>> jobs = spider.jobs.iter()
+List jobs
+^^^^^^^^^
 
-Iter logic also supports different filters, as described for `list endpoint`_.
+To iterate through the spider jobs (descending order)::
 
-For example, to get all finished jobs::
+    >>> jobs_metadata = spider.jobs.iter()
+    >>> [j['key'] for j in jobs_metadata]
+    ['1111111/1/3', '1111111/1/2', '1111111/1/1']
 
-    >>> jobs = spider.jobs.iter(state='finished')
+``jobs_metadata`` is an iterator and, when iterated, returns an iterable
+of dict objects, so you typically use it like this::
 
-``jobs`` is an iterator and, when iterated, return an iterable of dict objects,
-so you typically use it like this::
-
-    >>> for job in jobs:
+    >>> for job in jobs_metadata:
     ...     # do something with job data
 
 Or, if you just want to get the job ids::
@@ -155,26 +157,51 @@ Or, if you just want to get the job ids::
     >>> [x['key'] for x in jobs]
     ['123/1/1', '123/1/2', '123/1/3']
 
-Job dictionary object itself looks like::
+Job metadata fieldset from ``iter()`` is less detailed than ``job.metadata``,
+but contains few new fields as well. Additional fields can be requested using
+the ``jobmeta`` parameter. If it used, then it's up to the user to list all the
+required fields, so only few default fields would be added except requested
+ones::
 
-    >>> job
-    {
-      'key': '123/1/2',
-      'spider': 'myspider',
-      'version': 'some-version'
-      'state': 'finished',
-      'close_reason': 'success',
-      'errors': 0,
-      'logs': 8,
-      'pending_time': 1482852737072,
-      'running_time': 1482852737848,
-      'finished_time': 1482852774356,
-      'ts': 1482852755902,
-      'elapsed': 207609,
-    }
+    >>> metadata = next(project.jobs.iter())
+    >>> metadata.get('spider', 'missing')
+    'foo'
+    >>> jobs_metadata = project.jobs.iter(jobmeta=['scheduled_by', ])
+    >>> metadata = next(jobs_metadata)
+    >>> metadata.get('scheduled_by', 'missing')
+    'John'
+    >>> metadata.get('spider', 'missing')
+    missing
 
-Dict entries returned by ``iter`` method contain some additional meta, but can be
-easily converted to ``Job`` instances with::
+By default ``jobs.iter()`` returns maximum last 1000 results.
+Pagination is available using the ``start`` parameter::
+
+    >>> jobs_metadata = spider.jobs.iter(start=1000)
+
+There are several filters like spider, state, has_tag, lacks_tag,
+startts and endts (check `list endpoint`_ for more details).
+
+To get jobs filtered by tags::
+
+    >>> jobs_metadata = project.jobs.iter(has_tag=['new', 'verified'], lacks_tag='obsolete')
+
+List of tags has ``OR`` power, so in the case above jobs with 'new' or
+'verified' tag are expected.
+
+To get certain number of last finished jobs per some spider::
+
+    >>> jobs_metadata = project.jobs.iter(spider='foo', state='finished', count=3)
+
+There are 4 possible job states, which can be used as values
+for filtering by state:
+
+- pending
+- running
+- finished
+- deleted
+
+Dict entries returned by ``iter`` method contain some additional meta,
+but can be easily converted to ``Job`` instances with::
 
     >>> [Job(x['key']) for x in jobs]
     [
@@ -182,6 +209,9 @@ easily converted to ``Job`` instances with::
       <scrapinghub.client.Job at 0x106e260b8>,
       <scrapinghub.client.Job at 0x106e26a20>,
     ]
+
+Show summaries
+^^^^^^^^^^^^^^
 
 To check jobs summary::
 
@@ -209,18 +239,18 @@ It's also possible to get last job summary (for each spider)::
       'ts': 1482911615830,
       'version': 'some-version'}]
 
-(Note that there can be a lot of spiders, so the method above returns an iterator.)
+Note that there can be a lot of spiders, so the method above returns an iterator.
 
 Job
 ---
 
-Job instance provides access to job data:
+Job instance provides access to a job data with the following fields:
 
+- metadata
 - items
 - logs
 - requests
 - samples
-- metadata
 
 Request to cancel a job::
 
@@ -229,7 +259,6 @@ Request to cancel a job::
 To delete a job::
 
     >>> job.delete()
-
 
 Metadata
 ^^^^^^^^
@@ -305,6 +334,7 @@ To retrieve all samples for a job::
     ...     # sample is a list with a timestamp and data
     >>> sample
     [1482233732452, 0, 0, 0, 0, 0]
+
 
 Additional features
 ===================
@@ -388,6 +418,7 @@ To remove existing tag ``existing`` for all spider jobs::
     >>> spider.update_tags(remove=['existing'])
 
 Modifying tags is available on spider/job levels.
+
 
 .. _Scrapinghub API: http://doc.scrapinghub.com/api.html
 .. _count endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-count
