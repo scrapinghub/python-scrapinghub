@@ -8,14 +8,11 @@ with the `Scrapinghub API`_. It takes best from ``scrapinghub.Connection`` and
 ``scrapinghub.HubstorageClient`` and combines it under single interface.
 
 
-.. contents:: :depth: 1
+.. contents:: :depth: 3
 
 
 Usage
 =====
-
-Client
-------
 
 First, you connect to Scrapinghub::
 
@@ -26,8 +23,8 @@ First, you connect to Scrapinghub::
 
 Client instance has ``projects`` field for access to client projects collection.
 
-Projects
---------
+Projects (client level)
+-----------------------
 
 You can list the projects available to your account::
 
@@ -58,8 +55,8 @@ And select a particular project to work with::
 
 (The above is a shortcut for ``client.projects.get(123)``.)
 
-Project
--------
+Project (projects level)
+------------------------
 
 Project instance has ``jobs`` field to work with the project jobs.
 
@@ -72,70 +69,16 @@ To schedule a spider run (it returns a job object)::
 
 Project instance also has the following fields:
 
-- activity
-- collections
-- frontier
-- reports
-- settings
-- spiders
+- activity - access to project activity records
+- collections - work with project collections (see ``Collections`` section)
+- frontier - using project frontier (see ``Frontier`` section)
+- reports - work with project reports
+- settings - interface to project settings
+- spiders - access to spiders collection (see ``Spiders`` section)
 
-Collections
------------
 
-Let's store hash and timestamp pair for foo spider. Usual workflow with `Collections`_ would be::
-
-    >>> collections = project.collections
-    >>> foo_store = collections.new_store('foo_store')
-    >>> foo_store.set({'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'})
-    >>> foo_store.count()
-    1
-    >>> foo_store.get('002d050ee3ff6192dcbecc4e4b4457d7')
-    '1447221694537'
-    >>> for result in foo_store.iter_values():
-    # do something with _key & value pair
-    >>> foo_store.delete('002d050ee3ff6192dcbecc4e4b4457d7')
-    >>> foo_store.count()
-    0
-
-Frontier
---------
-
-Typical workflow with `Frontier`_::
-
-    >>> frontier = project.frontier
-
-Add a request to the frontier::
-
-    >>> frontier.add('test', 'example.com', [{'fp': '/some/path.html'}])
-    >>> frontier.flush()
-    >>> frontier.newcount
-    1
-
-Add requests with additional parameters::
-
-    >>> frontier.add('test', 'example.com', [{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
-    >>> frontier.flush()
-    >>> frontier.newcount
-    2
-
-To delete the slot ``example.com`` from the frontier::
-
-    >>> frontier.delete_slot('test', 'example.com')
-
-To retrieve requests for a given slot::
-
-    >>> reqs = frontier.read('test', 'example.com')
-
-To delete a batch of requests::
-
-    >>> frontier.delete('test', 'example.com', '00013967d8af7b0001')
-
-To retrieve fingerprints for a given slot::
-
-    >>> fps = [req['requests'] for req in frontier.read('test', 'example.com')]
-
-Spiders
--------
+Spiders (project level)
+-----------------------
 
 To get the list of spiders in the project::
 
@@ -155,8 +98,8 @@ To select a particular spider to work with::
     >>> spider.name
     spider2
 
-Spider
-------
+Spider (spiders level)
+----------------------
 
 Like project instance, spider instance has ``jobs`` field to work with the spider's jobs.
 
@@ -165,8 +108,8 @@ To schedule a spider run (you don't need to specify spider name explicitly)::
     >>> spider.jobs.schedule(arg1='val1')
     <scrapinghub.client.Job at 0x106ee12e8>>
 
-Jobs
-----
+Jobs (project/spider level)
+---------------------------
 
 To select a specific job for a project::
 
@@ -266,10 +209,8 @@ It's also possible to get last job summary (for each spider)::
 
 (Note that there can be a lot of spiders, so the method above returns an iterator.)
 
-Job
----
-
-
+Job (jobs level)
+----------------
 
 To delete a job::
 
@@ -288,16 +229,16 @@ To get job metadata::
     >>> j.metadata['scrapystats']['memusage/max']
     53628928
 
-Items
------
+Items (job level)
+-----------------
 
 To retrieve all scraped items from a job::
 
     >>> for item in job.items.iter():
     ...     # do something with item (it's just a dict)
 
-Logs
-----
+Logs (job level)
+----------------
 
 To retrieve all log entries from a job::
 
@@ -310,8 +251,8 @@ To retrieve all log entries from a job::
       'time': 1482233733976},
     }
 
-Requests
---------
+Requests (job level)
+--------------------
 
 To retrieve all requests from a job::
 
@@ -329,8 +270,69 @@ To retrieve all requests from a job::
     }]
 
 
-Tags
-----
+Additional features
+===================
+
+Collections (project level)
+---------------------------
+
+As an example, let's store hash and timestamp pair for foo spider.
+
+Usual workflow with `Collections`_ would be::
+
+    >>> collections = project.collections
+    >>> foo_store = collections.new_store('foo_store')
+    >>> foo_store.set({'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'})
+    >>> foo_store.count()
+    1
+    >>> foo_store.get('002d050ee3ff6192dcbecc4e4b4457d7')
+    '1447221694537'
+    >>> for result in foo_store.iter_values():
+    # do something with _key & value pair
+    >>> foo_store.delete('002d050ee3ff6192dcbecc4e4b4457d7')
+    >>> foo_store.count()
+    0
+
+Frontier (project level)
+------------------------
+
+Typical workflow with `Frontier`_::
+
+    >>> frontier = project.frontier
+
+Add a request to the frontier::
+
+    >>> frontier.add('test', 'example.com', [{'fp': '/some/path.html'}])
+    >>> frontier.flush()
+    >>> frontier.newcount
+    1
+
+Add requests with additional parameters::
+
+    >>> frontier.add('test', 'example.com', [{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
+    >>> frontier.flush()
+    >>> frontier.newcount
+    2
+
+To delete the slot ``example.com`` from the frontier::
+
+    >>> frontier.delete_slot('test', 'example.com')
+
+To retrieve requests for a given slot::
+
+    >>> reqs = frontier.read('test', 'example.com')
+
+To delete a batch of requests::
+
+    >>> frontier.delete('test', 'example.com', '00013967d8af7b0001')
+
+To retrieve fingerprints for a given slot::
+
+    >>> fps = [req['requests'] for req in frontier.read('test', 'example.com')]
+
+
+Tags (spider/job level)
+-----------------------
 
 Tags is a convenient way to mark specific jobs (for better search, postprocessing etc).
 
@@ -345,7 +347,6 @@ To mark all spider jobs with tag ``consumed``::
 To remove existing tag ``existing`` for all spider jobs::
 
     >>> spider.update_tags(remove=['existing'])
-
 
 .. _count endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-count
 .. _list endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-list
