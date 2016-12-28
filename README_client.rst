@@ -209,36 +209,61 @@ It's also possible to get last job summary (for each spider)::
 
 (Note that there can be a lot of spiders, so the method above returns an iterator.)
 
-Job (jobs level)
-----------------
+Job
+---
+
+Job instance provides access to job data:
+
+- items
+- logs
+- requests
+- samples
+- metadata
+
+Request to cancel a job::
+
+    >>> job.cancel()
 
 To delete a job::
 
     >>> job.delete()
 
 
+Metadata
+~~~~~~~~
 
-To get job metadata::
+Job details can be found in jobs metadata and it's scrapystats::
 
-    >>> job.metadata['spider']
-    'myspider'
-    >>> job.metadata['started_time']
-    '2010-09-28T15:09:57.629000'
-    >>> job.metadata['tags']
-    []
-    >>> j.metadata['scrapystats']['memusage/max']
-    53628928
+    >>> job.metadata['version']
+    '5123a86-master'
+    >>> job.metadata['scrapystats']
+    ...
+    'downloader/response_count': 104,
+    'downloader/response_status_count/200': 104,
+    'finish_reason': 'finished',
+    'finish_time': 1447160494937,
+    'item_scraped_count': 50,
+    'log_count/DEBUG': 157,
+    'log_count/INFO': 1365,
+    'log_count/WARNING': 3,
+    'memusage/max': 182988800,
+    'memusage/startup': 62439424,
+    ...
 
-Items (job level)
------------------
+Anything can be stored in metadata, here is example how to add tags::
+
+    >>> job.update_metadata({'tags': 'obsolete'})
+
+Items
+~~~~~
 
 To retrieve all scraped items from a job::
 
     >>> for item in job.items.iter():
     ...     # do something with item (it's just a dict)
 
-Logs (job level)
-----------------
+Logs
+~~~~
 
 To retrieve all log entries from a job::
 
@@ -251,8 +276,8 @@ To retrieve all log entries from a job::
       'time': 1482233733976},
     }
 
-Requests (job level)
---------------------
+Requests
+~~~~~~~~
 
 To retrieve all requests from a job::
 
@@ -269,12 +294,21 @@ To retrieve all requests from a job::
       'url': 'https://example.com'
     }]
 
+Samples
+~~~~~~~
+
+To retrieve all samples for a job::
+
+    >>> for sample in job.samples.iter():
+    ...     # sample is a list with a timestamp and data
+    >>> sample
+    [1482233732452, 0, 0, 0, 0, 0]
 
 Additional features
 ===================
 
-Collections (project level)
----------------------------
+Collections
+-----------
 
 As an example, let's store hash and timestamp pair for foo spider.
 
@@ -293,8 +327,10 @@ Usual workflow with `Collections`_ would be::
     >>> foo_store.count()
     0
 
-Frontier (project level)
-------------------------
+Collections are available on project level only.
+
+Frontier
+--------
 
 Typical workflow with `Frontier`_::
 
@@ -330,9 +366,10 @@ To retrieve fingerprints for a given slot::
 
     >>> fps = [req['requests'] for req in frontier.read('test', 'example.com')]
 
+Frontier is available on project level only.
 
-Tags (spider/job level)
------------------------
+Tags
+----
 
 Tags is a convenient way to mark specific jobs (for better search, postprocessing etc).
 
@@ -348,6 +385,9 @@ To remove existing tag ``existing`` for all spider jobs::
 
     >>> spider.update_tags(remove=['existing'])
 
+Modifying tags is available on spider/job levels.
+
+.. _Scrapinghub API: http://doc.scrapinghub.com/api.html
 .. _count endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-count
 .. _list endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-list
 .. _Collections: http://doc.scrapinghub.com/api/collections.html
