@@ -169,14 +169,21 @@ class Jobs(object):
         return Job(self._client, str(jobkey))
 
     def summary(self, _queuename=None, **params):
-        spiderid = None if not self.spider else self.spider.id
+        spiderid = self._extract_spider_id(params)
         return self._hsproject.jobq.summary(
             _queuename, spiderid=spiderid, **params)
 
-    def lastjobsummary(self, **params):
-        spiderid = None if not self.spider else self.spider.id
-        # FIXME returns a generator, not a list
+    def iter_last(self, **params):
+        spiderid = self._extract_spider_id(params)
         return self._hsproject.spiders.lastjobsummary(spiderid, **params)
+
+    def _extract_spider_id(self, params):
+        spiderid = params.pop('spiderid', None)
+        if not spiderid and self.spider:
+            return self.spider.id
+        elif spiderid and self.spider and spiderid != self.spider.id:
+            raise APIError('Please use same spider id')
+        return spiderid
 
 
 class Job(object):

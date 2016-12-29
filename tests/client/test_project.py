@@ -162,13 +162,13 @@ def test_project_jobs_summary(project):
     assert summary4['summary'][0].get('units') == 1
 
 
-def test_project_jobs_lastjobsummary(project):
-    lastsumm0 = project.jobs.lastjobsummary()
+def test_project_jobs_iter_last(project):
+    lastsumm0 = project.jobs.iter_last()
     assert isinstance(lastsumm0, types.GeneratorType)
     assert list(lastsumm0) == []
 
     job1 = project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'finished'})
-    lastsumm1 = list(project.jobs.lastjobsummary())
+    lastsumm1 = list(project.jobs.iter_last())
     assert len(lastsumm1) == 1
     assert lastsumm1[0].get('key') == job1.key
     assert lastsumm1[0].get('spider') == TEST_SPIDER_NAME
@@ -177,10 +177,10 @@ def test_project_jobs_lastjobsummary(project):
     assert lastsumm1[0].get('finished_time') > 0
     assert lastsumm1[0].get('ts') > 0
 
-    # next lastjobsummary should return last spider's job
+    # next iter_last should return last spider's job
     job2 = project.jobs.schedule(TEST_SPIDER_NAME,
                                  subid=1,
                                  meta={'state': 'finished'})
-    lastsumm2 = list(project.jobs.lastjobsummary())
+    lastsumm2 = list(project.jobs.iter_last())
     assert len(lastsumm2) == 1
     assert lastsumm2[0].get('key') == job2.key
