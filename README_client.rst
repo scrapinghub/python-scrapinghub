@@ -194,55 +194,55 @@ iter
 
 To iterate through the spider jobs (descending order)::
 
-    >>> jobs_metadata = spider.jobs.iter()
-    >>> [j['key'] for j in jobs_metadata]
+    >>> jobs_summary = spider.jobs.iter()
+    >>> [j['key'] for j in jobs_summary]
     ['123/1/3', '123/1/2', '123/1/1']
 
-``jobs_metadata`` is an iterator and, when iterated, returns an iterable
+``jobs_summary`` is an iterator and, when iterated, returns an iterable
 of dict objects, so you typically use it like this::
 
-    >>> for job in jobs_metadata:
+    >>> for job in jobs_summary:
     ...     # do something with job data
 
 Or, if you just want to get the job ids::
 
-    >>> [x['key'] for x in jobs_metadata]
+    >>> [x['key'] for x in jobs_summary]
     ['123/1/3', '123/1/2', '123/1/1']
 
-Job metadata fieldset from ``iter()`` is less detailed than ``job.metadata``,
+Job summary fieldset from ``iter()`` is less detailed than ``job.metadata``,
 but contains few new fields as well. Additional fields can be requested using
 the ``jobmeta`` parameter. If it used, then it's up to the user to list all the
 required fields, so only few default fields would be added except requested
 ones::
 
-    >>> metadata = next(project.jobs.iter())
-    >>> metadata.get('spider', 'missing')
+    >>> job_summary = next(project.jobs.iter())
+    >>> job_summary.get('spider', 'missing')
     'foo'
-    >>> jobs_metadata = project.jobs.iter(jobmeta=['scheduled_by', ])
-    >>> metadata = next(jobs_metadata)
-    >>> metadata.get('scheduled_by', 'missing')
+    >>> jobs_summary = project.jobs.iter(jobmeta=['scheduled_by', ])
+    >>> job_summary = next(jobs_summary)
+    >>> job_summary.get('scheduled_by', 'missing')
     'John'
-    >>> metadata.get('spider', 'missing')
+    >>> job_summary.get('spider', 'missing')
     missing
 
 By default ``jobs.iter()`` returns maximum last 1000 results.
 Pagination is available using the ``start`` parameter::
 
-    >>> jobs_metadata = spider.jobs.iter(start=1000)
+    >>> jobs_summary = spider.jobs.iter(start=1000)
 
 There are several filters like spider, state, has_tag, lacks_tag,
 startts and endts (check `list endpoint`_ for more details).
 
 To get jobs filtered by tags::
 
-    >>> jobs_metadata = project.jobs.iter(has_tag=['new', 'verified'], lacks_tag='obsolete')
+    >>> jobs_summary = project.jobs.iter(has_tag=['new', 'verified'], lacks_tag='obsolete')
 
 List of tags has ``OR`` power, so in the case above jobs with 'new' or
 'verified' tag are expected.
 
 To get certain number of last finished jobs per some spider::
 
-    >>> jobs_metadata = project.jobs.iter(spider='foo', state='finished', count=3)
+    >>> jobs_summary = project.jobs.iter(spider='foo', state='finished', count=3)
 
 There are 4 possible job states, which can be used as values
 for filtering by state:

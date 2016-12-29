@@ -8,13 +8,12 @@ from .hubstorage.resourcetype import DownloadableResource
 from .hubstorage.resourcetype import ItemsResourceType
 
 # scrapinghub.hubstorage classes to use as-is
-from .hubstorage.activity import Activity
 from .hubstorage.frontier import Frontier
 from .hubstorage.job import JobMeta
-from .hubstorage.project import Reports
 from .hubstorage.project import Settings
 
 # scrapinghub.hubstorage proxied classes
+from .hubstorage.activity import Activity as _Activity
 from .hubstorage.collectionsrt import Collections as _Collections
 from .hubstorage.collectionsrt import Collection as _Collection
 from .hubstorage.job import Items as _Items
@@ -74,7 +73,7 @@ class Project(object):
         self.spiders = Spiders(client, projectid)
 
         # proxied sub-resources
-        self.activity = Activity(client._hsclient, projectid)
+        self.activity = Activity(_Activity, client, projectid)
         self.collections = Collections(_Collections, client, projectid)
         self.frontier = Frontier(client._hsclient, projectid)
         self.settings = Settings(client._hsclient, projectid)
@@ -185,7 +184,10 @@ class Job(object):
     def __init__(self, client, jobkey, metadata=None):
         self.projectid = parse_job_key(jobkey).projectid
         self.key = jobkey
+
         self._client = client
+        self._project = self._client._hsclient.get_project(self.projectid)
+        self._job = self._client._hsclient.get_job(self.key)
 
         # proxied sub-resources
         self.items = Items(_Items, client, jobkey)
@@ -195,12 +197,8 @@ class Job(object):
 
         self.metadata = JobMeta(client._hsclient, jobkey, cached=metadata)
 
-    @property
-    def _hsjob(self):
-        return self._client._hsclient.get_job(self.key)
-
     def update_metadata(self, *args, **kwargs):
-        self._hsjob.update_metadata(*args, **kwargs)
+        self._job.update_metadata(*args, **kwargs)
 
     def update_tags(self, add=None, remove=None):
         params = get_tags_for_update(add_tag=add, remove_tag=remove)
@@ -211,30 +209,26 @@ class Job(object):
         return result['count']
 
     def close_writers(self):
-        self._hsjob.close_writers()
+        self._job.close_writers()
 
     def purge(self):
-        self._hsjob.purged()
+        self._job.purged()
         self.metadata.expire()
 
-    @property
-    def _hsjobq(self):
-        return self._client._hsclient.get_project(self.projectid).jobq
-
     def start(self, **params):
-        return self._hsjobq.start(self, **params)
+        return self._project.jobq.start(self, **params)
 
     def update(self, **params):
-        return self._hsjobq.update(self, **params)
+        return self._project.jobq.update(self, **params)
 
     def cancel(self):
-        self._hsjobq.request_cancel(self)
+        self._project.jobq.request_cancel(self)
 
     def finish(self, **params):
-        return self._hsjobq.finish(self, **params)
+        return self._project.jobq.finish(self, **params)
 
     def delete(self, **params):
-        return self._hsjobq.delete(self, **params)
+        return self._project.jobq.delete(self, **params)
 
 
 class _Proxy(object):
@@ -308,6 +302,19 @@ class Samples(_Proxy):
     pass
 
 
+class Activity(_Proxy):
+
+    def __init__(self, *args, **kwargs):
+        super(Activity, self).__init__(*args, **kwargs)
+        self._proxy_methods([('iter', 'list')])
+
+    def add(self, *args, **kwargs):
+        self._origin.add(*args, **kwargs)
+
+    def post(self, *args, **kwargs):
+        self._origin.post(*args, **kwargs)
+
+
 class Collections(_Proxy):
 
     def __init__(self, *args, **kwargs):
@@ -338,9 +345,6 @@ class Collection(object):
 
     def __init__(self, client, collections, coltype, colname):
         self._client = client
-        # FIXME it'd be nice to reuse _Proxy here, but Collection init is
-        # a bit custom: there's a compound key and required collections
-        # field to create an origin instance
         self._origin = _Collection(coltype, colname, collections._origin)
         proxy_methods(self._origin, self, [
             'create_writer', 'get', 'set', 'delete', 'count',
