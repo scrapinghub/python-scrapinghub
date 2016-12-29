@@ -99,7 +99,6 @@ Project instance also has the following fields:
 - activity - access to project activity records
 - collections - work with project collections (see ``Collections`` section)
 - frontier - using project frontier (see ``Frontier`` section)
-- reports - work with project reports
 - settings - interface to project settings
 - spiders - access to spiders collection (see ``Spiders`` section)
 

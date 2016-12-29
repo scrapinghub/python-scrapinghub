@@ -77,7 +77,6 @@ class Project(object):
         self.activity = Activity(client._hsclient, projectid)
         self.collections = Collections(_Collections, client, projectid)
         self.frontier = Frontier(client._hsclient, projectid)
-        self.reports = Reports(client._hsclient, projectid)
         self.settings = Settings(client._hsclient, projectid)
 
 
