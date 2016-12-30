@@ -59,6 +59,8 @@ def wrap_http_errors(method):
                 raise NotFound(http_error=exc)
             elif status_code == 413:
                 raise ValueTooLarge(http_error=exc)
+            elif 400 <= status_code < 500:
+                raise ScrapinghubAPIError(http_error=exc)
             raise
     return wrapped
 
