@@ -3,6 +3,7 @@ from contextlib import closing
 import pytest
 from six.moves import range
 
+from scrapinghub.utils import NotFound, InvalidUsage
 from .conftest import TEST_COLLECTION_NAME
 
 
@@ -40,7 +41,7 @@ def test_post_get_delete(project):
         returned_item = col.get(test_key)
         assert test_item == returned_item
         col.delete(test_key)
-        with pytest.raises(KeyError):
+        with pytest.raises(NotFound):
             col.get(test_key)
 
 
@@ -74,14 +75,14 @@ def test_post_scan(project, collection):
     collection.delete('post_scan_test%d' % i for i in range(20))
 
     # test items removed (check first and last)
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFound):
         collection.get('post_scan_test0')
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFound):
         collection.get(last_key)
 
 
 def test_errors_bad_key(collection):
-    with pytest.raises(KeyError):
+    with pytest.raises(NotFound):
         collection.get('does_not_exist')
 
 
@@ -91,7 +92,7 @@ def test_errors_bad_key(collection):
         {'_key': 'large_test', 'value': 'x' * 1024 ** 2},
 ])
 def test_errors(collection, testarg):
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidUsage):
         collection.set(testarg)
 
 
