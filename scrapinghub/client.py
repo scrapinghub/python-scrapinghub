@@ -336,27 +336,20 @@ class Activity(_Proxy):
 
 class Collections(_Proxy):
 
-    def __init__(self, *args, **kwargs):
-        super(Collections, self).__init__(*args, **kwargs)
-        self._proxy_methods([
-            'count', 'delete', 'create_writer',
-            '_validate_collection',
-        ])
+    def get_store(self, colname):
+        return self.get_collection('s', colname)
 
-    def new_store(self, colname):
-        return self.new_collection('s', colname)
+    def get_cached_store(self, colname):
+        return self.get_collection('cs', colname)
 
-    def new_cached_store(self, colname):
-        return self.new_collection('cs', colname)
+    def get_versioned_store(self, colname):
+        return self.get_collection('vs', colname)
 
-    def new_versioned_store(self, colname):
-        return self.new_collection('vs', colname)
+    def get_versioned_cached_store(self, colname):
+        return self.get_collection('vcs', colname)
 
-    def new_versioned_cached_store(self, colname):
-        return self.new_collection('vcs', colname)
-
-    def new_collection(self, coltype, colname):
-        self._validate_collection(coltype, colname)
+    def get_collection(self, coltype, colname):
+        self._origin._validate_collection(coltype, colname)
         return Collection(self._client, self, coltype, colname)
 
 

@@ -26,14 +26,14 @@ def test_post_get_delete(project):
     item_to_send['_key'] = test_key = 'insert_test_key'
 
     test_collections = [
-        project.collections.new_store(TEST_COLLECTION_NAME),
-        project.collections.new_cached_store(TEST_COLLECTION_NAME),
-        project.collections.new_versioned_store(TEST_COLLECTION_NAME),
-        project.collections.new_versioned_cached_store(TEST_COLLECTION_NAME),
+        project.collections.get_store(TEST_COLLECTION_NAME),
+        project.collections.get_cached_store(TEST_COLLECTION_NAME),
+        project.collections.get_versioned_store(TEST_COLLECTION_NAME),
+        project.collections.get_versioned_cached_store(TEST_COLLECTION_NAME),
     ]
 
     test_collections.extend(
-        project.collections.new_collection(t, TEST_COLLECTION_NAME + 'b')
+        project.collections.get_collection(t, TEST_COLLECTION_NAME + 'b')
         for t in ('s', 'vs', 'cs', 'vcs'))
 
     for col in test_collections:
@@ -121,11 +121,9 @@ def test_data_download(project, collection):
 def test_invalid_collection_name(project):
     cols = project.collections
     for method, args in [
-            (cols.new_collection, ('invalidtype', 'n')),
-            (cols.new_store, ('foo-bar',)),
-            (cols.new_store, ('foo/bar',)),
-            (cols.new_store, ('/foo',)),
-            (cols.create_writer, ('invalidtype', 'n')),
-            (cols.create_writer, ('s', 'foo-bar'))]:
+            (cols.get_collection, ('invalidtype', 'n')),
+            (cols.get_store, ('foo-bar',)),
+            (cols.get_store, ('foo/bar',)),
+            (cols.get_store, ('/foo',))]:
         with pytest.raises(ValueError):
             method(*args)

@@ -151,7 +151,7 @@ def _remove_job(project, jobkey):
 
 
 def get_test_collection(project):
-    return project.collections.new_store(TEST_COLLECTION_NAME)
+    return project.collections.get_store(TEST_COLLECTION_NAME)
 
 
 def clean_collection(collection):
