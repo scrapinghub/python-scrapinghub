@@ -312,9 +312,13 @@ Let's store hash and timestamp pair for foo spider. Usual workflow with `Collect
     >>> foo_store.count()
     1
     >>> foo_store.get('002d050ee3ff6192dcbecc4e4b4457d7')
-    '1447221694537'
-    >>> for result in foo_store.iter_values():
-    # do something with _key & value pair
+    {u'value': u'1447221694537'}
+    >>> # iterate over _key & value pair
+    ... list(foo_store.iter_values())
+    [{u'_key': u'002d050ee3ff6192dcbecc4e4b4457d7', u'value': u'1447221694537'}]
+    >>> # filter by multiple keys - only values for keys that exist will be returned
+    ... list(foo_store.iter_values(key=['002d050ee3ff6192dcbecc4e4b4457d7', 'blah']))
+    [{u'_key': u'002d050ee3ff6192dcbecc4e4b4457d7', u'value': u'1447221694537'}]
     >>> foo_store.delete('002d050ee3ff6192dcbecc4e4b4457d7')
     >>> foo_store.count()
     0
