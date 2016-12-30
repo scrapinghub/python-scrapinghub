@@ -1,8 +1,8 @@
 import json
 
 from scrapinghub import APIError
-from scrapinghub import Connection
-from scrapinghub import HubstorageClient
+from scrapinghub import Connection as _Connection
+from scrapinghub import HubstorageClient as _HubstorageClient
 
 from .hubstorage.resourcetype import DownloadableResource
 from .hubstorage.resourcetype import ItemsResourceType
@@ -21,12 +21,26 @@ from .hubstorage.job import Logs as _Logs
 from .hubstorage.job import Samples as _Samples
 from .hubstorage.job import Requests as _Requests
 
-from .utils import DuplicateJobError, NonExistingSpider
+from .utils import DuplicateJobError
 from .utils import LogLevel
 from .utils import get_tags_for_update
 from .utils import parse_project_id, parse_job_key
 from .utils import proxy_methods
 from .utils import wrap_kwargs, wrap_http_errors
+
+
+class Connection(_Connection):
+
+    @wrap_http_errors
+    def _request(self, *args, **kwargs):
+        return super(Connection, self)._request(*args, **kwargs)
+
+
+class HubstorageClient(_HubstorageClient):
+
+    @wrap_http_errors
+    def request(self, *args, **kwargs):
+        return super(HubstorageClient, self).request(*args, **kwargs)
 
 
 class ScrapinghubClient(object):
@@ -58,7 +72,6 @@ class Projects(object):
     def list(self):
         return self._client._connection.project_ids()
 
-    @wrap_http_errors
     def summary(self, **params):
         return self._client._hsclient.projects.jobsummaries(**params)
 
@@ -86,13 +99,11 @@ class Spiders(object):
         self.projectid = projectid
         self._client = client
 
-    @wrap_http_errors
     def get(self, spidername, **params):
         project = self._client._hsclient.get_project(self.projectid)
         spiderid = project.ids.spider(spidername, **params)
         if spiderid is None:
-            raise NonExistingSpider("Spider {} doesn't exist."
-                                    .format(spidername))
+            raise ValueError("Spider {} doesn't exist.".format(spidername))
         return Spider(self._client, self.projectid, spiderid, spidername)
 
     def list(self):
@@ -126,13 +137,11 @@ class Jobs(object):
         self._client = client
         self._project = client._hsclient.get_project(projectid)
 
-    @wrap_http_errors
     def count(self, **params):
         if self.spider:
             params['spider'] = self.spider.name
         return next(self._project.jobq.apiget(('count',), params=params))
 
-    @wrap_http_errors
     def iter(self, **params):
         """ Iterate over jobs collection for a given set of params.
         FIXME the function returns a list of dicts, not a list of Job's
@@ -143,7 +152,7 @@ class Jobs(object):
 
     def schedule(self, spidername=None, **params):
         if not spidername and not self.spider:
-            raise APIError('Please provide spidername')
+            raise ValueError('Please provide spidername')
         params['project'] = self.projectid
         params['spider'] = spidername or self.spider.name
         if 'job_settings' in params:
@@ -156,25 +165,23 @@ class Jobs(object):
                 'schedule', 'json', params)
         except APIError as exc:
             if 'already scheduled' in str(exc):
-                raise DuplicateJobError(str(exc))
+                raise DuplicateJobError(exc)
             raise
         return Job(self._client, response['jobid'])
 
     def get(self, jobkey):
         jobkey = parse_job_key(jobkey)
         if jobkey.projectid != self.projectid:
-            raise APIError('Please use same project id')
+            raise ValueError('Please use same project id')
         if self.spider and jobkey.spiderid != self.spider.id:
-            raise APIError('Please use same spider id')
+            raise ValueError('Please use same spider id')
         return Job(self._client, str(jobkey))
 
-    @wrap_http_errors
     def summary(self, _queuename=None, **params):
         spiderid = self._extract_spider_id(params)
         return self._project.jobq.summary(
             _queuename, spiderid=spiderid, **params)
 
-    @wrap_http_errors
     def iter_last(self, **params):
         spiderid = self._extract_spider_id(params)
         return self._project.spiders.lastjobsummary(spiderid, **params)
@@ -184,7 +191,7 @@ class Jobs(object):
         if not spiderid and self.spider:
             return self.spider.id
         elif spiderid and self.spider and spiderid != self.spider.id:
-            raise APIError('Please use same spider id')
+            raise ValueError('Please use same spider id')
         return spiderid
 
 
@@ -206,7 +213,6 @@ class Job(object):
 
         self.metadata = JobMeta(client._hsclient, jobkey, cached=metadata)
 
-    @wrap_http_errors
     def update_metadata(self, *args, **kwargs):
         self._job.update_metadata(*args, **kwargs)
 
@@ -218,32 +224,25 @@ class Job(object):
         result = self._client._connection._post('jobs_update', 'json', params)
         return result['count']
 
-    @wrap_http_errors
     def close_writers(self):
         self._job.close_writers()
 
-    @wrap_http_errors
     def purge(self):
         self._job.purged()
         self.metadata.expire()
 
-    @wrap_http_errors
     def start(self, **params):
         return self._project.jobq.start(self, **params)
 
-    @wrap_http_errors
     def update(self, **params):
         return self._project.jobq.update(self, **params)
 
-    @wrap_http_errors
     def cancel(self):
         self._project.jobq.request_cancel(self)
 
-    @wrap_http_errors
     def finish(self, **params):
         return self._project.jobq.finish(self, **params)
 
-    @wrap_http_errors
     def delete(self, **params):
         return self._project.jobq.delete(self, **params)
 
@@ -294,7 +293,7 @@ class Logs(_Proxy):
         if level:
             minlevel = getattr(LogLevel, level, None)
             if minlevel is None:
-                raise APIError("Unknown log level: {}".format(level))
+                raise ValueError("Unknown log level: {}".format(level))
             params['filter'] = json.dumps(['level', '>=', [minlevel]])
         return params
 
@@ -337,7 +336,7 @@ class Collections(_Proxy):
     def __init__(self, *args, **kwargs):
         super(Collections, self).__init__(*args, **kwargs)
         self._proxy_methods([
-            'count', 'get', 'set', 'delete', 'create_writer',
+            'count', 'delete', 'create_writer',
             '_validate_collection',
         ])
 
@@ -356,6 +355,14 @@ class Collections(_Proxy):
     def new_collection(self, coltype, colname):
         self._validate_collection(coltype, colname)
         return Collection(self._client, self, coltype, colname)
+
+    def get(self, _type, _name, _key=None, **params):
+        r = self._origin.apiget((_type, _name, _key), params=params)
+        return r if _key is None else next(r)
+
+    def set(self, _type, _name, _values):
+        return self._origin.apipost(
+            (_type, _name), is_idempotent=True, jl=_values)
 
 
 class Collection(object):

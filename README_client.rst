@@ -275,9 +275,9 @@ To check jobs summary::
       'name': 'finished',
       'summary': [..,
 
-It's also possible to get last job summary (for each spider)::
+It's also possible to get last jobs summary (for each spider)::
 
-    >>> list(sp.jobs.lastjobsummary())
+    >>> list(sp.jobs.iter_last())
     [{'close_reason': 'success',
       'elapsed': 3062444,
       'errors': 1,

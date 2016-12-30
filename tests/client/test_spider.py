@@ -8,7 +8,7 @@ from scrapinghub import APIError
 from scrapinghub.client import DuplicateJobError
 from scrapinghub.client import Jobs, Job
 from scrapinghub.client import Spider
-from scrapinghub.utils import NonExistingSpider, JobKey
+from scrapinghub.utils import JobKey
 
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .utils import validate_default_meta
@@ -22,7 +22,7 @@ def test_spiders_get(project):
     assert spider.projectid == int(TEST_PROJECT_ID)
     assert isinstance(spider.jobs, Jobs)
 
-    with pytest.raises(NonExistingSpider):
+    with pytest.raises(ValueError):
         project.spiders.get('non-existing')
 
 

@@ -4,22 +4,38 @@ from functools import wraps
 from six import string_types
 from requests.exceptions import HTTPError
 
-from scrapinghub import APIError
+
+class ScrapinghubAPIError(Exception):
+
+    def __init__(self, origin):
+        self.origin = origin
+        message = _get_http_error_msg(origin)
+        super(ScrapinghubAPIError, self).__init__(message)
 
 
-class DuplicateJobError(APIError):
+def _get_http_error_msg(exc):
+    try:
+        return exc.response.json()
+    except ValueError:
+        pass
+    if exc.response.text:
+        return exc.response.text
+    return str(exc)
+
+
+class InvalidUsage(ScrapinghubAPIError):
     pass
 
 
-class WrongProjectID(APIError):
+class NotFound(ScrapinghubAPIError):
     pass
 
 
-class WrongJobKey(APIError):
+class RequestEntityTooLarge(ScrapinghubAPIError):
     pass
 
 
-class NonExistingSpider(APIError):
+class DuplicateJobError(ScrapinghubAPIError):
     pass
 
 
@@ -47,7 +63,7 @@ def parse_project_id(projectid):
     try:
         projectid = int(projectid)
     except ValueError:
-        raise WrongProjectID("Project ID should be convertible to integer")
+        raise ValueError("Project ID should be convertible to integer")
     return projectid
 
 
@@ -57,13 +73,13 @@ def parse_job_key(jobkey):
     elif isinstance(jobkey, string_types):
         parts = jobkey.split('/')
     else:
-        raise WrongJobKey("Job key should be a string or a tuple")
+        raise ValueError("Job key should be a string or a tuple")
     if len(parts) != 3:
-        raise WrongJobKey("Job key should consist of projectid/spiderid/jobid")
+        raise ValueError("Job key should consist of projectid/spiderid/jobid")
     try:
         parts = map(int, parts)
     except ValueError:
-        raise WrongJobKey("Job key parts should be integers")
+        raise ValueError("Job key parts should be integers")
     return JobKey(*parts)
 
 
@@ -74,7 +90,7 @@ def get_tags_for_update(**kwargs):
         if not v:
             continue
         if not isinstance(v, list):
-            raise APIError("Add/remove field value must be a list")
+            raise ValueError("Add/remove field value must be a list")
         params[k] = v
     return params
 
@@ -84,8 +100,17 @@ def wrap_http_errors(method):
     def wrapped(*args, **kwargs):
         try:
             return method(*args, **kwargs)
-        except HTTPError as error:
-            raise APIError(error)
+        except HTTPError as exc:
+            if exc.response.status_code == 400:
+                raise InvalidUsage(exc)
+            elif exc.response.status_code == 404:
+                raise NotFound(exc)
+            elif exc.response.status_code == 413:
+                raise RequestEntityTooLarge(exc)
+            elif (exc.response.status_code > 400 and
+                    exc.response.status_code < 500):
+                raise ScrapinghubAPIError(exc)
+            raise
     return wrapped
 
 
