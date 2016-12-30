@@ -9,11 +9,11 @@ from .hubstorage import ValueTooLarge as _ValueTooLarge
 def _get_http_error_msg(exc):
     if isinstance(exc, HTTPError):
         try:
-            error_obj = exc.response.json()
+            payload = exc.response.json()
         except ValueError:
-            error_obj = None
-        if error_obj and isinstance(error_obj, dict):
-            error = error_obj.get('error')
+            payload = None
+        if payload and isinstance(payload, dict):
+            error = payload.get('error')
             if error:
                 return error
         elif exc.response.text:
