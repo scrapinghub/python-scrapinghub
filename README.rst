@@ -384,9 +384,6 @@ To retrieve all samples for a job::
     [1482233732452, 0, 0, 0, 0, 0]
 
 
-Additional features
-===================
-
 Collections
 -----------
 
