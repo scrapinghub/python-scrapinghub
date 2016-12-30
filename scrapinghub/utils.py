@@ -17,12 +17,17 @@ class ScrapinghubAPIError(Exception):
 
 
 def _get_http_error_msg(exc):
-    try:
-        return exc.response.json()
-    except ValueError:
-        pass
-    if exc.response.text:
-        return exc.response.text
+    if isinstance(exc, HTTPError):
+        try:
+            error_obj = exc.response.json()
+        except ValueError:
+            error_obj = None
+        if error_obj and isinstance(error_obj, dict):
+            error = error_obj.get('error')
+            if error:
+                return error
+        elif exc.response.text:
+                return exc.response.text
     return str(exc)
 
 
