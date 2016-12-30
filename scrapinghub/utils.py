@@ -123,7 +123,7 @@ def wrap_kwargs(fn, kwargs_fn):
     return wrapped
 
 
-def proxy_methods(origin, successor, methods, wrapper=wrap_http_errors):
+def proxy_methods(origin, successor, methods):
     """A helper to proxy methods from origin to successor.
 
     Accepts a list with strings and tuples:
@@ -138,5 +138,4 @@ def proxy_methods(origin, successor, methods, wrapper=wrap_http_errors):
         else:
             successor_name, origin_name = method, method
         if not hasattr(successor, successor_name):
-            setattr(successor, successor_name,
-                    wrapper(getattr(origin, origin_name)))
+            setattr(successor, successor_name, getattr(origin, origin_name))
