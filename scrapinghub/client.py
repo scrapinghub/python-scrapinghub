@@ -367,4 +367,6 @@ class Collection(object):
         ])
 
     def get(self, key, *args, **kwargs):
+        if key is None:
+            raise ValueError("key cannot be None")
         return self._origin.get(key, *args, **kwargs)
