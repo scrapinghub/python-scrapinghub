@@ -336,21 +336,22 @@ class Activity(_Proxy):
 
 class Collections(_Proxy):
 
-    def get_store(self, colname):
-        return self.get_collection('s', colname)
-
-    def get_cached_store(self, colname):
-        return self.get_collection('cs', colname)
-
-    def get_versioned_store(self, colname):
-        return self.get_collection('vs', colname)
-
-    def get_versioned_cached_store(self, colname):
-        return self.get_collection('vcs', colname)
-
-    def get_collection(self, coltype, colname):
+    def get(self, coltype, colname):
         self._origin._validate_collection(coltype, colname)
         return Collection(self._client, self, coltype, colname)
+
+    def get_store(self, colname):
+        return self.get('s', colname)
+
+    def get_cached_store(self, colname):
+        return self.get('cs', colname)
+
+    def get_versioned_store(self, colname):
+        return self.get('vs', colname)
+
+    def get_versioned_cached_store(self, colname):
+        return self.get('vcs', colname)
+
 
 
 class Collection(object):

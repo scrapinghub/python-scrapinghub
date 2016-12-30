@@ -33,7 +33,7 @@ def test_post_get_delete(project):
     ]
 
     test_collections.extend(
-        project.collections.get_collection(t, TEST_COLLECTION_NAME + 'b')
+        project.collections.get(t, TEST_COLLECTION_NAME + 'b')
         for t in ('s', 'vs', 'cs', 'vcs'))
 
     for col in test_collections:
@@ -121,7 +121,7 @@ def test_data_download(project, collection):
 def test_invalid_collection_name(project):
     cols = project.collections
     for method, args in [
-            (cols.get_collection, ('invalidtype', 'n')),
+            (cols.get, ('invalidtype', 'n')),
             (cols.get_store, ('foo-bar',)),
             (cols.get_store, ('foo/bar',)),
             (cols.get_store, ('/foo',))]:
