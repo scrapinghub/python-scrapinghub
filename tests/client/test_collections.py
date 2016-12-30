@@ -60,14 +60,22 @@ def test_post_scan(project, collection):
     del test_item['_key']
     assert test_item == returned_item
 
+    # get requires key field
+    with pytest.raises(TypeError):
+        collection.get()
+
+    result = collection.get('post_scan_test2')
+    assert isinstance(result, dict)
+    assert result['counter'] == 2
+
     # get all values starting with 1
-    result = list(collection.get(prefix='post_scan_test1'))
+    result = list(collection.iter(prefix='post_scan_test1'))
     # 1 & 10-19 = 11 items
     assert len(result) == 11
 
     # combining with normal filters
-    result = list(collection.get(filter='["counter", ">", [5]]',
-                                 prefix='post_scan_test1'))
+    result = list(collection.iter(filter='["counter", ">", [5]]',
+                                  prefix='post_scan_test1'))
     # 10-19
     assert len(result) == 10
 

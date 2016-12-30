@@ -365,3 +365,6 @@ class Collection(object):
             ('iter', 'iter_values'),
             ('iter_raw_json', 'iter_json'),
         ])
+
+    def get(self, key, *args, **kwargs):
+        return self._origin.get(key, *args, **kwargs)
