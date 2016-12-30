@@ -355,7 +355,6 @@ class Collections(_Proxy):
         return self.get('vcs', colname)
 
 
-
 class Collection(object):
 
     def __init__(self, client, collections, coltype, colname):

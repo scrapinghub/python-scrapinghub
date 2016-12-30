@@ -268,12 +268,11 @@ summary
 To check jobs summary::
 
     >>> spider.jobs.summary()
-
     [{'count': 0, 'name': 'pending', 'summary': []},
      {'count': 0, 'name': 'running', 'summary': []},
      {'count': 5,
       'name': 'finished',
-      'summary': [..,
+      'summary': [...]}
 
 It's also possible to get last jobs summary (for each spider)::
 
@@ -399,14 +398,18 @@ As an example, let's store hash and timestamp pair for foo spider.
 Usual workflow with `Collections`_ would be::
 
     >>> collections = project.collections
-    >>> foo_store = collections.new_store('foo_store')
+    >>> foo_store = collections.get_store('foo_store')
     >>> foo_store.set({'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'})
     >>> foo_store.count()
     1
     >>> foo_store.get('002d050ee3ff6192dcbecc4e4b4457d7')
-    '1447221694537'
-    >>> for result in foo_store.iter_values():
-    # do something with _key & value pair
+    {u'value': u'1447221694537'}
+    >>> # iterate over _key & value pair
+    ... list(foo_store.iter())
+    [{u'_key': u'002d050ee3ff6192dcbecc4e4b4457d7', u'value': u'1447221694537'}]
+    >>> # filter by multiple keys - only values for keys that exist will be returned
+    ... list(foo_store.iter(key=['002d050ee3ff6192dcbecc4e4b4457d7', 'blah']))
+    [{u'_key': u'002d050ee3ff6192dcbecc4e4b4457d7', u'value': u'1447221694537'}]
     >>> foo_store.delete('002d050ee3ff6192dcbecc4e4b4457d7')
     >>> foo_store.count()
     0
@@ -470,6 +473,7 @@ To remove existing tag ``existing`` for all spider jobs::
     >>> spider.update_tags(remove=['existing'])
 
 Modifying tags is available on spider/job levels.
+
 
 Exceptions
 ==========
