@@ -3,7 +3,7 @@ from contextlib import closing
 import pytest
 from six.moves import range
 
-from scrapinghub.utils import NotFound, InvalidUsage
+from scrapinghub.utils import NotFound, InvalidUsage, RequestEntityTooLarge
 from .conftest import TEST_COLLECTION_NAME
 
 
@@ -89,11 +89,15 @@ def test_errors_bad_key(collection):
 @pytest.mark.parametrize('testarg', [
         {'foo': 42},
         {'_key': []},
-        {'_key': 'large_test', 'value': 'x' * 1024 ** 2},
 ])
 def test_errors(collection, testarg):
     with pytest.raises(InvalidUsage):
         collection.set(testarg)
+
+
+def test_entity_too_large(collection):
+    with pytest.raises(RequestEntityTooLarge):
+        collection.set({'_key': 'large_test', 'value': 'x' * 1024 ** 2})
 
 
 def test_data_download(project, collection):
