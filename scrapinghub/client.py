@@ -356,14 +356,6 @@ class Collections(_Proxy):
         self._validate_collection(coltype, colname)
         return Collection(self._client, self, coltype, colname)
 
-    def get(self, _type, _name, _key=None, **params):
-        r = self._origin.apiget((_type, _name, _key), params=params)
-        return r if _key is None else next(r)
-
-    def set(self, _type, _name, _values):
-        return self._origin.apipost(
-            (_type, _name), is_idempotent=True, jl=_values)
-
 
 class Collection(object):
 

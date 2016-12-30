@@ -7,9 +7,10 @@ from requests.exceptions import HTTPError
 
 class ScrapinghubAPIError(Exception):
 
-    def __init__(self, origin):
-        self.origin = origin
-        message = _get_http_error_msg(origin)
+    def __init__(self, message=None, http_error=None):
+        self.http_error = http_error
+        if not message:
+            message = _get_http_error_msg(http_error)
         super(ScrapinghubAPIError, self).__init__(message)
 
 
@@ -101,15 +102,15 @@ def wrap_http_errors(method):
         try:
             return method(*args, **kwargs)
         except HTTPError as exc:
-            if exc.response.status_code == 400:
-                raise InvalidUsage(exc)
-            elif exc.response.status_code == 404:
-                raise NotFound(exc)
-            elif exc.response.status_code == 413:
-                raise RequestEntityTooLarge(exc)
-            elif (exc.response.status_code > 400 and
-                    exc.response.status_code < 500):
-                raise ScrapinghubAPIError(exc)
+            status_code = exc.response.status_code
+            if status_code == 400:
+                raise InvalidUsage(http_error=exc)
+            elif status_code == 404:
+                raise NotFound(http_error=exc)
+            elif status_code == 413:
+                raise RequestEntityTooLarge(http_error=exc)
+            elif status_code > 400 and status_code < 500:
+                raise ScrapinghubAPIError(http_error=exc)
             raise
     return wrapped
 

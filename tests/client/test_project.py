@@ -4,7 +4,6 @@ from collections import defaultdict
 import pytest
 from six.moves import range
 
-from scrapinghub import APIError
 from scrapinghub.client import Jobs, Job
 from scrapinghub.client import DuplicateJobError
 from scrapinghub.client import Activity, Collections, Spiders
@@ -85,7 +84,7 @@ def test_project_jobs_iter(project):
 
 def test_project_jobs_schedule(project):
     # scheduling on project level requires spidername
-    with pytest.raises(APIError):
+    with pytest.raises(ValueError):
         project.jobs.schedule()
 
     job0 = project.jobs.schedule(TEST_SPIDER_NAME)
@@ -117,7 +116,7 @@ def test_project_jobs_schedule(project):
 
 def test_project_jobs_get(project):
     # error when using different project id in jobkey
-    with pytest.raises(APIError):
+    with pytest.raises(ValueError):
         project.jobs.get('1/2/3')
 
     fake_job = project.jobs.get(TEST_PROJECT_ID + '/2/3')

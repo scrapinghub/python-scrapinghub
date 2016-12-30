@@ -4,7 +4,6 @@ from collections import defaultdict
 import pytest
 from six.moves import range
 
-from scrapinghub import APIError
 from scrapinghub.client import DuplicateJobError
 from scrapinghub.client import Jobs, Job
 from scrapinghub.client import Spider
@@ -142,15 +141,15 @@ def test_spider_jobs_schedule(spider):
 
 def test_spider_jobs_get(spider):
     # error on wrong jobkey format
-    with pytest.raises(APIError):
+    with pytest.raises(ValueError):
         spider.jobs.get('wrongg')
 
     # error when using different project id in jobkey
-    with pytest.raises(APIError):
+    with pytest.raises(ValueError):
         spider.jobs.get('1/2/3')
 
     # error when using different spider id in jobkey
-    with pytest.raises(APIError):
+    with pytest.raises(ValueError):
         spider.jobs.get(TEST_PROJECT_ID + '/2/3')
 
     fake_job_id = str(JobKey(TEST_PROJECT_ID, spider.id, 3))
