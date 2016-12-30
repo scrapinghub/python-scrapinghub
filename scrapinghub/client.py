@@ -26,7 +26,7 @@ from .utils import LogLevel
 from .utils import get_tags_for_update
 from .utils import parse_project_id, parse_job_key
 from .utils import proxy_methods
-from .utils import wrap_kwargs, wrap_http_errors
+from .utils import wrap_kwargs, wrap_http_errors, wrap_value_too_large
 
 
 class Connection(_Connection):
@@ -258,6 +258,9 @@ class _Proxy(object):
         if issubclass(cls, ItemsResourceType):
             self._proxy_methods(['get', 'write', 'flush', 'close',
                                  'stats', ('iter', 'list')])
+            # redefine write method to wrap hubstorage.ValueTooLarge error
+            origin_method = getattr(self, 'write')
+            setattr(self, 'write', wrap_value_too_large(origin_method))
 
         # DType iter_values() has more priority than IType list()
         if issubclass(cls, DownloadableResource):

@@ -3,7 +3,7 @@ from contextlib import closing
 import pytest
 from six.moves import range
 
-from scrapinghub.utils import NotFound, InvalidUsage, RequestEntityTooLarge
+from scrapinghub.utils import NotFound, InvalidUsage, ValueTooLarge
 from .conftest import TEST_COLLECTION_NAME
 
 
@@ -96,7 +96,7 @@ def test_errors(collection, testarg):
 
 
 def test_entity_too_large(collection):
-    with pytest.raises(RequestEntityTooLarge):
+    with pytest.raises(ValueTooLarge):
         collection.set({'_key': 'large_test', 'value': 'x' * 1024 ** 2})
 
 

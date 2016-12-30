@@ -4,6 +4,8 @@ from functools import wraps
 from six import string_types
 from requests.exceptions import HTTPError
 
+from scrapinghub.hubstorage import ValueTooLarge as _ValueTooLarge
+
 
 class ScrapinghubAPIError(Exception):
 
@@ -32,7 +34,7 @@ class NotFound(ScrapinghubAPIError):
     pass
 
 
-class RequestEntityTooLarge(ScrapinghubAPIError):
+class ValueTooLarge(ScrapinghubAPIError):
     pass
 
 
@@ -108,7 +110,7 @@ def wrap_http_errors(method):
             elif status_code == 404:
                 raise NotFound(http_error=exc)
             elif status_code == 413:
-                raise RequestEntityTooLarge(http_error=exc)
+                raise ValueTooLarge(http_error=exc)
             elif status_code > 400 and status_code < 500:
                 raise ScrapinghubAPIError(http_error=exc)
             raise
@@ -120,6 +122,16 @@ def wrap_kwargs(fn, kwargs_fn):
     def wrapped(*args, **kwargs):
         kwargs = kwargs_fn(kwargs)
         return fn(*args, **kwargs)
+    return wrapped
+
+
+def wrap_value_too_large(method):
+    @wraps(method)
+    def wrapped(*args, **kwargs):
+        try:
+            return method(*args, **kwargs)
+        except _ValueTooLarge as exc:
+            raise ValueTooLarge(str(exc))
     return wrapped
 
 
