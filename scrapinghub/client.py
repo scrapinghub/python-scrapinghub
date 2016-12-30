@@ -21,12 +21,14 @@ from .hubstorage.job import Logs as _Logs
 from .hubstorage.job import Samples as _Samples
 from .hubstorage.job import Requests as _Requests
 
-from .utils import DuplicateJobError, NotFound
+from .exceptions import (
+    NotFound, DuplicateJobError, wrap_http_errors, wrap_value_too_large
+)
 from .utils import LogLevel
 from .utils import get_tags_for_update
 from .utils import parse_project_id, parse_job_key
 from .utils import proxy_methods
-from .utils import wrap_kwargs, wrap_http_errors, wrap_value_too_large
+from .utils import wrap_kwargs
 
 
 class Connection(_Connection):

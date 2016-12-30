@@ -8,8 +8,7 @@ import pytest
 import shutil
 
 from scrapinghub import ScrapinghubClient
-from scrapinghub.client import NotFound
-
+from scrapinghub.exceptions import NotFound
 
 TEST_PROJECT_ID = "2222222"
 TEST_SPIDER_NAME = 'hs-test-spider'

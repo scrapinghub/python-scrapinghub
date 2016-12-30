@@ -471,6 +471,37 @@ To remove existing tag ``existing`` for all spider jobs::
 
 Modifying tags is available on spider/job levels.
 
+Exceptions
+==========
+
+scrapinghub.exceptions.ScrapinghubAPIError
+------------------------------------------
+
+Base exception class.
+
+
+scrapinghub.exceptions.InvalidUsage
+-----------------------------------
+
+Usually raised in case of 400 response from API.
+
+
+scrapinghub.exceptions.NotFound
+-------------------------------
+
+Entity doesn't exist (e.g. spider or project).
+
+
+scrapinghub.exceptions.ValueTooLarge
+------------------------------------
+
+Value cannot be writtent because it exceeds size limits.
+
+scrapinghub.exceptions.DuplicateJobError
+----------------------------------------
+
+Job for given spider with given arguments is already scheduled or running.
+
 
 .. _Scrapinghub API: http://doc.scrapinghub.com/api.html
 .. _VCR.py library: https://pypi.python.org/pypi/vcrpy

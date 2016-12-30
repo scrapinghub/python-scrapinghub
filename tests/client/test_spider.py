@@ -4,7 +4,7 @@ from collections import defaultdict
 import pytest
 from six.moves import range
 
-from scrapinghub.client import DuplicateJobError, NotFound
+from scrapinghub.exceptions import NotFound, DuplicateJobError
 from scrapinghub.client import Jobs, Job
 from scrapinghub.client import Spider
 from scrapinghub.utils import JobKey

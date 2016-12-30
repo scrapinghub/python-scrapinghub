@@ -5,7 +5,7 @@ import pytest
 from six.moves import range
 
 from scrapinghub.client import Jobs, Job
-from scrapinghub.client import DuplicateJobError
+from scrapinghub.exceptions import DuplicateJobError
 from scrapinghub.client import Activity, Collections, Spiders
 from scrapinghub.client import Frontier, Settings
 

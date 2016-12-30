@@ -3,7 +3,7 @@ from contextlib import closing
 import pytest
 from six.moves import range
 
-from scrapinghub.utils import NotFound, InvalidUsage, ValueTooLarge
+from scrapinghub.exceptions import InvalidUsage, NotFound, ValueTooLarge
 from .conftest import TEST_COLLECTION_NAME
 
 
