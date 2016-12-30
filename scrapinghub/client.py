@@ -21,7 +21,7 @@ from .hubstorage.job import Logs as _Logs
 from .hubstorage.job import Samples as _Samples
 from .hubstorage.job import Requests as _Requests
 
-from .utils import DuplicateJobError
+from .utils import DuplicateJobError, NotFound
 from .utils import LogLevel
 from .utils import get_tags_for_update
 from .utils import parse_project_id, parse_job_key
@@ -103,7 +103,7 @@ class Spiders(object):
         project = self._client._hsclient.get_project(self.projectid)
         spiderid = project.ids.spider(spidername, **params)
         if spiderid is None:
-            raise ValueError("Spider {} doesn't exist.".format(spidername))
+            raise NotFound("Spider {} doesn't exist.".format(spidername))
         return Spider(self._client, self.projectid, spiderid, spidername)
 
     def list(self):

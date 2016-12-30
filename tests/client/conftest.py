@@ -6,9 +6,9 @@ import pickle
 import vcr
 import pytest
 import shutil
-from requests import HTTPError
 
 from scrapinghub import ScrapinghubClient
+from scrapinghub.client import NotFound
 
 
 TEST_PROJECT_ID = "2222222"
@@ -158,7 +158,5 @@ def clean_collection(collection):
     try:
         for item in collection.iter():
             collection.delete(item['_key'])
-    except HTTPError as e:
-        # if collection doesn't exist yet service responds 404
-        if e.response.status_code != 404:
-            raise
+    except NotFound:
+        pass

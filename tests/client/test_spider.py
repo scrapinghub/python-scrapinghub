@@ -4,7 +4,7 @@ from collections import defaultdict
 import pytest
 from six.moves import range
 
-from scrapinghub.client import DuplicateJobError
+from scrapinghub.client import DuplicateJobError, NotFound
 from scrapinghub.client import Jobs, Job
 from scrapinghub.client import Spider
 from scrapinghub.utils import JobKey
@@ -21,7 +21,7 @@ def test_spiders_get(project):
     assert spider.projectid == int(TEST_PROJECT_ID)
     assert isinstance(spider.jobs, Jobs)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(NotFound):
         project.spiders.get('non-existing')
 
 
