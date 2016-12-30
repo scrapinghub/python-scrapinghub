@@ -1,6 +1,8 @@
 import logging
+from functools import wraps
 
 from six import string_types
+from requests.exceptions import HTTPError
 
 from scrapinghub import APIError
 
@@ -77,7 +79,25 @@ def get_tags_for_update(**kwargs):
     return params
 
 
-def proxy_methods(origin, successor, methods):
+def wrap_http_errors(method):
+    @wraps(method)
+    def wrapped(*args, **kwargs):
+        try:
+            return method(*args, **kwargs)
+        except HTTPError as error:
+            raise APIError(error)
+    return wrapped
+
+
+def wrap_kwargs(fn, kwargs_fn):
+    """Tiny wrapper to prepare modified version of function kwargs"""
+    def wrapped(*args, **kwargs):
+        kwargs = kwargs_fn(kwargs)
+        return fn(*args, **kwargs)
+    return wrapped
+
+
+def proxy_methods(origin, successor, methods, wrapper=wrap_http_errors):
     """A helper to proxy methods from origin to successor.
 
     Accepts a list with strings and tuples:
@@ -92,12 +112,5 @@ def proxy_methods(origin, successor, methods):
         else:
             successor_name, origin_name = method, method
         if not hasattr(successor, successor_name):
-            setattr(successor, successor_name, getattr(origin, origin_name))
-
-
-def wrap_kwargs(fn, kwargs_fn):
-    """Tiny wrapper to prepare modified version of function kwargs"""
-    def wrapped(*args, **kwargs):
-        kwargs = kwargs_fn(kwargs)
-        return fn(*args, **kwargs)
-    return wrapped
+            setattr(successor, successor_name,
+                    wrapper(getattr(origin, origin_name)))

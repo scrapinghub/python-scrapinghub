@@ -26,7 +26,7 @@ from .utils import LogLevel
 from .utils import get_tags_for_update
 from .utils import parse_project_id, parse_job_key
 from .utils import proxy_methods
-from .utils import wrap_kwargs
+from .utils import wrap_kwargs, wrap_http_errors
 
 
 class ScrapinghubClient(object):
@@ -58,6 +58,7 @@ class Projects(object):
     def list(self):
         return self._client._connection.project_ids()
 
+    @wrap_http_errors
     def summary(self, **params):
         return self._client._hsclient.projects.jobsummaries(**params)
 
@@ -85,6 +86,7 @@ class Spiders(object):
         self.projectid = projectid
         self._client = client
 
+    @wrap_http_errors
     def get(self, spidername, **params):
         project = self._client._hsclient.get_project(self.projectid)
         spiderid = project.ids.spider(spidername, **params)
@@ -122,24 +124,22 @@ class Jobs(object):
         self.projectid = projectid
         self.spider = spider
         self._client = client
+        self._project = client._hsclient.get_project(projectid)
 
-    @property
-    def _hsproject(self):
-        """Shortcut to hsclient.project for internal use"""
-        return self._client._hsclient.get_project(self.projectid)
-
+    @wrap_http_errors
     def count(self, **params):
         if self.spider:
             params['spider'] = self.spider.name
-        return next(self._hsproject.jobq.apiget(('count',), params=params))
+        return next(self._project.jobq.apiget(('count',), params=params))
 
+    @wrap_http_errors
     def iter(self, **params):
         """ Iterate over jobs collection for a given set of params.
         FIXME the function returns a list of dicts, not a list of Job's
         """
         if self.spider:
             params['spider'] = self.spider.name
-        return self._hsproject.jobq.list(**params)
+        return self._project.jobq.list(**params)
 
     def schedule(self, spidername=None, **params):
         if not spidername and not self.spider:
@@ -168,14 +168,16 @@ class Jobs(object):
             raise APIError('Please use same spider id')
         return Job(self._client, str(jobkey))
 
+    @wrap_http_errors
     def summary(self, _queuename=None, **params):
         spiderid = self._extract_spider_id(params)
-        return self._hsproject.jobq.summary(
+        return self._project.jobq.summary(
             _queuename, spiderid=spiderid, **params)
 
+    @wrap_http_errors
     def iter_last(self, **params):
         spiderid = self._extract_spider_id(params)
-        return self._hsproject.spiders.lastjobsummary(spiderid, **params)
+        return self._project.spiders.lastjobsummary(spiderid, **params)
 
     def _extract_spider_id(self, params):
         spiderid = params.pop('spiderid', None)
@@ -193,8 +195,8 @@ class Job(object):
         self.key = jobkey
 
         self._client = client
-        self._project = self._client._hsclient.get_project(self.projectid)
-        self._job = self._client._hsclient.get_job(self.key)
+        self._project = client._hsclient.get_project(self.projectid)
+        self._job = client._hsclient.get_job(jobkey)
 
         # proxied sub-resources
         self.items = Items(_Items, client, jobkey)
@@ -204,6 +206,7 @@ class Job(object):
 
         self.metadata = JobMeta(client._hsclient, jobkey, cached=metadata)
 
+    @wrap_http_errors
     def update_metadata(self, *args, **kwargs):
         self._job.update_metadata(*args, **kwargs)
 
@@ -215,25 +218,32 @@ class Job(object):
         result = self._client._connection._post('jobs_update', 'json', params)
         return result['count']
 
+    @wrap_http_errors
     def close_writers(self):
         self._job.close_writers()
 
+    @wrap_http_errors
     def purge(self):
         self._job.purged()
         self.metadata.expire()
 
+    @wrap_http_errors
     def start(self, **params):
         return self._project.jobq.start(self, **params)
 
+    @wrap_http_errors
     def update(self, **params):
         return self._project.jobq.update(self, **params)
 
+    @wrap_http_errors
     def cancel(self):
         self._project.jobq.request_cancel(self)
 
+    @wrap_http_errors
     def finish(self, **params):
         return self._project.jobq.finish(self, **params)
 
+    @wrap_http_errors
     def delete(self, **params):
         return self._project.jobq.delete(self, **params)
 
