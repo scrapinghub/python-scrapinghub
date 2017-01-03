@@ -13,9 +13,9 @@ def _get_http_error_msg(exc):
         except ValueError:
             payload = None
         if payload and isinstance(payload, dict):
-            error = payload.get('error')
-            if error:
-                return error
+            message = payload.get('message')
+            if message:
+                return message
         elif exc.response.text:
             return exc.response.text
     return str(exc)
