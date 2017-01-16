@@ -37,6 +37,13 @@ class Connection(_Connection):
     def _request(self, *args, **kwargs):
         return super(Connection, self)._request(*args, **kwargs)
 
+    def _build_url(self, *args, **kwargs):
+        """Handle APIErrors caused by unknown methods"""
+        try:
+            return super(Connection, self)._build_url(*args, **kwargs)
+        except APIError as exc:
+            raise ValueError(exc.args[0])
+
 
 class HubstorageClient(_HubstorageClient):
 

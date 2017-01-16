@@ -3,6 +3,7 @@ from functools import wraps
 
 from requests import HTTPError
 
+from .legacy import APIError
 from .hubstorage import ValueTooLarge as _ValueTooLarge
 
 
@@ -62,6 +63,11 @@ def wrap_http_errors(method):
             elif 400 <= status_code < 500:
                 raise ScrapinghubAPIError(http_error=exc)
             raise
+        except APIError as exc:
+            msg = exc.args[0]
+            if 'format must be either json or jl' in msg:
+                raise ValueError(msg)
+            raise ScrapinghubAPIError(msg)
     return wrapped
 
 
