@@ -97,7 +97,8 @@ class Connection(object):
         try:
             base_path = self.API_METHODS[method]
         except KeyError:
-            raise APIError("Unknown method: {0}".format(method))
+            raise APIError("Unknown method: {0}".format(method),
+                           _type=APIError.ERR_VALUE_ERROR)
         else:
             path = "{0}.{1}".format(base_path, format)
             return urljoin(self.url, path)
@@ -126,7 +127,8 @@ class Connection(object):
         Raises APIError if json response have error status.
         """
         if format not in ('json', 'jl') and not raw:
-            raise APIError("format must be either json or jl")
+            raise APIError("format must be either json or jl",
+                           _type=APIError.ERR_VALUE_ERROR)
 
         if data is None and files is None:
             response = self._session.get(url, headers=headers)
@@ -145,7 +147,8 @@ class Connection(object):
                 if data['status'] == 'ok':
                     return data
                 elif data['status'] in ('error', 'badrequest'):
-                    raise APIError(data['message'])
+                    raise APIError(data['message'],
+                                   _type=APIError.ERR_INVALID_USAGE)
                 else:
                     raise APIError("Unknown response status: {0[status]}".format(data))
             except KeyError:
@@ -394,4 +397,12 @@ class Job(RequestProxyMixin):
 
 
 class APIError(Exception):
-    pass
+
+    ERR_DEFAULT = 0
+    ERR_NOT_FOUND = 1
+    ERR_VALUE_ERROR = 2
+    ERR_INVALID_USAGE = 3
+
+    def __init__(self, message, _type=None):
+        super(APIError, self).__init__(message)
+        self._type = _type or self.ERR_DEFAULT
