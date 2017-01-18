@@ -460,11 +460,11 @@ To mark a job with tag ``consumed``::
 
 To mark all spider jobs with tag ``consumed``::
 
-    >>> spider.update_tags(add=['consumed'])
+    >>> spider.jobs.update_tags(add=['consumed'])
 
 To remove existing tag ``existing`` for all spider jobs::
 
-    >>> spider.update_tags(remove=['existing'])
+    >>> spider.jobs.update_tags(remove=['existing'])
 
 Modifying tags is available on spider/job levels.
 
