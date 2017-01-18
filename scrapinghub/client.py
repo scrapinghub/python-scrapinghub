@@ -122,14 +122,6 @@ class Spider(object):
         self.jobs = Jobs(client, projectid, self)
         self._client = client
 
-    def update_tags(self, add=None, remove=None):
-        params = get_tags_for_update(add_tag=add, remove_tag=remove)
-        if not params:
-            return
-        params.update({'project': self.projectid, 'spider': self.name})
-        result = self._client._connection._post('jobs_update', 'json', params)
-        return result['count']
-
 
 class Jobs(object):
 
@@ -195,6 +187,17 @@ class Jobs(object):
         elif spiderid and self.spider and spiderid != self.spider.id:
             raise ValueError('Please use same spider id')
         return spiderid
+
+    def update_tags(self, add=None, remove=None, spidername=None):
+        spidername = spidername or (self.spider.name if self.spider else None)
+        if not spidername:
+            raise ValueError('Please provide spidername')
+        params = get_tags_for_update(add_tag=add, remove_tag=remove)
+        if not params:
+            return
+        params.update({'project': self.projectid, 'spider': spidername})
+        result = self._client._connection._post('jobs_update', 'json', params)
+        return result['count']
 
 
 class Job(object):
