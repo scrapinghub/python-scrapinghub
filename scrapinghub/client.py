@@ -247,16 +247,16 @@ class Job(object):
         return self._project.jobq.start(self, **params)
 
     def update(self, **params):
-        return self._project.jobq.update(self, **params)
+        return next(self._project.jobq.update(self, **params))['prevstate']
 
     def cancel(self):
         self._project.jobq.request_cancel(self)
 
     def finish(self, **params):
-        return self._project.jobq.finish(self, **params)
+        return next(self._project.jobq.finish(self, **params))['prevstate']
 
     def delete(self, **params):
-        return self._project.jobq.delete(self, **params)
+        return next(self._project.jobq.delete(self, **params))['prevstate']
 
 
 class _Proxy(object):
