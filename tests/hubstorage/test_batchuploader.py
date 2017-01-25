@@ -41,20 +41,29 @@ def test_writer_maxitemsize(hsclient, hsproject):
     with pytest.raises(ValueTooLarge) as excinfo1:
         writer.write({'b': 'x' * max_size})
     excinfo1.match(
-        r'Value exceeds max encoded size of 1048576 bytes:'
+        r'Value exceeds max encoded size of 1 MiB:'
         ' \'{"b": "x+\\.\\.\\.\'')
 
     with pytest.raises(ValueTooLarge) as excinfo2:
         writer.write({'b'*max_size: 'x'})
     excinfo2.match(
-        r'Value exceeds max encoded size of 1048576 bytes:'
+        r'Value exceeds max encoded size of 1 MiB:'
         ' \'{"b+\\.\\.\\.\'')
 
     with pytest.raises(ValueTooLarge) as excinfo3:
         writer.write({'b'*(max_size//2): 'x'*(max_size//2)})
     excinfo3.match(
-        r'Value exceeds max encoded size of 1048576 bytes:'
+        r'Value exceeds max encoded size of 1 MiB:'
         ' \'{"b+\\.\\.\\.\'')
+
+
+def test_writer_maxitemsize_custom(hsclient, hsproject):
+    _, writer = _job_and_writer(hsclient, hsproject, maxitemsize=512*1024)
+    with pytest.raises(ValueTooLarge) as excinfo:
+        writer.write({'b': 'x' * writer.maxitemsize})
+    excinfo.match(
+        r'Value exceeds max encoded size of 512 KiB:'
+        ' \'{"b": "x+\\.\\.\\.\'')
 
 
 def test_writer_contentencoding(hsclient, hsproject):

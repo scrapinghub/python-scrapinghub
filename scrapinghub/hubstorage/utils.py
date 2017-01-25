@@ -131,3 +131,21 @@ def apipoll(endpoint, *args, **kwargs):
         if result is not None or (time.time() - start) > max_poll:
             return result
 
+
+def sizeof_fmt(num):
+    """Little helper to get size in human readable form.
+
+    Size is rounded to a closest integer value (for simplicity).
+
+    >>> sizeof_fmt(100)
+    '100 B'
+    >>> sizeof_fmt(1024)
+    '1 KiB'
+    >>> sizeof_fmt(1024*1024 + 100)
+    '1 MiB'
+    """
+    for unit in ['B', 'KiB', 'MiB']:
+        if abs(num) < 1024.0:
+            return "%.0f %s" % (num, unit)
+        num /= 1024.0
+    return "%.0f %s" % (num, 'GiB')
