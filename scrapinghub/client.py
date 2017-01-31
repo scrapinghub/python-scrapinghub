@@ -237,19 +237,23 @@ class Job(object):
         self.metadata.expire()
 
     def start(self, **params):
-        return self._project.jobq.start(self, **params)
+        return self.update(state='running', **params)
+
+    def finish(self, **params):
+        return self.update(state='finished', **params)
+
+    def delete(self, **params):
+        return self.update(state='deleted', **params)
 
     def update(self, **params):
-        return self._project.jobq.update(self, **params)
+        try:
+            job = next(self._project.jobq.update(self, **params))
+            return job['prevstate']
+        except StopIteration:
+            raise NotFound("Job {} doesn't exist".format(self.key))
 
     def cancel(self):
         self._project.jobq.request_cancel(self)
-
-    def finish(self, **params):
-        return self._project.jobq.finish(self, **params)
-
-    def delete(self, **params):
-        return self._project.jobq.delete(self, **params)
 
 
 class _Proxy(object):
