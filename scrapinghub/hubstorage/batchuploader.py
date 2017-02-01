@@ -12,7 +12,7 @@ from itertools import count
 import requests
 from collections import deque
 from threading import Thread, Event
-from .utils import xauth, iterqueue
+from .utils import xauth, iterqueue, sizeof_fmt
 from .serialization import jsonencode
 
 logger = logging.getLogger('hubstorage.batchuploader')
@@ -227,8 +227,8 @@ class _BatchWriter(object):
         if len(data) > self.maxitemsize:
             truncated_data = data[:self.ERRMSG_DATA_TRUNCATION_LEN] + "..."
             raise ValueTooLarge(
-                'Value exceeds max encoded size of {} bytes: {!r}'
-                .format(self.maxitemsize, truncated_data))
+                'Value exceeds max encoded size of {}: {!r}'
+                .format(sizeof_fmt(self.maxitemsize), truncated_data))
 
         self.itemsq.put(data)
         if self.itemsq.full():
