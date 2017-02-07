@@ -742,17 +742,32 @@ class _Proxy(object):
                        ('iter_raw_json', 'iter_json')]
             self._proxy_methods(methods)
 
-            # apply_iter_filters is responsible to modify filter params for all
-            # iter* calls: should be used only if defined for a child class
-            if hasattr(self, '_modify_iter_filters'):
-                apply_fn = getattr(self, '_modify_iter_filters')
-                for method in [method[0] for method in methods]:
-                    wrapped = wrap_kwargs(getattr(self, method), apply_fn)
-                    setattr(self, method, wrapped)
+            # modify filter params for all iter* methods
+            for method in [method[0] for method in methods]:
+                wrapped = wrap_kwargs(getattr(self, method),
+                                      self._modify_iter_filters)
+                setattr(self, method, wrapped)
 
     def _proxy_methods(self, methods):
         """A little helper for cleaner interface."""
         proxy_methods(self._origin, self, methods)
+
+    def _modify_iter_filters(self, params):
+        """Modify iter() filters on-the-fly.
+
+        Base implementation is responsible for improving filters support
+        to pass multiple filters at once as a list with tuples.
+        """
+        filters = params.get('filter')
+        if filters and isinstance(filters, list):
+            filter_data = []
+            for elem in params.pop('filter'):
+                if not isinstance(elem, (list, tuple)):
+                    raise ValueError("Filter condition must be tuple or list")
+                filter_data.append(json.dumps(elem))
+            if filter_data:
+                params['filter'] = filter_data
+        return params
 
 
 class Logs(_Proxy):
@@ -774,7 +789,17 @@ class Logs(_Proxy):
         [{
             'level': 20,
             'message': '[scrapy.core.engine] Closing spider (finished)',
-            'time': 1482233733976},
+            'time': 1482233733976,
+        }]
+
+    - retrive logs with a given log level and filter by a word
+
+        >>> filters = [("message", "contains", ["logger"])]
+        >>> list(job.logs.iter(level='WARNING', filter=filters))
+        [{
+            'level': 30,
+            'message': 'Some warning message',
+            'time': 1486375511188,
         }]
     """
 
@@ -792,6 +817,7 @@ class Logs(_Proxy):
         :param params: an original dictionary with params
         :return: a modified dictionary with params
         """
+        params = super(Logs, self)._modify_iter_filters(params)
         offset = params.pop('offset', None)
         if offset:
             params['start'] = '{}/{}'.format(self.key, offset)
@@ -800,7 +826,9 @@ class Logs(_Proxy):
             minlevel = getattr(LogLevel, level, None)
             if minlevel is None:
                 raise ValueError("Unknown log level: {}".format(level))
-            params['filter'] = json.dumps(['level', '>=', [minlevel]])
+            level_filter = json.dumps(['level', '>=', [minlevel]])
+            # there can already be some filters handled by super class method
+            params['filter'] = params.get('filter', []) + [level_filter]
         return params
 
 
@@ -822,7 +850,15 @@ class Items(_Proxy):
 
         >>> list(job.items.iter(startts=1447221694537))
         {'name': ['Some custom item'],
-         'url': 'http://some-url/item.html'}]
+         'url': 'http://some-url/item.html',
+         'size': 100000}
+
+    - retrieve 1 item with multiple filters:
+        >>> filters = [("size", ">", [30000]), ("size", "<", [40000])]
+        >>> list(job.items.iter(count=1, filter=filters))
+        {'name': ['Some other item'],
+         'url': 'http://some-url/other-item.html',
+         'size': 50000}
     """
 
     def _modify_iter_filters(self, params):
@@ -831,6 +867,7 @@ class Items(_Proxy):
         Returns:
             dict: updated set of params
         """
+        params = super(Items, self)._modify_iter_filters(params)
         offset = params.pop('offset', None)
         if offset:
             params['start'] = '{}/{}'.format(self.key, offset)
