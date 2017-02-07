@@ -956,10 +956,14 @@ class Activity(_Proxy):
         self._proxy_methods([('iter', 'list')])
 
     def add(self, *args, **kwargs):
-        self._origin.add(*args, **kwargs)
+        entry = dict(*args, **kwargs)
+        return self.post(entry)
 
-    def post(self, *args, **kwargs):
-        self._origin.post(*args, **kwargs)
+    def post(self, _value, **kwargs):
+        jobkey = _value.get('job') or kwargs.get('job')
+        if jobkey and parse_job_key(jobkey).projectid != self.key:
+            raise ValueError('Please use same project id')
+        self._origin.post(_value, **kwargs)
 
 
 class Collections(_Proxy):
