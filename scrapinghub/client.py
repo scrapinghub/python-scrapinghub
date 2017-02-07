@@ -200,7 +200,7 @@ class Project(object):
     """
 
     def __init__(self, client, projectid):
-        self.id = projectid
+        self.key = projectid
         self._client = client
 
         # sub-resources
@@ -284,7 +284,7 @@ class Spider(object):
 
         >>> project.spiders.get('spider2')
         <scrapinghub.client.Spider at 0x106ee3748>
-        >>> spider.id
+        >>> spider.key
         2
         >>> spider.name
         spider2
@@ -292,7 +292,7 @@ class Spider(object):
 
     def __init__(self, client, projectid, spiderid, spidername):
         self.projectid = projectid
-        self.id = spiderid
+        self.key = spiderid
         self.name = spidername
         self.jobs = Jobs(client, projectid, self)
         self._client = client
@@ -435,13 +435,13 @@ class Jobs(object):
         Usage::
 
             >>> job = project.jobs.get('123/1/2')
-            >>> job.id
+            >>> job.key
             '123/1/2'
         """
         jobkey = parse_job_key(jobkey)
         if jobkey.projectid != self.projectid:
             raise ValueError('Please use same project id')
-        if self.spider and jobkey.spiderid != self.spider.id:
+        if self.spider and jobkey.spiderid != self.spider.key:
             raise ValueError('Please use same spider id')
         return Job(self._client, str(jobkey))
 
@@ -503,8 +503,8 @@ class Jobs(object):
     def _extract_spider_id(self, params):
         spiderid = params.pop('spiderid', None)
         if not spiderid and self.spider:
-            return self.spider.id
-        elif spiderid and self.spider and spiderid != self.spider.id:
+            return self.spider.key
+        elif spiderid and self.spider and spiderid != self.spider.key:
             raise ValueError('Please use same spider id')
         return spiderid
 
@@ -563,7 +563,7 @@ class Job(object):
     Usage::
 
         >>> job = project.job('123/1/2')
-        >>> job.id
+        >>> job.key
         '123/1/2'
         >>> job.metadata['state']
         'finished'

@@ -14,7 +14,7 @@ from .utils import validate_default_meta
 
 
 def test_project_subresources(project):
-    assert project.id == int(TEST_PROJECT_ID)
+    assert project.key == int(TEST_PROJECT_ID)
     assert isinstance(project.collections, Collections)
     assert isinstance(project.jobs, Jobs)
     assert isinstance(project.spiders, Spiders)

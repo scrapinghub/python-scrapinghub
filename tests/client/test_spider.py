@@ -16,7 +16,7 @@ from .utils import validate_default_meta
 def test_spiders_get(project):
     spider = project.spiders.get(TEST_SPIDER_NAME)
     assert isinstance(spider, Spider)
-    assert isinstance(spider.id, int)
+    assert isinstance(spider.key, int)
     assert spider.name == TEST_SPIDER_NAME
     assert spider.projectid == int(TEST_PROJECT_ID)
     assert isinstance(spider.jobs, Jobs)
@@ -32,7 +32,7 @@ def test_spiders_list(project):
 
 
 def test_spider_base(project, spider):
-    assert spider.id == 1
+    assert spider.key == 1
     assert spider.name == TEST_SPIDER_NAME
     assert spider.projectid == int(TEST_PROJECT_ID)
     assert isinstance(project.jobs, Jobs)
@@ -152,7 +152,7 @@ def test_spider_jobs_get(spider):
     with pytest.raises(ValueError):
         spider.jobs.get(TEST_PROJECT_ID + '/2/3')
 
-    fake_job_id = str(JobKey(TEST_PROJECT_ID, spider.id, 3))
+    fake_job_id = str(JobKey(TEST_PROJECT_ID, spider.key, 3))
     fake_job = spider.jobs.get(fake_job_id)
     assert isinstance(fake_job, Job)
 

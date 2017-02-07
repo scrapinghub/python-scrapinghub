@@ -10,7 +10,7 @@ def test_job_base(client, spider):
     job = spider.jobs.schedule()
     assert isinstance(job, Job)
     assert job.projectid == int(TEST_PROJECT_ID)
-    assert job.key.startswith(TEST_PROJECT_ID + '/' + str(spider.id))
+    assert job.key.startswith(TEST_PROJECT_ID + '/' + str(spider.key))
 
     assert isinstance(job.items, Items)
     assert isinstance(job.logs, Logs)

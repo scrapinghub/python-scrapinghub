@@ -44,7 +44,7 @@ def test_client_projects_get_project(client):
     # testing with string project id
     p2 = projects.get(TEST_PROJECT_ID)
     assert isinstance(p2, Project)
-    assert p1.id == p2.id
+    assert p1.key == p2.key
 
 
 def test_client_projects_list_projects(client):
