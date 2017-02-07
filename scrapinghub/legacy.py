@@ -146,6 +146,10 @@ class Connection(object):
             try:
                 if data['status'] == 'ok':
                     return data
+                elif (data['status'] == 'error' and
+                        data['message'] == 'Authentication failed'):
+                    raise APIError(data['message'],
+                                   _type=APIError.ERR_AUTH_ERROR)
                 elif data['status'] in ('error', 'badrequest'):
                     raise APIError(data['message'],
                                    _type=APIError.ERR_INVALID_USAGE)
@@ -402,6 +406,7 @@ class APIError(Exception):
     ERR_NOT_FOUND = 1
     ERR_VALUE_ERROR = 2
     ERR_INVALID_USAGE = 3
+    ERR_AUTH_ERROR = 4
 
     def __init__(self, message, _type=None):
         super(APIError, self).__init__(message)
