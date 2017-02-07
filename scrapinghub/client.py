@@ -736,7 +736,8 @@ class _Proxy(object):
             setattr(self, 'write', wrap_value_too_large(origin_method))
 
         # DType iter_values() has more priority than IType list()
-        if issubclass(cls, DownloadableResource):
+        # plus Collections interface doesn't need the iter methods
+        if issubclass(cls, DownloadableResource) and cls is not Collections:
             methods = [('iter', 'iter_values'),
                        ('iter_raw_msgpack', 'iter_msgpack'),
                        ('iter_raw_json', 'iter_json')]
@@ -975,6 +976,8 @@ class Collections(_Proxy):
     Usage::
 
         >>> collections = project.collections
+        >>> collections.list()
+        [{'name': 'Pages', 'type': 's'}]
         >>> foo_store = collections.get_store('foo_store')
     """
 
@@ -994,6 +997,9 @@ class Collections(_Proxy):
 
     def get_versioned_cached_store(self, colname):
         return self.get('vcs', colname)
+
+    def list(self):
+        return list(self._origin.apiget('list'))
 
 
 class Collection(object):
