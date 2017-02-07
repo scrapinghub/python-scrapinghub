@@ -1018,3 +1018,10 @@ class Collection(object):
         if key is None:
             raise ValueError("key cannot be None")
         return self._origin.get(key, *args, **kwargs)
+
+    def set(self, *args, **kwargs):
+        """Set item to collection by key.
+
+        The method returns None (original method returns an empty generator).
+        """
+        self._origin.set(*args, **kwargs)
