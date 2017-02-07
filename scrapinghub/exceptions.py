@@ -35,6 +35,10 @@ class InvalidUsage(ScrapinghubAPIError):
     pass
 
 
+class AuthorizationError(ScrapinghubAPIError):
+    pass
+
+
 class NotFound(ScrapinghubAPIError):
     pass
 
@@ -56,6 +60,11 @@ def wrap_http_errors(method):
             status_code = exc.response.status_code
             if status_code == 400:
                 raise InvalidUsage(http_error=exc)
+            elif status_code == 401:
+                raise AuthorizationError(
+                    message='Please check your credentials.',
+                    http_error=exc,
+                )
             elif status_code == 404:
                 raise NotFound(http_error=exc)
             elif status_code == 413:
