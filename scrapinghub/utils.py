@@ -1,3 +1,4 @@
+import json
 import logging
 
 from six import string_types
@@ -83,3 +84,20 @@ def proxy_methods(origin, successor, methods):
             successor_name, origin_name = method, method
         if not hasattr(successor, successor_name):
             setattr(successor, successor_name, getattr(origin, origin_name))
+
+
+def format_iter_filters(params):
+    """Format iter() filter param on-the-fly.
+
+    Support passing multiple filters at once as a list with tuples.
+    """
+    filters = params.get('filter')
+    if filters and isinstance(filters, list):
+        filter_data = []
+        for elem in params.pop('filter'):
+            if not isinstance(elem, (list, tuple)):
+                raise ValueError("Filter condition must be tuple or list")
+            filter_data.append(json.dumps(elem))
+        if filter_data:
+            params['filter'] = filter_data
+    return params

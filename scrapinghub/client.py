@@ -29,6 +29,7 @@ from .utils import get_tags_for_update
 from .utils import parse_project_id, parse_job_key
 from .utils import proxy_methods
 from .utils import wrap_kwargs
+from .utils import format_iter_filters
 
 
 class Connection(_Connection):
@@ -742,33 +743,22 @@ class _Proxy(object):
                        ('iter_raw_msgpack', 'iter_msgpack'),
                        ('iter_raw_json', 'iter_json')]
             self._proxy_methods(methods)
-
-            # modify filter params for all iter* methods
-            for method in [method[0] for method in methods]:
-                wrapped = wrap_kwargs(getattr(self, method),
-                                      self._modify_iter_filters)
-                setattr(self, method, wrapped)
+            self._wrap_iter_methods([method[0] for method in methods])
 
     def _proxy_methods(self, methods):
         """A little helper for cleaner interface."""
         proxy_methods(self._origin, self, methods)
 
-    def _modify_iter_filters(self, params):
-        """Modify iter() filters on-the-fly.
+    def _wrap_iter_methods(self, methods):
+        """Modify kwargs for all passed self.iter* methods."""
+        for method in methods:
+            wrapped = wrap_kwargs(getattr(self, method),
+                                  self._modify_iter_params)
+            setattr(self, method, wrapped)
 
-        Base implementation is responsible for improving filters support
-        to pass multiple filters at once as a list with tuples.
-        """
-        filters = params.get('filter')
-        if filters and isinstance(filters, list):
-            filter_data = []
-            for elem in params.pop('filter'):
-                if not isinstance(elem, (list, tuple)):
-                    raise ValueError("Filter condition must be tuple or list")
-                filter_data.append(json.dumps(elem))
-            if filter_data:
-                params['filter'] = filter_data
-        return params
+    def _modify_iter_params(self, params):
+        """Modify iter() params on-the-fly."""
+        return format_iter_filters(params)
 
 
 class Logs(_Proxy):
@@ -809,7 +799,7 @@ class Logs(_Proxy):
         self._proxy_methods(['log', 'debug', 'info', 'warning', 'warn',
                              'error', 'batch_write_start'])
 
-    def _modify_iter_filters(self, params):
+    def _modify_iter_params(self, params):
         """Modify iter() filters on-the-fly.
 
         - convert offset to start parameter
@@ -818,7 +808,7 @@ class Logs(_Proxy):
         :param params: an original dictionary with params
         :return: a modified dictionary with params
         """
-        params = super(Logs, self)._modify_iter_filters(params)
+        params = super(Logs, self)._modify_iter_params(params)
         offset = params.pop('offset', None)
         if offset:
             params['start'] = '{}/{}'.format(self.key, offset)
@@ -862,13 +852,13 @@ class Items(_Proxy):
          'size': 50000}
     """
 
-    def _modify_iter_filters(self, params):
+    def _modify_iter_params(self, params):
         """Modify iter filter to convert offset to start parameter.
 
         Returns:
             dict: updated set of params
         """
-        params = super(Items, self)._modify_iter_filters(params)
+        params = super(Items, self)._modify_iter_params(params)
         offset = params.pop('offset', None)
         if offset:
             params['start'] = '{}/{}'.format(self.key, offset)
@@ -955,6 +945,7 @@ class Activity(_Proxy):
     def __init__(self, *args, **kwargs):
         super(Activity, self).__init__(*args, **kwargs)
         self._proxy_methods([('iter', 'list')])
+        self._wrap_iter_methods(['iter'])
 
     def add(self, *args, **kwargs):
         entry = dict(*args, **kwargs)
@@ -1055,6 +1046,11 @@ class Collection(object):
             ('iter', 'iter_values'),
             ('iter_raw_json', 'iter_json'),
         ])
+        # simplified version of _Proxy._wrap_iter_methods logic
+        # to provide better support for filter param in iter methods
+        for method in ['iter', 'iter_raw_json']:
+            wrapped = wrap_kwargs(getattr(self, method), format_iter_filters)
+            setattr(self, method, wrapped)
 
     def get(self, key, *args, **kwargs):
         """Get item from collection by key.
