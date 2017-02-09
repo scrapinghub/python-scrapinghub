@@ -391,6 +391,16 @@ class Jobs(object):
             params['spider'] = self.spider.name
         return self._project.jobq.list(**params)
 
+    def list(self, **params):
+        """Convenient shortcut to list iter results.
+
+        Please note that list() method can use a lot of memory and for a large
+        amount of jobs it's recommended to iterate through it via iter()
+        method (all params and available filters are same for both methods).
+
+        """
+        return list(self.iter(**params))
+
     def schedule(self, spidername=None, **params):
         """Schedule a new job and returns its jobkey.
 
@@ -762,12 +772,19 @@ class _Proxy(object):
         """Modify iter() params on-the-fly."""
         return format_iter_filters(params)
 
+    def list(self, *args, **kwargs):
+        return list(self.iter(*args, **kwargs))
+
 
 class Logs(_Proxy):
     """Representation of collection of job logs.
 
     Not a public constructor: use :class:`Job` instance to get a :class:`Logs`
     instance. See :attr:`Job.logs` attribute.
+
+    Please note that list() method can use a lot of memory and for a large
+    amount of logs it's recommended to iterate through it via iter() method
+    (all params and available filters are same for both methods).
 
     Usage:
 
@@ -776,9 +793,14 @@ class Logs(_Proxy):
         >>> job.logs.iter()
         <generator object mpdecode at 0x10f5f3aa0>
 
+    - iterate through first 100 log entries and print them::
+
+        >>> for log in job.logs.iter(count=100):
+        >>> ... print(log)
+
     - retrieve a single log entry from a job::
 
-        >>> list(job.logs.iter(count=1))
+        >>> job.logs.list(count=1)
         [{
             'level': 20,
             'message': '[scrapy.core.engine] Closing spider (finished)',
@@ -788,7 +810,7 @@ class Logs(_Proxy):
     - retrive logs with a given log level and filter by a word
 
         >>> filters = [("message", "contains", ["logger"])]
-        >>> list(job.logs.iter(level='WARNING', filter=filters))
+        >>> job.logs.list(level='WARNING', filter=filters)
         [{
             'level': 30,
             'message': 'Some warning message',
@@ -831,6 +853,10 @@ class Items(_Proxy):
     Not a public constructor: use :class:`Job` instance to get a :class:`Items`
     instance. See :attr:`Job.items` attribute.
 
+    Please note that list() method can use a lot of memory and for a large
+    amount of items it's recommended to iterate through it via iter() method
+    (all params and available filters are same for both methods).
+
     Usage:
 
     - retrieve all scraped items from a job::
@@ -838,20 +864,29 @@ class Items(_Proxy):
         >>> job.items.iter()
         <generator object mpdecode at 0x10f5f3aa0>
 
+    - iterate through first 100 items and print them::
+
+        >>> for log in job.logs.iter(count=100):
+        >>> ... print(log)
+
     - retrieve items with timestamp greater or equal to given timestamp
       (item here is an arbitrary dictionary depending on your code)::
 
-        >>> list(job.items.iter(startts=1447221694537))
-        {'name': ['Some custom item'],
-         'url': 'http://some-url/item.html',
-         'size': 100000}
+        >>> job.items.list(startts=1447221694537)
+        [{
+            'name': ['Some custom item'],
+            'url': 'http://some-url/item.html',
+            'size': 100000,
+        }]
 
     - retrieve 1 item with multiple filters:
         >>> filters = [("size", ">", [30000]), ("size", "<", [40000])]
-        >>> list(job.items.iter(count=1, filter=filters))
-        {'name': ['Some other item'],
-         'url': 'http://some-url/other-item.html',
-         'size': 50000}
+        >>> job.items.list(count=1, filter=filters)
+        [{
+            'name': ['Some other item'],
+            'url': 'http://some-url/other-item.html',
+            'size': 50000,
+        }]
     """
 
     def _modify_iter_params(self, params):
@@ -873,6 +908,10 @@ class Requests(_Proxy):
     Not a public constructor: use :class:`Job` instance to get a
     :class:`Requests` instance. See :attr:`Job.requests` attribute.
 
+    Please note that list() method can use a lot of memory and for a large
+    amount of requests it's recommended to iterate through it via iter()
+    method (all params and available filters are same for both methods).
+
     Usage:
 
     - retrieve all requests from a job::
@@ -888,7 +927,7 @@ class Requests(_Proxy):
 
     - retrieve single request from a job::
 
-        >>> list(job.requests.iter(count=1))
+        >>> job.requests.list(count=1)
         [{
         'duration': 354,
         'fp': '6d748741a927b10454c83ac285b002cd239964ea',
@@ -910,6 +949,10 @@ class Samples(_Proxy):
     Not a public constructor: use :class:`Job` instance to get a
     :class:`Samples` instance. See :attr:`Job.samples` attribute.
 
+    Please note that list() method can use a lot of memory and for a large
+    amount of samples it's recommended to iterate through it via iter()
+    method (all params and available filters are same for both methods).
+
     Usage:
 
     - retrieve all samples from a job::
@@ -919,7 +962,7 @@ class Samples(_Proxy):
 
     - retrieve samples with timestamp greater or equal to given timestamp::
 
-        >>> list(job.samples.iter(startts=1484570043851))
+        >>> job.samples.list(startts=1484570043851)
         [[1484570043851, 554, 576, 1777, 821, 0],
          [1484570046673, 561, 583, 1782, 821, 0]]
     """
@@ -931,6 +974,10 @@ class Activity(_Proxy):
     Not a public constructor: use :class:`Project` instance to get a
     :class:`Activity` instance. See :attr:`Project.activity` attribute.
 
+    Please note that list() method can use a lot of memory and for a large
+    amount of activities it's recommended to iterate through it via iter()
+    method (all params and available filters are same for both methods).
+
     Usage:
 
     - get all activity from a project::
@@ -940,7 +987,7 @@ class Activity(_Proxy):
 
     - get only last 2 events from a project::
 
-        >>> list(p.activity.iter(count=2))
+        >>> p.activity.list(count=2)
         [{'event': 'job:completed', 'job': '123/2/3', 'user': 'jobrunner'},
          {'event': 'job:cancelled', 'job': '123/2/3', 'user': 'john'}]
     """
@@ -1026,13 +1073,14 @@ class Collection(object):
 
     - iterate iterate over _key & value pair::
 
-        >>> list(foo_store.iter())
-            [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7',
-              'value': '1447221694537'}]
+        >>> for elem in foo_store.iter(count=1)):
+        >>> ... print(elem)
+        [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7',
+            'value': '1447221694537'}]
 
     - filter by multiple keys, only values for keys that exist will be returned::
 
-        >>> list(foo_store.iter(key=['002d050ee3ff6192dcbecc4e4b4457d7', 'blah']))
+        >>> foo_store.list(key=['002d050ee3ff6192dcbecc4e4b4457d7', 'blah'])
         [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'}]
 
     - delete an item by key::
@@ -1053,6 +1101,15 @@ class Collection(object):
         for method in ['iter', 'iter_raw_json']:
             wrapped = wrap_kwargs(getattr(self, method), format_iter_filters)
             setattr(self, method, wrapped)
+
+    def list(self, *args, **kwargs):
+        """Convenient shortcut to list iter results.
+
+        Please note that list() method can use a lot of memory and for a large
+        amount of elements it's recommended to iterate through it via iter()
+        method (all params and available filters are same for both methods).
+        """
+        return list(self.iter(*args, **kwargs))
 
     def get(self, key, *args, **kwargs):
         """Get item from collection by key.
