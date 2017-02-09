@@ -200,10 +200,12 @@ class Project(object):
         >>> project = client.get_project(123)
         >>> project
         <scrapinghub.client.Project at 0x106cdd6a0>
+        >>> project.key
+        '123'
     """
 
     def __init__(self, client, projectid):
-        self.key = projectid
+        self.key = str(projectid)
         self._client = client
 
         # sub-resources
@@ -287,15 +289,18 @@ class Spider(object):
 
         >>> spider = project.spiders.get('spider1')
         <scrapinghub.client.Spider at 0x106ee3748>
-        >>> spider.key
+        >>> spider.id
         '1'
+        >>> spider.key
+        '123/1'
         >>> spider.name
         'spider1'
     """
 
     def __init__(self, client, projectid, spiderid, spidername):
         self.projectid = projectid
-        self.key = str(spiderid)
+        self.key = '{}/{}'.format(str(projectid), str(spiderid))
+        self.id = str(spiderid)
         self.name = spidername
         self.jobs = Jobs(client, projectid, self)
         self._client = client
@@ -455,7 +460,7 @@ class Jobs(object):
         jobkey = parse_job_key(jobkey)
         if jobkey.projectid != self.projectid:
             raise ValueError('Please use same project id')
-        if self.spider and jobkey.spiderid != self.spider.key:
+        if self.spider and jobkey.spiderid != self.spider.id:
             raise ValueError('Please use same spider id')
         return Job(self._client, str(jobkey))
 
@@ -517,10 +522,10 @@ class Jobs(object):
     def _extract_spider_id(self, params):
         spiderid = params.pop('spiderid', None)
         if not spiderid and self.spider:
-            return self.spider.key
-        elif spiderid and self.spider and spiderid != self.spider.key:
+            return self.spider.id
+        elif spiderid and self.spider and str(spiderid) != self.spider.id:
             raise ValueError('Please use same spider id')
-        return spiderid
+        return str(spiderid)
 
     def update_tags(self, add=None, remove=None, spidername=None):
         """Update tags for all existing spider jobs.
