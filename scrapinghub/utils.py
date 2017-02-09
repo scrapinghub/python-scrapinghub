@@ -95,9 +95,13 @@ def format_iter_filters(params):
     if filters and isinstance(filters, list):
         filter_data = []
         for elem in params.pop('filter'):
-            if not isinstance(elem, (list, tuple)):
-                raise ValueError("Filter condition must be tuple or list")
-            filter_data.append(json.dumps(elem))
+            if isinstance(elem, string_types):
+                filter_data.append(elem)
+            elif isinstance(elem, (list, tuple)):
+                filter_data.append(json.dumps(elem))
+            else:
+                raise ValueError(
+                    "Filter condition must be string, tuple or list")
         if filter_data:
             params['filter'] = filter_data
     return params
