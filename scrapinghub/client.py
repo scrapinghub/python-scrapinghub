@@ -286,7 +286,7 @@ class Spider(object):
         >>> project.spiders.get('spider2')
         <scrapinghub.client.Spider at 0x106ee3748>
         >>> spider.key
-        2
+        1
         >>> spider.name
         spider2
     """
@@ -1042,7 +1042,7 @@ class Collection(object):
         self._client = client
         self._origin = _Collection(coltype, colname, collections._origin)
         proxy_methods(self._origin, self, [
-            'create_writer', 'get', 'set', 'delete', 'count',
+            'create_writer', 'delete', 'count',
             ('iter', 'iter_values'),
             ('iter_raw_json', 'iter_json'),
         ])
