@@ -293,7 +293,7 @@ class Spider(object):
 
     def __init__(self, client, projectid, spiderid, spidername):
         self.projectid = projectid
-        self.key = spiderid
+        self.key = str(spiderid)
         self.name = spidername
         self.jobs = Jobs(client, projectid, self)
         self._client = client
