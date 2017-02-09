@@ -1,5 +1,7 @@
 import json
 
+from six import string_types
+
 from scrapinghub import APIError
 from scrapinghub import Connection as _Connection
 from scrapinghub import HubstorageClient as _HubstorageClient
@@ -1092,7 +1094,7 @@ class Collection(object):
         self._client = client
         self._origin = _Collection(coltype, colname, collections._origin)
         proxy_methods(self._origin, self, [
-            'create_writer', 'delete', 'count',
+            'create_writer', 'count',
             ('iter', 'iter_values'),
             ('iter_raw_json', 'iter_json'),
         ])
@@ -1127,3 +1129,15 @@ class Collection(object):
         The method returns None (original method returns an empty generator).
         """
         self._origin.set(*args, **kwargs)
+
+    def delete(self, _keys):
+        """Delete item(s) from collection by key(s).
+
+        The method returns None (original method returns an empty generator).
+        """
+        if (not isinstance(_keys, string_types) and
+                not(isinstance(_keys, (list, tuple)) and
+                    all(isinstance(key, string_types) for key in _keys))):
+            raise ValueError(
+                "You should provide a string key or a list of string keys")
+        self._origin.delete(_keys)
