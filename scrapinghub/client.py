@@ -96,7 +96,7 @@ class ScrapinghubClient(object):
 
         Usage::
 
-            >>> job = client.get_job('1/2/3')
+            >>> job = client.get_job('123/1/1')
             >>> job
             <scrapinghub.client.Job at 0x10afe2eb1>
         """
@@ -283,12 +283,12 @@ class Spider(object):
 
     Usage::
 
-        >>> project.spiders.get('spider2')
+        >>> spider = project.spiders.get('spider1')
         <scrapinghub.client.Spider at 0x106ee3748>
         >>> spider.key
         1
         >>> spider.name
-        spider2
+        spider1
     """
 
     def __init__(self, client, projectid, spiderid, spidername):
@@ -313,7 +313,7 @@ class Jobs(object):
 
         >>> project.jobs
         <scrapinghub.client.Jobs at 0x10477f0b8>
-        >>> spider = project.spiders.get('spider2')
+        >>> spider = project.spiders.get('spider1')
         >>> spider.jobs
         <scrapinghub.client.Jobs at 0x104767e80>
     """
@@ -333,6 +333,7 @@ class Jobs(object):
 
         Usage::
 
+            >>> spider = project.spiders.get('spider1')
             >>> spider.jobs.count()
             5
             >>> project.jobs.count(spider='spider2', state='finished')
@@ -384,7 +385,7 @@ class Jobs(object):
         - get certain number of last finished jobs per some spider::
 
             >>> jobs_summary = project.jobs.iter(
-            ...     spider='foo', state='finished', count=3)
+            ...     spider='spider2', state='finished', count=3)
         """
         if self.spider:
             params['spider'] = self.spider.name
@@ -400,7 +401,7 @@ class Jobs(object):
 
         Usage::
 
-            >>> project.schedule('myspider', arg1='val1')
+            >>> project.schedule('spider1', arg1='val1')
             '123/1/1'
         """
         if not spidername and not self.spider:
@@ -526,13 +527,14 @@ class Jobs(object):
 
         - mark all spider jobs with tag ``consumed``::
 
+            >>> spider = project.spiders.get('spider1')
             >>> spider.jobs.update_tags(add=['consumed'])
             5
 
         - remove existing tag ``existing`` for all spider jobs::
 
             >>> project.jobs.update_tags(
-            ...     remove=['existing'], spidername='spider')
+            ...     remove=['existing'], spidername='spider2')
             2
         """
         spidername = spidername or (self.spider.name if self.spider else None)
