@@ -525,7 +525,7 @@ class Jobs(object):
             return self.spider.id
         elif spiderid and self.spider and str(spiderid) != self.spider.id:
             raise ValueError('Please use same spider id')
-        return str(spiderid)
+        return str(spiderid) if spiderid else None
 
     def update_tags(self, add=None, remove=None, spidername=None):
         """Update tags for all existing spider jobs.
