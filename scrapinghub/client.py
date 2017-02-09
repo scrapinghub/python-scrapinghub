@@ -286,9 +286,9 @@ class Spider(object):
         >>> spider = project.spiders.get('spider1')
         <scrapinghub.client.Spider at 0x106ee3748>
         >>> spider.key
-        1
+        '1'
         >>> spider.name
-        spider1
+        'spider1'
     """
 
     def __init__(self, client, projectid, spiderid, spidername):

@@ -26,10 +26,10 @@ class JobKey(object):
 
 def parse_project_id(projectid):
     try:
-        projectid = int(projectid)
+        int(projectid)
     except ValueError:
-        raise ValueError("Project ID should be convertible to integer")
-    return projectid
+        raise ValueError("Project id should be convertible to integer")
+    return str(projectid)
 
 
 def parse_job_key(jobkey):
@@ -42,10 +42,10 @@ def parse_job_key(jobkey):
     if len(parts) != 3:
         raise ValueError("Job key should consist of projectid/spiderid/jobid")
     try:
-        parts = map(int, parts)
+        map(int, parts)
     except ValueError:
         raise ValueError("Job key parts should be integers")
-    return JobKey(*parts)
+    return JobKey(*map(str, parts))
 
 
 def get_tags_for_update(**kwargs):
