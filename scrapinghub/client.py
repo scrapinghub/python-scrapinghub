@@ -554,8 +554,6 @@ class Jobs(object):
             ...     remove=['existing'], spidername='spider2')
             2
         """
-        if not (add or remove):
-            raise ValueError('Please provide tags to add or remove')
         spidername = spidername or (self.spider.name if self.spider else None)
         if not spidername:
             raise ValueError('Please provide spidername')
@@ -637,8 +635,6 @@ class Job(object):
 
             >>> job.update_tags(add=['consumed'])
         """
-        if not (add or remove):
-            raise ValueError('Please provide tags to add or remove')
         params = get_tags_for_update(add_tag=add, remove_tag=remove)
         if not params:
             return
