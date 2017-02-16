@@ -1,6 +1,7 @@
 import json
 
 from six import string_types
+from requests.compat import urljoin
 
 from scrapinghub import APIError
 from scrapinghub import Connection as _Connection
@@ -304,6 +305,16 @@ class Spider(object):
         self.name = spidername
         self.jobs = Jobs(client, projectid, self)
         self._client = client
+
+    @wrap_http_errors
+    def update_tags(self, add=None, remove=None):
+        params = get_tags_for_update(add=add, remove=remove)
+        if not params:
+            return
+        path = 'v2/projects/{}/spiders/{}/tags'.format(self.projectid, self.id)
+        url = urljoin(self._client._connection.url, path)
+        response = self._client._connection._session.patch(url, json=params)
+        response.raise_for_status()
 
 
 class Jobs(object):
