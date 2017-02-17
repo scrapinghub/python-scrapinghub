@@ -74,8 +74,8 @@ And select a particular project to work with::
     >>> project = client.get_project(123)
     >>> project
     <scrapinghub.client.Project at 0x106cdd6a0>
-    >>> project.id
-    123
+    >>> project.key
+    '123'
 
 The above is a shortcut for ``client.projects.get(123)``.
 
@@ -116,8 +116,8 @@ To select a particular spider to work with::
     >>> spider = project.spiders.get('spider2')
     >>> spider
     <scrapinghub.client.Spider at 0x106ee3748>
-    >>> spider.id
-    2
+    >>> spider.key
+    '123/2'
     >>> spider.name
     spider2
 
@@ -144,7 +144,7 @@ get
 To select a specific job for a project::
 
     >>> job = project.jobs.get('123/1/2')
-    >>> job.id
+    >>> job.key
     '123/1/2'
 
 Also there's a shortcut to get same job with client instance::

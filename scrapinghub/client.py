@@ -282,16 +282,12 @@ class Spider(object):
     a :class:`Spider` instance. See :meth:`Spiders.get` method.
 
     :ivar projectid: integer project id.
-    :ivar id: integer spider id.
     :ivar name: a spider name string.
     :ivar jobs: a collection of jobs, :class:`Jobs` object.
 
     Usage::
 
         >>> spider = project.spiders.get('spider1')
-        <scrapinghub.client.Spider at 0x106ee3748>
-        >>> spider.id
-        '1'
         >>> spider.key
         '123/1'
         >>> spider.name
@@ -301,7 +297,7 @@ class Spider(object):
     def __init__(self, client, projectid, spiderid, spidername):
         self.projectid = projectid
         self.key = '{}/{}'.format(str(projectid), str(spiderid))
-        self.id = str(spiderid)
+        self._id = str(spiderid)
         self.name = spidername
         self.jobs = Jobs(client, projectid, self)
         self._client = client
@@ -309,14 +305,15 @@ class Spider(object):
     @wrap_http_errors
     def update_tags(self, add=None, remove=None):
         params = get_tags_for_update(add=add, remove=remove)
-        path = 'v2/projects/{}/spiders/{}/tags'.format(self.projectid, self.id)
+        path = 'v2/projects/{}/spiders/{}/tags'.format(self.projectid,
+                                                       self._id)
         url = urljoin(self._client._connection.url, path)
         response = self._client._connection._session.patch(url, json=params)
         response.raise_for_status()
 
     @wrap_http_errors
     def list_tags(self):
-        path = 'v2/projects/{}/spiders/{}'.format(self.projectid, self.id)
+        path = 'v2/projects/{}/spiders/{}'.format(self.projectid, self._id)
         url = urljoin(self._client._connection.url, path)
         response = self._client._connection._session.get(url)
         response.raise_for_status()
@@ -477,7 +474,7 @@ class Jobs(object):
         jobkey = parse_job_key(jobkey)
         if jobkey.projectid != self.projectid:
             raise ValueError('Please use same project id')
-        if self.spider and jobkey.spiderid != self.spider.id:
+        if self.spider and jobkey.spiderid != self.spider._id:
             raise ValueError('Please use same spider id')
         return Job(self._client, str(jobkey))
 
@@ -539,8 +536,8 @@ class Jobs(object):
     def _extract_spider_id(self, params):
         spiderid = params.pop('spiderid', None)
         if not spiderid and self.spider:
-            return self.spider.id
-        elif spiderid and self.spider and str(spiderid) != self.spider.id:
+            return self.spider._id
+        elif spiderid and self.spider and str(spiderid) != self.spider._id:
             raise ValueError('Please use same spider id')
         return str(spiderid) if spiderid else None
 
