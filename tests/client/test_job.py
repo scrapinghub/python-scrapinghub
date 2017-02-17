@@ -9,8 +9,8 @@ from .conftest import TEST_SPIDER_NAME
 def test_job_base(client, spider):
     job = spider.jobs.schedule()
     assert isinstance(job, Job)
-    assert job.projectid == int(TEST_PROJECT_ID)
-    assert job.key.startswith(TEST_PROJECT_ID + '/' + str(spider.key))
+    assert job.projectid == TEST_PROJECT_ID
+    assert job.key.startswith(spider.key)
 
     assert isinstance(job.items, Items)
     assert isinstance(job.logs, Logs)
@@ -72,8 +72,7 @@ def test_job_start_extras(spider):
         'false': False,
         'nil': None,
     }
-    started = next(job.start(**extras))
-    assert job.key == started['key']
+    assert job.start(**extras) == 'pending'
     for k, v in extras.items():
         if type(v) is float:
             assert abs(job.metadata.get(k) - v) < 0.0001

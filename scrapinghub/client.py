@@ -1,9 +1,9 @@
 import json
+import collections
 
 from six import string_types
 from requests.compat import urljoin
 
-from scrapinghub import APIError
 from scrapinghub import Connection as _Connection
 from scrapinghub import HubstorageClient as _HubstorageClient
 
@@ -24,9 +24,9 @@ from .hubstorage.job import Logs as _Logs
 from .hubstorage.job import Samples as _Samples
 from .hubstorage.job import Requests as _Requests
 
-from .exceptions import (
-    NotFound, DuplicateJobError, wrap_http_errors, wrap_value_too_large
-)
+from .exceptions import NotFound, InvalidUsage, DuplicateJobError
+from .exceptions import wrap_http_errors, wrap_value_too_large
+
 from .utils import LogLevel
 from .utils import get_tags_for_update
 from .utils import parse_project_id, parse_job_key
@@ -309,12 +309,18 @@ class Spider(object):
     @wrap_http_errors
     def update_tags(self, add=None, remove=None):
         params = get_tags_for_update(add=add, remove=remove)
-        if not params:
-            return
         path = 'v2/projects/{}/spiders/{}/tags'.format(self.projectid, self.id)
         url = urljoin(self._client._connection.url, path)
         response = self._client._connection._session.patch(url, json=params)
         response.raise_for_status()
+
+    @wrap_http_errors
+    def list_tags(self):
+        path = 'v2/projects/{}/spiders/{}'.format(self.projectid, self.id)
+        url = urljoin(self._client._connection.url, path)
+        response = self._client._connection._session.get(url)
+        response.raise_for_status()
+        return response.json().get('tags', [])
 
 
 class Jobs(object):
@@ -444,7 +450,7 @@ class Jobs(object):
         try:
             response = self._client._connection._post(
                 'schedule', 'json', params)
-        except APIError as exc:
+        except InvalidUsage as exc:
             if 'already scheduled' in str(exc):
                 raise DuplicateJobError(exc)
             raise
@@ -647,8 +653,6 @@ class Job(object):
             >>> job.update_tags(add=['consumed'])
         """
         params = get_tags_for_update(add_tag=add, remove_tag=remove)
-        if not params:
-            return
         params.update({'project': self.projectid, 'job': self.key})
         result = self._client._connection._post('jobs_update', 'json', params)
         return result['count']
@@ -1152,8 +1156,7 @@ class Collection(object):
         The method returns None (original method returns an empty generator).
         """
         if (not isinstance(_keys, string_types) and
-                not(isinstance(_keys, (list, tuple)) and
-                    all(isinstance(key, string_types) for key in _keys))):
-            raise ValueError(
-                "You should provide a string key or a list of string keys")
+                not isinstance(_keys, collections.Iterable)):
+            raise ValueError("You should provide string key or iterable "
+                             "object providing string keys")
         self._origin.delete(_keys)

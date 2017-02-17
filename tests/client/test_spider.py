@@ -2,9 +2,10 @@ import types
 from collections import defaultdict
 
 import pytest
+from six import string_types
 from six.moves import range
 
-from scrapinghub.exceptions import NotFound, DuplicateJobError
+from scrapinghub.exceptions import NotFound, DuplicateJobError, InvalidUsage
 from scrapinghub.client import Jobs, Job
 from scrapinghub.client import Spider
 from scrapinghub.utils import JobKey
@@ -16,9 +17,6 @@ from .utils import validate_default_meta
 def test_spiders_get(project):
     spider = project.spiders.get(TEST_SPIDER_NAME)
     assert isinstance(spider, Spider)
-    assert isinstance(spider.key, int)
-    assert spider.name == TEST_SPIDER_NAME
-    assert spider.projectid == int(TEST_PROJECT_ID)
     assert isinstance(spider.jobs, Jobs)
 
     with pytest.raises(NotFound):
@@ -32,35 +30,30 @@ def test_spiders_list(project):
 
 
 def test_spider_base(project, spider):
-    assert spider.key == 1
+    assert isinstance(spider.id, string_types)
+    assert isinstance(spider.key, string_types)
+    assert spider.key == spider.projectid + '/' + spider.id
     assert spider.name == TEST_SPIDER_NAME
-    assert spider.projectid == int(TEST_PROJECT_ID)
+    assert spider.projectid == TEST_PROJECT_ID
     assert isinstance(project.jobs, Jobs)
 
 
-def test_spider_update_tags(project, spider):
-    # empty updates
-    assert spider.update_tags() is None
-    assert spider.update_tags(
-        add=['new1', 'new2'], remove=['old1', 'old2']) == 0
+def test_spider_list_update_tags(project, spider):
+    # FIXME empty update should fail
+    with pytest.raises(InvalidUsage):
+        spider.update_tags()
 
-    jobs = [project.jobs.schedule(TEST_SPIDER_NAME, subid='tags-' + str(i))
-            for i in range(2)]
-    # FIXME the endpoint normalises tags so it's impossible to send tags
-    # having upper-cased symbols, let's add more tests when it's fixed
-    assert spider.update_tags(add=['tag-a', 'tag-b', 'tag-c']) == 2
-    for job in jobs:
-        assert job.metadata.liveget('tags') == ['tag-a', 'tag-b', 'tag-c']
-    assert spider.update_tags(remove=['tag-c', 'tag-d']) == 2
-    for job in jobs:
-        assert job.metadata.liveget('tags') == ['tag-a', 'tag-b']
-    # FIXME adding and removing tags at the same time doesn't work neither:
-    # remove-tag field is ignored if there's non-void add-tag field
+    spider.update_tags(add=['new1', 'new2'])
+    assert spider.list_tags() == ['new1', 'new2']
+    spider.update_tags(add=['new2', 'new3'], remove=['new1'])
+    assert spider.list_tags() == ['new2', 'new3']
+    spider.update_tags(remove=['new2', 'new3'])
+    assert spider.list_tags() == []
 
 
 def test_spider_jobs(spider):
     jobs = spider.jobs
-    assert jobs.projectid == int(TEST_PROJECT_ID)
+    assert jobs.projectid == TEST_PROJECT_ID
     assert jobs.spider is spider
 
 
@@ -113,6 +106,30 @@ def test_spider_jobs_iter(spider):
         next(jobs1)
 
 
+def test_spider_jobs_list(spider):
+    spider.jobs.schedule(meta={'state': 'running'})
+
+    # no finished jobs
+    jobs0 = spider.jobs.list()
+    assert isinstance(jobs0, list)
+    assert len(jobs0) == 0
+
+    # filter by state must work like for iter
+    jobs1 = spider.jobs.list(state='running')
+    assert len(jobs1) == 1
+    job = jobs1[0]
+    assert isinstance(job, dict)
+    ts = job.get('ts')
+    assert isinstance(ts, int) and ts > 0
+    running_time = job.get('running_time')
+    assert isinstance(running_time, int) and running_time > 0
+    elapsed = job.get('elapsed')
+    assert isinstance(elapsed, int) and elapsed > 0
+    assert job.get('key').startswith(TEST_PROJECT_ID)
+    assert job.get('spider') == TEST_SPIDER_NAME
+    assert job.get('state') == 'running'
+
+
 def test_spider_jobs_schedule(spider):
     job0 = spider.jobs.schedule()
     assert isinstance(job0, Job)
@@ -152,7 +169,7 @@ def test_spider_jobs_get(spider):
     with pytest.raises(ValueError):
         spider.jobs.get(TEST_PROJECT_ID + '/2/3')
 
-    fake_job_id = str(JobKey(TEST_PROJECT_ID, spider.key, 3))
+    fake_job_id = str(JobKey(spider.projectid, spider.id, 3))
     fake_job = spider.jobs.get(fake_job_id)
     assert isinstance(fake_job, Job)
 

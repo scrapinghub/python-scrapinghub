@@ -14,7 +14,7 @@ from .utils import validate_default_meta
 
 
 def test_project_subresources(project):
-    assert project.key == int(TEST_PROJECT_ID)
+    assert project.key == TEST_PROJECT_ID
     assert isinstance(project.collections, Collections)
     assert isinstance(project.jobs, Jobs)
     assert isinstance(project.spiders, Spiders)
@@ -25,7 +25,7 @@ def test_project_subresources(project):
 
 def test_project_jobs(project):
     jobs = project.jobs
-    assert jobs.projectid == int(TEST_PROJECT_ID)
+    assert jobs.projectid == TEST_PROJECT_ID
     assert jobs.spider is None
 
 
@@ -80,6 +80,30 @@ def test_project_jobs_iter(project):
 
     with pytest.raises(StopIteration):
         next(jobs1)
+
+
+def test_project_jobs_list(project):
+    project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'running'})
+
+    # no finished jobs
+    jobs0 = project.jobs.list()
+    assert isinstance(jobs0, list)
+    assert len(jobs0) == 0
+
+    # filter by state must work like for iter
+    jobs1 = project.jobs.list(state='running')
+    assert len(jobs1) == 1
+    job = jobs1[0]
+    assert isinstance(job, dict)
+    ts = job.get('ts')
+    assert isinstance(ts, int) and ts > 0
+    running_time = job.get('running_time')
+    assert isinstance(running_time, int) and running_time > 0
+    elapsed = job.get('elapsed')
+    assert isinstance(elapsed, int) and elapsed > 0
+    assert job.get('key').startswith(TEST_PROJECT_ID)
+    assert job.get('spider') == TEST_SPIDER_NAME
+    assert job.get('state') == 'running'
 
 
 def test_project_jobs_schedule(project):

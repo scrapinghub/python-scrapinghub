@@ -69,7 +69,7 @@ def is_using_real_services(request):
 
 @pytest.fixture(scope='session')
 def client():
-    return ScrapinghubClient(auth=TEST_ADMIN_AUTH,
+    return ScrapinghubClient(apikey=TEST_ADMIN_AUTH,
                              endpoint=TEST_HS_ENDPOINT,
                              dash_endpoint=TEST_DASH_ENDPOINT)
 
@@ -81,10 +81,15 @@ def project(client):
 
 @my_vcr.use_cassette()
 @pytest.fixture(scope='session')
-def spider(project):
+def spider(project, request):
     # on normal conditions you can't create a new spider this way:
     # it can only be created on project deploy as usual
-    return project.spiders.get(TEST_SPIDER_NAME, create=True)
+    spider = project.spiders.get(TEST_SPIDER_NAME, create=True)
+    if is_using_real_services(request):
+        existing_tags = spider.list_tags()
+        if existing_tags:
+            spider.update_tags(remove=existing_tags)
+    return spider
 
 
 @pytest.fixture(scope='session')
