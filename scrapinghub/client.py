@@ -1147,13 +1147,13 @@ class Collection(object):
         """
         self._origin.set(*args, **kwargs)
 
-    def delete(self, _keys):
+    def delete(self, keys):
         """Delete item(s) from collection by key(s).
 
         The method returns None (original method returns an empty generator).
         """
-        if (not isinstance(_keys, string_types) and
-                not isinstance(_keys, collections.Iterable)):
+        if (not isinstance(keys, string_types) and
+                not isinstance(keys, collections.Iterable)):
             raise ValueError("You should provide string key or iterable "
                              "object providing string keys")
-        self._origin.delete(_keys)
+        self._origin.delete(keys)
