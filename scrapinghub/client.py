@@ -157,6 +157,13 @@ class Projects(object):
         """
         return self._client._connection.project_ids()
 
+    def iter(self):
+        """Iterate through list of projects available to current user.
+
+        Provided for the sake of API consistency.
+        """
+        return iter(self.list())
+
     def summary(self, **params):
         """Get short summaries for all available user projects.
 
@@ -273,6 +280,13 @@ class Spiders(object):
         """
         project = self._client._connection[self.projectid]
         return project.spiders()
+
+    def iter(self):
+        """Iterate through a list of spiders for a project.
+
+        Provided for the sake of API consistency.
+        """
+        return iter(self.list())
 
 
 class Spider(object):
@@ -1057,8 +1071,13 @@ class Collections(_Proxy):
     def get_versioned_cached_store(self, colname):
         return self.get('vcs', colname)
 
+    def iter(self):
+        """Iterate through collections of a project."""
+        return self._origin.apiget('list')
+
     def list(self):
-        return list(self._origin.apiget('list'))
+        """List collections of a project."""
+        return list(self.iter())
 
 
 class Collection(object):
