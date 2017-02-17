@@ -65,8 +65,12 @@ def wrap_http_errors(method):
             raise
         except APIError as exc:
             msg = exc.args[0]
-            if 'format must be either json or jl' in msg:
+            if exc._type == APIError.ERR_NOT_FOUND:
+                raise NotFound(msg)
+            elif exc._type == APIError.ERR_VALUE_ERROR:
                 raise ValueError(msg)
+            elif exc._type == APIError.ERR_INVALID_USAGE:
+                raise InvalidUsage(msg)
             raise ScrapinghubAPIError(msg)
     return wrapped
 
