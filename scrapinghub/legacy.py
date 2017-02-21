@@ -60,10 +60,10 @@ class Connection(object):
 
         assert not apikey.startswith('http://'), \
                 "Instantiating scrapinghub.Connection with url as first argument is not supported"
-        assert not password, \
-                "Authentication with user:pass is not supported, use your apikey instead"
-
+        if password:
+            warnings.warn("A lot of endpoints support authentication only via apikey.")
         self.apikey = apikey
+        self.password = password or ''
         self.url = url or self.DEFAULT_ENDPOINT
         self._session = self._create_session()
 
@@ -74,13 +74,13 @@ class Connection(object):
     def auth(self):
         warnings.warn("'auth' connection attribute is deprecated, "
                       "use 'apikey' attribute instead", stacklevel=2)
-        return (self.apikey, '')
+        return (self.apikey, self.password)
 
     def _create_session(self):
         from requests import session
         from scrapinghub import __version__
         s = session()
-        s.auth = (self.apikey, '')
+        s.auth = (self.apikey, self.password)
         s.headers.update({
             'User-Agent': 'python-scrapinghub/{0}'.format(__version__),
         })

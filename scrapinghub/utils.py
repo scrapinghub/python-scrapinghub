@@ -1,6 +1,8 @@
 import json
 import logging
+import binascii
 
+from codecs import decode
 from six import string_types
 
 
@@ -105,3 +107,28 @@ def format_iter_filters(params):
         if filter_data:
             params['filter'] = filter_data
     return params
+
+
+def parse_auth(auth):
+    """Parse authentification token.
+
+    >>> parse_auth(None)
+    >>> parse_auth(('user', 'pass'))
+    ('user', 'pass')
+    >>> parse_auth('user:pass')
+    ('user', 'pass')
+    >>> parse_auth('apikey')
+    ('apikey', '')
+    >>> parse_auth('312f322f333a736f6d652e6a77742e746f6b656e')
+    ('1/2/3', 'some.jwt.token')
+    """
+    if auth is None or isinstance(auth, tuple):
+        return auth
+    try:
+        auth = decode(auth, 'hex_codec')
+        if not isinstance(auth, string_types):
+            auth = auth.decode('ascii')
+    except binascii.Error:
+        pass
+    user, _, password = auth.partition(':')
+    return user, password

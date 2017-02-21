@@ -29,6 +29,7 @@ from .exceptions import wrap_http_errors, wrap_value_too_large
 
 from .utils import LogLevel
 from .utils import get_tags_for_update
+from .utils import parse_auth
 from .utils import parse_project_id, parse_job_key
 from .utils import proxy_methods
 from .utils import wrap_kwargs
@@ -52,7 +53,7 @@ class HubstorageClient(_HubstorageClient):
 class ScrapinghubClient(object):
     """Main class to work with Scrapinghub API.
 
-    :param apikey: Scrapinghub APIKEY string.
+    :param auth: Scrapinghub APIKEY or other SH auth credentials.
     :param dash_endpoint: (optional) Scrapinghub Dash panel url.
     :param \*\*kwargs: (optional) Additional arguments for
         :class:`scrapinghub.hubstorage.HubstorageClient` constructor.
@@ -67,10 +68,15 @@ class ScrapinghubClient(object):
         <scrapinghub.client.ScrapinghubClient at 0x1047af2e8>
     """
 
-    def __init__(self, apikey=None, dash_endpoint=None, **kwargs):
+    def __init__(self, auth=None, dash_endpoint=None, **kwargs):
         self.projects = Projects(self)
-        self._connection = Connection(apikey=apikey, url=dash_endpoint)
-        self._hsclient = HubstorageClient(auth=apikey, **kwargs)
+        auth = parse_auth(auth)
+        connection_kwargs = {'apikey': auth, 'url': dash_endpoint}
+        if len(auth) == 2:
+            connection_kwargs['apikey'] = auth[0]
+            connection_kwargs['password'] = auth[1]
+        self._connection = Connection(**connection_kwargs)
+        self._hsclient = HubstorageClient(auth=auth, **kwargs)
 
     def get_project(self, projectid):
         """Get :class:`Project` instance with a given project id.
