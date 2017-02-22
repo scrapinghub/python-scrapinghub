@@ -457,6 +457,13 @@ class Jobs(object):
             raise ValueError('Please provide spidername')
         params['project'] = self.projectid
         params['spider'] = spidername or self.spider.name
+        spider_args = params.pop('spider_args', None)
+        if spider_args:
+            if not isinstance(spider_args, dict):
+                raise ValueError("spider_args should be a dictionary")
+            cleaned_args = {k: v for k, v in spider_args.items()
+                            if k not in params}
+            params.update(cleaned_args)
         if 'job_settings' in params:
             params['job_settings'] = json.dumps(params['job_settings'])
         if 'meta' in params:
