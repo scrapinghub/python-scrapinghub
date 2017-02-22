@@ -11,7 +11,6 @@ from .hubstorage.resourcetype import DownloadableResource
 from .hubstorage.resourcetype import ItemsResourceType
 
 # scrapinghub.hubstorage classes to use as-is
-from .hubstorage.frontier import Frontier
 from .hubstorage.job import JobMeta
 from .hubstorage.project import Settings
 
@@ -19,6 +18,7 @@ from .hubstorage.project import Settings
 from .hubstorage.activity import Activity as _Activity
 from .hubstorage.collectionsrt import Collections as _Collections
 from .hubstorage.collectionsrt import Collection as _Collection
+from .hubstorage.frontier import Frontier as _Frontier
 from .hubstorage.job import Items as _Items
 from .hubstorage.job import Logs as _Logs
 from .hubstorage.job import Samples as _Samples
@@ -227,7 +227,7 @@ class Project(object):
         # proxied sub-resources
         self.activity = Activity(_Activity, client, projectid)
         self.collections = Collections(_Collections, client, projectid)
-        self.frontier = Frontier(client._hsclient, projectid)
+        self.frontier = Frontier(_Frontier, client, projectid)
         self.settings = Settings(client._hsclient, projectid)
 
 
@@ -1082,6 +1082,31 @@ class Collections(_Proxy):
     def list(self):
         """List collections of a project."""
         return list(self.iter())
+
+
+class Frontier(_Proxy):
+    """Frontiers collection for a project."""
+
+    def __init__(self, *args, **kwargs):
+        super(Frontier, self).__init__(*args, **kwargs)
+        self._proxy_methods(['close', 'flush', 'add', 'read', 'delete',
+                             'delete_slot'])
+
+    @property
+    def newcount(self):
+        return self._origin.newcount
+
+    def iter(self):
+        return iter(self.list())
+
+    def list(self):
+        return next(self._origin.apiget('list'))
+
+    def iter_slots(self, name):
+        return iter(self.list_slots(name))
+
+    def list_slots(self, name):
+        return next(self._origin.apiget((name, 'list')))
 
 
 class Collection(object):
