@@ -32,11 +32,6 @@ def test_connection_init_assert_apikey_not_url():
         Connection(password='testpass', apikey='http://some-url')
 
 
-def test_connection_init_with_password():
-    with pytest.raises(AssertionError):
-        Connection(apikey='testkey', password='testpass')
-
-
 def test_connection_init_with_default_url():
     conn = Connection(apikey='testkey')
     assert conn.url == Connection.DEFAULT_ENDPOINT
