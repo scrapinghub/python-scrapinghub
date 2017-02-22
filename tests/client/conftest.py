@@ -69,7 +69,7 @@ def is_using_real_services(request):
 
 @pytest.fixture(scope='session')
 def client():
-    return ScrapinghubClient(apikey=TEST_ADMIN_AUTH,
+    return ScrapinghubClient(auth=TEST_ADMIN_AUTH,
                              endpoint=TEST_HS_ENDPOINT,
                              dash_endpoint=TEST_DASH_ENDPOINT)
 

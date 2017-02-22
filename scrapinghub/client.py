@@ -70,13 +70,11 @@ class ScrapinghubClient(object):
 
     def __init__(self, auth=None, dash_endpoint=None, **kwargs):
         self.projects = Projects(self)
-        auth = parse_auth(auth)
-        connection_kwargs = {'apikey': auth, 'url': dash_endpoint}
-        if len(auth) == 2:
-            connection_kwargs['apikey'] = auth[0]
-            connection_kwargs['password'] = auth[1]
-        self._connection = Connection(**connection_kwargs)
-        self._hsclient = HubstorageClient(auth=auth, **kwargs)
+        login, password = parse_auth(auth)
+        self._connection = Connection(apikey=login,
+                                      password=password,
+                                      url=dash_endpoint)
+        self._hsclient = HubstorageClient(auth=(login, password), **kwargs)
 
     def get_project(self, projectid):
         """Get :class:`Project` instance with a given project id.

@@ -1,9 +1,10 @@
+import os
 import json
 import logging
 import binascii
 
 from codecs import decode
-from six import string_types
+from six import string_types, binary_type
 
 
 class LogLevel(object):
@@ -112,23 +113,53 @@ def format_iter_filters(params):
 def parse_auth(auth):
     """Parse authentification token.
 
+    >>> parse_auth(None)  # noqa
+    RuntimeError: No API key provided and SH_APIKEY environment variable not set
+    >>> os.environ['SH_APIKEY'] = 'apikey'
     >>> parse_auth(None)
+    ('apikey', '')
     >>> parse_auth(('user', 'pass'))
     ('user', 'pass')
     >>> parse_auth('user:pass')
     ('user', 'pass')
-    >>> parse_auth('apikey')
-    ('apikey', '')
+    >>> parse_auth('c3a3c298c2b8c3a6c291c284c3a9')
+    ('c3a3c298c2b8c3a6c291c284c3a9', '')
     >>> parse_auth('312f322f333a736f6d652e6a77742e746f6b656e')
     ('1/2/3', 'some.jwt.token')
     """
-    if auth is None or isinstance(auth, tuple):
+    if auth is None:
+        apikey = os.environ.get('SH_APIKEY')
+        if apikey is None:
+            raise RuntimeError("No API key provided and SH_APIKEY "
+                               "environment variable not set")
+        return (apikey, '')
+
+    if isinstance(auth, tuple):
+        if len(auth) != 2:
+            raise ValueError("Wrong amount of authentication credentials")
+        if not isinstance(auth[0], string_types):
+            raise ValueError("Login must me of a string type")
+        if not (auth[1] is None or isinstance(auth[1], string_types)):
+            raise ValueError("Password must be None or of a string type")
         return auth
+
+    if not isinstance(auth, string_types):
+        raise ValueError("Wrong authentication credentials")
+
+    decoded_auth = None
     try:
-        auth = decode(auth, 'hex_codec')
-        if not isinstance(auth, string_types):
-            auth = auth.decode('ascii')
-    except binascii.Error:
+        decoded_auth = decode(auth, 'hex_codec')
+    except (binascii.Error, TypeError):
+        login, _, password = auth.partition(':')
+        return (login, password)
+
+    try:
+        if not isinstance(decoded_auth, string_types):
+            decoded_auth = decoded_auth.decode('ascii')
+        login, _, password = decoded_auth.partition(':')
+        if password and parse_job_key(login):
+            return (login, password)
+    except (UnicodeDecodeError, ValueError):
         pass
-    user, _, password = auth.partition(':')
-    return user, password
+
+    return (auth, '')
