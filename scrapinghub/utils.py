@@ -151,6 +151,8 @@ def parse_auth(auth):
         decoded_auth = decode(auth, 'hex_codec')
     except (binascii.Error, TypeError):
         login, _, password = auth.partition(':')
+        if not password:
+            raise ValueError("Bad apikey, please check your credentials")
         return (login, password)
 
     try:

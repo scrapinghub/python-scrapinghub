@@ -76,6 +76,11 @@ def test_parse_auth_simple():
     assert parse_auth('user:pass') == ('user', 'pass')
 
 
+def test_parse_auth_bad_apikey():
+    with pytest.raises(ValueError):
+        parse_auth('apikey')
+
+
 def test_parse_auth_apikey():
     test_key = u'\xe3\x98\xb8\xe6\x91\x84\xe9'
     apikey = encode(test_key.encode('utf8'), 'hex_codec').decode('ascii')
