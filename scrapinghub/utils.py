@@ -113,8 +113,6 @@ def format_iter_filters(params):
 def parse_auth(auth):
     """Parse authentification token.
 
-    >>> parse_auth(None)  # noqa
-    RuntimeError: No API key provided and SH_APIKEY environment variable not set
     >>> os.environ['SH_APIKEY'] = 'apikey'
     >>> parse_auth(None)
     ('apikey', '')
@@ -135,26 +133,27 @@ def parse_auth(auth):
         return (apikey, '')
 
     if isinstance(auth, tuple):
-        if len(auth) != 2:
-            raise ValueError("Wrong amount of authentication credentials")
-        if not isinstance(auth[0], string_types):
-            raise ValueError("Login must me of a string type")
-        if not (auth[1] is None or isinstance(auth[1], string_types)):
-            raise ValueError("Password must be None or of a string type")
+        all_strings = all(isinstance(k, string_types) for k in auth)
+        if len(auth) != 2 or not all_strings:
+            raise ValueError("Wrong authentication credentials")
         return auth
 
     if not isinstance(auth, string_types):
         raise ValueError("Wrong authentication credentials")
 
-    decoded_auth = None
+    jwt_auth = _search_for_jwt_credentials(auth)
+    if jwt_auth:
+        return jwt_auth
+
+    login, _, password = auth.partition(':')
+    return (login, password)
+
+
+def _search_for_jwt_credentials(auth):
     try:
         decoded_auth = decode(auth, 'hex_codec')
     except (binascii.Error, TypeError):
-        login, _, password = auth.partition(':')
-        if not password:
-            raise ValueError("Bad apikey, please check your credentials")
-        return (login, password)
-
+        return
     try:
         if not isinstance(decoded_auth, string_types):
             decoded_auth = decoded_auth.decode('ascii')
@@ -163,5 +162,3 @@ def parse_auth(auth):
             return (login, password)
     except (UnicodeDecodeError, ValueError):
         pass
-
-    return (auth, '')

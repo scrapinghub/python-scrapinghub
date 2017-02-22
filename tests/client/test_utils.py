@@ -55,7 +55,7 @@ def test_parse_auth_none_with_env():
 
 def test_parse_auth_tuple():
     assert parse_auth(('test', 'test')) == ('test', 'test')
-    assert parse_auth(('apikey', None)) == ('apikey', None)
+    assert parse_auth(('apikey', '')) == ('apikey', '')
 
     with pytest.raises(ValueError):
         parse_auth(('user', 'pass', 'bad-param'))
@@ -76,14 +76,8 @@ def test_parse_auth_simple():
     assert parse_auth('user:pass') == ('user', 'pass')
 
 
-def test_parse_auth_bad_apikey():
-    with pytest.raises(ValueError):
-        parse_auth('apikey')
-
-
 def test_parse_auth_apikey():
-    test_key = u'\xe3\x98\xb8\xe6\x91\x84\xe9'
-    apikey = encode(test_key.encode('utf8'), 'hex_codec').decode('ascii')
+    apikey = 'c3a3c298c2b8c3a6c291c284c3a9'
     assert parse_auth(apikey) == (apikey, '')
 
 
