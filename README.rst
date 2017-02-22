@@ -88,7 +88,7 @@ Jobs instance is described well in ``Jobs`` section below.
 
 For example, to schedule a spider run (it returns a job object)::
 
-    >>> project.jobs.schedule('spider1', arg1='val1')
+    >>> project.jobs.schedule('spider1', spider_args={'arg1':'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
 
 Project instance also has the following fields:
@@ -128,7 +128,7 @@ Like project instance, spider instance has ``jobs`` field to work with the spide
 
 To schedule a spider run::
 
-    >>> spider.jobs.schedule(arg1='val1')
+    >>> spider.jobs.schedule(spider_args={'arg1:'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
 
 Note that you don't need to specify spider name explicitly.
@@ -160,6 +160,7 @@ Use ``schedule`` method to schedule a new job for project/spider::
 
 Scheduling logic supports different options, like
 
+- spider_args to provide spider arguments for the job
 - units to specify amount of units to schedule the job
 - job_settings to pass additional settings for the job
 - priority to set higher/lower priority of the job
