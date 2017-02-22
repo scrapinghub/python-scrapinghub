@@ -29,9 +29,10 @@ def test_job_update_metadata(spider):
 
 
 def test_job_update_tags(spider):
-    job1 = spider.jobs.schedule(subid='tags-1', add_tag=['tag1'])
-    job2 = spider.jobs.schedule(subid='tags-2', add_tag=['tag2'])
-
+    job1 = spider.jobs.schedule(spider_args={'subid': 'tags-1'},
+                                add_tag=['tag1'])
+    job2 = spider.jobs.schedule(spider_args={'subid': 'tags-2'},
+                                add_tag=['tag2'])
     # FIXME the endpoint normalises tags so it's impossible to send tags
     # having upper-cased symbols, let's add more tests when it's fixed
     assert job1.update_tags(add=['tag11', 'tag12']) == 1

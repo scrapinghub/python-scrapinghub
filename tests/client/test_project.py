@@ -38,13 +38,13 @@ def test_project_jobs_count(project):
 
     for i in range(2):
         project.jobs.schedule(TEST_SPIDER_NAME,
-                              subid='running-%s' % i,
+                              spider_args={'subid': 'running-%s' % i},
                               meta={'state': 'running'})
     assert project.jobs.count(state='running') == 2
 
     for i in range(3):
         project.jobs.schedule(TEST_SPIDER_NAME,
-                              subid='finished%s' % i,
+                              spider_args={'subid': 'finished%s' % i},
                               meta={'state': 'finished'})
     assert project.jobs.count(state='finished') == 3
 
@@ -123,7 +123,7 @@ def test_project_jobs_schedule(project):
         project.jobs.schedule(TEST_SPIDER_NAME)
 
     job1 = project.jobs.schedule(TEST_SPIDER_NAME,
-                                 arg1='val1', arg2='val2',
+                                 spider_args={'arg1':'val1', 'arg2': 'val2'},
                                  priority=3, units=3,
                                  add_tag=['tagA', 'tagB'],
                                  meta={'state': 'running', 'meta1': 'val1'})
@@ -157,7 +157,7 @@ def test_project_jobs_summary(project):
     for state in sorted(counts):
         for i in range(counts[state]):
             job = project.jobs.schedule(TEST_SPIDER_NAME,
-                                        subid=state + str(i),
+                                        spider_args={'subid': state + str(i)},
                                         meta={'state': state})
             jobs[state].append(job.key)
     summary1 = project.jobs.summary()
@@ -202,7 +202,7 @@ def test_project_jobs_iter_last(project):
 
     # next iter_last should return last spider's job
     job2 = project.jobs.schedule(TEST_SPIDER_NAME,
-                                 subid=1,
+                                 spider_args={'subid': 1},
                                  meta={'state': 'finished'})
     lastsumm2 = list(project.jobs.iter_last())
     assert len(lastsumm2) == 1

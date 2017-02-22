@@ -66,11 +66,13 @@ def test_spider_jobs_count(spider):
     assert jobs.count(state='pending') == 1
 
     for i in range(2):
-        jobs.schedule(subid='running-%s' % i, meta={'state': 'running'})
+        jobs.schedule(spider_args={'subid': 'running-%s' % i},
+                      meta={'state': 'running'})
     assert jobs.count(state='running') == 2
 
     for i in range(3):
-        jobs.schedule(subid='finished%s' % i, meta={'state': 'finished'})
+        jobs.schedule(spider_args={'subid': 'finished%s' % i},
+                      meta={'state': 'finished'})
     assert jobs.count(state='finished') == 3
 
     assert jobs.count(state=['pending', 'running', 'finished']) == 6
@@ -141,7 +143,7 @@ def test_spider_jobs_schedule(spider):
     with pytest.raises(DuplicateJobError):
         spider.jobs.schedule()
 
-    job1 = spider.jobs.schedule(arg1='val1', arg2='val2',
+    job1 = spider.jobs.schedule(spider_args={'arg1': 'val1', 'arg2': 'val2'},
                                 priority=3, units=3,
                                 meta={'state': 'running', 'meta1': 'val1'},
                                 add_tag=['tagA', 'tagB'])
@@ -184,7 +186,7 @@ def test_spider_jobs_summary(spider):
     jobs = defaultdict(list)
     for state in sorted(counts):
         for i in range(counts[state]):
-            job = spider.jobs.schedule(subid=state + str(i),
+            job = spider.jobs.schedule(spider_args={'subid': state + str(i)},
                                        meta={'state': state})
             jobs[state].append(job.key)
     summary1 = spider.jobs.summary()
@@ -228,7 +230,8 @@ def test_spider_jobs_iter_last(spider):
     assert lastsumm1[0].get('ts') > 0
 
     # next iter_last should return last spider's job again
-    job2 = spider.jobs.schedule(subid=1, meta={'state': 'finished'})
+    job2 = spider.jobs.schedule(spider_args={'subid': 1},
+                                meta={'state': 'finished'})
     lastsumm2 = list(spider.jobs.iter_last())
     assert len(lastsumm2) == 1
     assert lastsumm2[0].get('key') == job2.key
