@@ -1,6 +1,9 @@
 import json
+import collections
 
-from scrapinghub import APIError
+from six import string_types
+from requests.compat import urljoin
+
 from scrapinghub import Connection as _Connection
 from scrapinghub import HubstorageClient as _HubstorageClient
 
@@ -8,7 +11,6 @@ from .hubstorage.resourcetype import DownloadableResource
 from .hubstorage.resourcetype import ItemsResourceType
 
 # scrapinghub.hubstorage classes to use as-is
-from .hubstorage.frontier import Frontier
 from .hubstorage.job import JobMeta
 from .hubstorage.project import Settings
 
@@ -16,19 +18,22 @@ from .hubstorage.project import Settings
 from .hubstorage.activity import Activity as _Activity
 from .hubstorage.collectionsrt import Collections as _Collections
 from .hubstorage.collectionsrt import Collection as _Collection
+from .hubstorage.frontier import Frontier as _Frontier
 from .hubstorage.job import Items as _Items
 from .hubstorage.job import Logs as _Logs
 from .hubstorage.job import Samples as _Samples
 from .hubstorage.job import Requests as _Requests
 
-from .exceptions import (
-    NotFound, DuplicateJobError, wrap_http_errors, wrap_value_too_large
-)
+from .exceptions import NotFound, InvalidUsage, DuplicateJobError
+from .exceptions import wrap_http_errors, wrap_value_too_large
+
 from .utils import LogLevel
 from .utils import get_tags_for_update
+from .utils import parse_auth
 from .utils import parse_project_id, parse_job_key
 from .utils import proxy_methods
 from .utils import wrap_kwargs
+from .utils import format_iter_filters
 
 
 class Connection(_Connection):
@@ -48,7 +53,7 @@ class HubstorageClient(_HubstorageClient):
 class ScrapinghubClient(object):
     """Main class to work with Scrapinghub API.
 
-    :param apikey: Scrapinghub APIKEY string.
+    :param auth: Scrapinghub APIKEY or other SH auth credentials.
     :param dash_endpoint: (optional) Scrapinghub Dash panel url.
     :param \*\*kwargs: (optional) Additional arguments for
         :class:`scrapinghub.hubstorage.HubstorageClient` constructor.
@@ -63,10 +68,13 @@ class ScrapinghubClient(object):
         <scrapinghub.client.ScrapinghubClient at 0x1047af2e8>
     """
 
-    def __init__(self, apikey=None, dash_endpoint=None, **kwargs):
+    def __init__(self, auth=None, dash_endpoint=None, **kwargs):
         self.projects = Projects(self)
-        self._connection = Connection(apikey=apikey, url=dash_endpoint)
-        self._hsclient = HubstorageClient(auth=apikey, **kwargs)
+        login, password = parse_auth(auth)
+        self._connection = Connection(apikey=login,
+                                      password=password,
+                                      url=dash_endpoint)
+        self._hsclient = HubstorageClient(auth=(login, password), **kwargs)
 
     def get_project(self, projectid):
         """Get :class:`Project` instance with a given project id.
@@ -95,7 +103,7 @@ class ScrapinghubClient(object):
 
         Usage::
 
-            >>> job = client.get_job('1/2/3')
+            >>> job = client.get_job('123/1/1')
             >>> job
             <scrapinghub.client.Job at 0x10afe2eb1>
         """
@@ -153,6 +161,13 @@ class Projects(object):
         """
         return self._client._connection.project_ids()
 
+    def iter(self):
+        """Iterate through list of projects available to current user.
+
+        Provided for the sake of API consistency.
+        """
+        return iter(self.list())
+
     def summary(self, **params):
         """Get short summaries for all available user projects.
 
@@ -197,10 +212,12 @@ class Project(object):
         >>> project = client.get_project(123)
         >>> project
         <scrapinghub.client.Project at 0x106cdd6a0>
+        >>> project.key
+        '123'
     """
 
     def __init__(self, client, projectid):
-        self.id = projectid
+        self.key = str(projectid)
         self._client = client
 
         # sub-resources
@@ -210,7 +227,7 @@ class Project(object):
         # proxied sub-resources
         self.activity = Activity(_Activity, client, projectid)
         self.collections = Collections(_Collections, client, projectid)
-        self.frontier = Frontier(client._hsclient, projectid)
+        self.frontier = Frontier(_Frontier, client, projectid)
         self.settings = Settings(client._hsclient, projectid)
 
 
@@ -268,6 +285,13 @@ class Spiders(object):
         project = self._client._connection[self.projectid]
         return project.spiders()
 
+    def iter(self):
+        """Iterate through a list of spiders for a project.
+
+        Provided for the sake of API consistency.
+        """
+        return iter(self.list())
+
 
 class Spider(object):
     """Class representing a Spider object.
@@ -276,26 +300,42 @@ class Spider(object):
     a :class:`Spider` instance. See :meth:`Spiders.get` method.
 
     :ivar projectid: integer project id.
-    :ivar id: integer spider id.
     :ivar name: a spider name string.
     :ivar jobs: a collection of jobs, :class:`Jobs` object.
 
     Usage::
 
-        >>> project.spiders.get('spider2')
-        <scrapinghub.client.Spider at 0x106ee3748>
-        >>> spider.id
-        2
+        >>> spider = project.spiders.get('spider1')
+        >>> spider.key
+        '123/1'
         >>> spider.name
-        spider2
+        'spider1'
     """
 
     def __init__(self, client, projectid, spiderid, spidername):
         self.projectid = projectid
-        self.id = spiderid
+        self.key = '{}/{}'.format(str(projectid), str(spiderid))
+        self._id = str(spiderid)
         self.name = spidername
         self.jobs = Jobs(client, projectid, self)
         self._client = client
+
+    @wrap_http_errors
+    def update_tags(self, add=None, remove=None):
+        params = get_tags_for_update(add=add, remove=remove)
+        path = 'v2/projects/{}/spiders/{}/tags'.format(self.projectid,
+                                                       self._id)
+        url = urljoin(self._client._connection.url, path)
+        response = self._client._connection._session.patch(url, json=params)
+        response.raise_for_status()
+
+    @wrap_http_errors
+    def list_tags(self):
+        path = 'v2/projects/{}/spiders/{}'.format(self.projectid, self._id)
+        url = urljoin(self._client._connection.url, path)
+        response = self._client._connection._session.get(url)
+        response.raise_for_status()
+        return response.json().get('tags', [])
 
 
 class Jobs(object):
@@ -312,7 +352,7 @@ class Jobs(object):
 
         >>> project.jobs
         <scrapinghub.client.Jobs at 0x10477f0b8>
-        >>> spider = project.spiders.get('spider2')
+        >>> spider = project.spiders.get('spider1')
         >>> spider.jobs
         <scrapinghub.client.Jobs at 0x104767e80>
     """
@@ -332,6 +372,7 @@ class Jobs(object):
 
         Usage::
 
+            >>> spider = project.spiders.get('spider1')
             >>> spider.jobs.count()
             5
             >>> project.jobs.count(spider='spider2', state='finished')
@@ -383,11 +424,21 @@ class Jobs(object):
         - get certain number of last finished jobs per some spider::
 
             >>> jobs_summary = project.jobs.iter(
-            ...     spider='foo', state='finished', count=3)
+            ...     spider='spider2', state='finished', count=3)
         """
         if self.spider:
             params['spider'] = self.spider.name
         return self._project.jobq.list(**params)
+
+    def list(self, **params):
+        """Convenient shortcut to list iter results.
+
+        Please note that list() method can use a lot of memory and for a large
+        amount of jobs it's recommended to iterate through it via iter()
+        method (all params and available filters are same for both methods).
+
+        """
+        return list(self.iter(**params))
 
     def schedule(self, spidername=None, **params):
         """Schedule a new job and returns its jobkey.
@@ -399,13 +450,20 @@ class Jobs(object):
 
         Usage::
 
-            >>> project.schedule('myspider', arg1='val1')
+            >>> project.schedule('spider1', arg1='val1')
             '123/1/1'
         """
         if not spidername and not self.spider:
             raise ValueError('Please provide spidername')
         params['project'] = self.projectid
         params['spider'] = spidername or self.spider.name
+        spider_args = params.pop('spider_args', None)
+        if spider_args:
+            if not isinstance(spider_args, dict):
+                raise ValueError("spider_args should be a dictionary")
+            cleaned_args = {k: v for k, v in spider_args.items()
+                            if k not in params}
+            params.update(cleaned_args)
         if 'job_settings' in params:
             params['job_settings'] = json.dumps(params['job_settings'])
         if 'meta' in params:
@@ -414,7 +472,7 @@ class Jobs(object):
         try:
             response = self._client._connection._post(
                 'schedule', 'json', params)
-        except APIError as exc:
+        except InvalidUsage as exc:
             if 'already scheduled' in str(exc):
                 raise DuplicateJobError(exc)
             raise
@@ -435,13 +493,13 @@ class Jobs(object):
         Usage::
 
             >>> job = project.jobs.get('123/1/2')
-            >>> job.id
+            >>> job.key
             '123/1/2'
         """
         jobkey = parse_job_key(jobkey)
         if jobkey.projectid != self.projectid:
             raise ValueError('Please use same project id')
-        if self.spider and jobkey.spiderid != self.spider.id:
+        if self.spider and jobkey.spiderid != self.spider._id:
             raise ValueError('Please use same spider id')
         return Job(self._client, str(jobkey))
 
@@ -503,10 +561,10 @@ class Jobs(object):
     def _extract_spider_id(self, params):
         spiderid = params.pop('spiderid', None)
         if not spiderid and self.spider:
-            return self.spider.id
-        elif spiderid and self.spider and spiderid != self.spider.id:
+            return self.spider._id
+        elif spiderid and self.spider and str(spiderid) != self.spider._id:
             raise ValueError('Please use same spider id')
-        return spiderid
+        return str(spiderid) if spiderid else None
 
     def update_tags(self, add=None, remove=None, spidername=None):
         """Update tags for all existing spider jobs.
@@ -525,13 +583,14 @@ class Jobs(object):
 
         - mark all spider jobs with tag ``consumed``::
 
+            >>> spider = project.spiders.get('spider1')
             >>> spider.jobs.update_tags(add=['consumed'])
             5
 
         - remove existing tag ``existing`` for all spider jobs::
 
             >>> project.jobs.update_tags(
-            ...     remove=['existing'], spidername='spider')
+            ...     remove=['existing'], spidername='spider2')
             2
         """
         spidername = spidername or (self.spider.name if self.spider else None)
@@ -563,7 +622,7 @@ class Job(object):
     Usage::
 
         >>> job = project.job('123/1/2')
-        >>> job.id
+        >>> job.key
         '123/1/2'
         >>> job.metadata['state']
         'finished'
@@ -616,8 +675,6 @@ class Job(object):
             >>> job.update_tags(add=['consumed'])
         """
         params = get_tags_for_update(add_tag=add, remove_tag=remove)
-        if not params:
-            return
         params.update({'project': self.projectid, 'job': self.key})
         result = self._client._connection._post('jobs_update', 'json', params)
         return result['count']
@@ -736,23 +793,31 @@ class _Proxy(object):
             setattr(self, 'write', wrap_value_too_large(origin_method))
 
         # DType iter_values() has more priority than IType list()
-        if issubclass(cls, DownloadableResource):
+        # plus Collections interface doesn't need the iter methods
+        if issubclass(cls, DownloadableResource) and cls is not Collections:
             methods = [('iter', 'iter_values'),
                        ('iter_raw_msgpack', 'iter_msgpack'),
                        ('iter_raw_json', 'iter_json')]
             self._proxy_methods(methods)
-
-            # apply_iter_filters is responsible to modify filter params for all
-            # iter* calls: should be used only if defined for a child class
-            if hasattr(self, '_modify_iter_filters'):
-                apply_fn = getattr(self, '_modify_iter_filters')
-                for method in [method[0] for method in methods]:
-                    wrapped = wrap_kwargs(getattr(self, method), apply_fn)
-                    setattr(self, method, wrapped)
+            self._wrap_iter_methods([method[0] for method in methods])
 
     def _proxy_methods(self, methods):
         """A little helper for cleaner interface."""
         proxy_methods(self._origin, self, methods)
+
+    def _wrap_iter_methods(self, methods):
+        """Modify kwargs for all passed self.iter* methods."""
+        for method in methods:
+            wrapped = wrap_kwargs(getattr(self, method),
+                                  self._modify_iter_params)
+            setattr(self, method, wrapped)
+
+    def _modify_iter_params(self, params):
+        """Modify iter() params on-the-fly."""
+        return format_iter_filters(params)
+
+    def list(self, *args, **kwargs):
+        return list(self.iter(*args, **kwargs))
 
 
 class Logs(_Proxy):
@@ -761,6 +826,10 @@ class Logs(_Proxy):
     Not a public constructor: use :class:`Job` instance to get a :class:`Logs`
     instance. See :attr:`Job.logs` attribute.
 
+    Please note that list() method can use a lot of memory and for a large
+    amount of logs it's recommended to iterate through it via iter() method
+    (all params and available filters are same for both methods).
+
     Usage:
 
     - retrieve all logs from a job::
@@ -768,13 +837,28 @@ class Logs(_Proxy):
         >>> job.logs.iter()
         <generator object mpdecode at 0x10f5f3aa0>
 
+    - iterate through first 100 log entries and print them::
+
+        >>> for log in job.logs.iter(count=100):
+        >>> ... print(log)
+
     - retrieve a single log entry from a job::
 
-        >>> list(job.logs.iter(count=1))
+        >>> job.logs.list(count=1)
         [{
             'level': 20,
             'message': '[scrapy.core.engine] Closing spider (finished)',
-            'time': 1482233733976},
+            'time': 1482233733976,
+        }]
+
+    - retrive logs with a given log level and filter by a word
+
+        >>> filters = [("message", "contains", ["logger"])]
+        >>> job.logs.list(level='WARNING', filter=filters)
+        [{
+            'level': 30,
+            'message': 'Some warning message',
+            'time': 1486375511188,
         }]
     """
 
@@ -783,7 +867,7 @@ class Logs(_Proxy):
         self._proxy_methods(['log', 'debug', 'info', 'warning', 'warn',
                              'error', 'batch_write_start'])
 
-    def _modify_iter_filters(self, params):
+    def _modify_iter_params(self, params):
         """Modify iter() filters on-the-fly.
 
         - convert offset to start parameter
@@ -792,6 +876,7 @@ class Logs(_Proxy):
         :param params: an original dictionary with params
         :return: a modified dictionary with params
         """
+        params = super(Logs, self)._modify_iter_params(params)
         offset = params.pop('offset', None)
         if offset:
             params['start'] = '{}/{}'.format(self.key, offset)
@@ -800,7 +885,9 @@ class Logs(_Proxy):
             minlevel = getattr(LogLevel, level, None)
             if minlevel is None:
                 raise ValueError("Unknown log level: {}".format(level))
-            params['filter'] = json.dumps(['level', '>=', [minlevel]])
+            level_filter = json.dumps(['level', '>=', [minlevel]])
+            # there can already be some filters handled by super class method
+            params['filter'] = params.get('filter', []) + [level_filter]
         return params
 
 
@@ -810,6 +897,10 @@ class Items(_Proxy):
     Not a public constructor: use :class:`Job` instance to get a :class:`Items`
     instance. See :attr:`Job.items` attribute.
 
+    Please note that list() method can use a lot of memory and for a large
+    amount of items it's recommended to iterate through it via iter() method
+    (all params and available filters are same for both methods).
+
     Usage:
 
     - retrieve all scraped items from a job::
@@ -817,20 +908,38 @@ class Items(_Proxy):
         >>> job.items.iter()
         <generator object mpdecode at 0x10f5f3aa0>
 
+    - iterate through first 100 items and print them::
+
+        >>> for log in job.logs.iter(count=100):
+        >>> ... print(log)
+
     - retrieve items with timestamp greater or equal to given timestamp
       (item here is an arbitrary dictionary depending on your code)::
 
-        >>> list(job.items.iter(startts=1447221694537))
-        {'name': ['Some custom item'],
-         'url': 'http://some-url/item.html'}]
+        >>> job.items.list(startts=1447221694537)
+        [{
+            'name': ['Some custom item'],
+            'url': 'http://some-url/item.html',
+            'size': 100000,
+        }]
+
+    - retrieve 1 item with multiple filters:
+        >>> filters = [("size", ">", [30000]), ("size", "<", [40000])]
+        >>> job.items.list(count=1, filter=filters)
+        [{
+            'name': ['Some other item'],
+            'url': 'http://some-url/other-item.html',
+            'size': 50000,
+        }]
     """
 
-    def _modify_iter_filters(self, params):
+    def _modify_iter_params(self, params):
         """Modify iter filter to convert offset to start parameter.
 
         Returns:
             dict: updated set of params
         """
+        params = super(Items, self)._modify_iter_params(params)
         offset = params.pop('offset', None)
         if offset:
             params['start'] = '{}/{}'.format(self.key, offset)
@@ -842,6 +951,10 @@ class Requests(_Proxy):
 
     Not a public constructor: use :class:`Job` instance to get a
     :class:`Requests` instance. See :attr:`Job.requests` attribute.
+
+    Please note that list() method can use a lot of memory and for a large
+    amount of requests it's recommended to iterate through it via iter()
+    method (all params and available filters are same for both methods).
 
     Usage:
 
@@ -858,7 +971,7 @@ class Requests(_Proxy):
 
     - retrieve single request from a job::
 
-        >>> list(job.requests.iter(count=1))
+        >>> job.requests.list(count=1)
         [{
         'duration': 354,
         'fp': '6d748741a927b10454c83ac285b002cd239964ea',
@@ -880,6 +993,10 @@ class Samples(_Proxy):
     Not a public constructor: use :class:`Job` instance to get a
     :class:`Samples` instance. See :attr:`Job.samples` attribute.
 
+    Please note that list() method can use a lot of memory and for a large
+    amount of samples it's recommended to iterate through it via iter()
+    method (all params and available filters are same for both methods).
+
     Usage:
 
     - retrieve all samples from a job::
@@ -889,7 +1006,7 @@ class Samples(_Proxy):
 
     - retrieve samples with timestamp greater or equal to given timestamp::
 
-        >>> list(job.samples.iter(startts=1484570043851))
+        >>> job.samples.list(startts=1484570043851)
         [[1484570043851, 554, 576, 1777, 821, 0],
          [1484570046673, 561, 583, 1782, 821, 0]]
     """
@@ -901,6 +1018,10 @@ class Activity(_Proxy):
     Not a public constructor: use :class:`Project` instance to get a
     :class:`Activity` instance. See :attr:`Project.activity` attribute.
 
+    Please note that list() method can use a lot of memory and for a large
+    amount of activities it's recommended to iterate through it via iter()
+    method (all params and available filters are same for both methods).
+
     Usage:
 
     - get all activity from a project::
@@ -910,19 +1031,24 @@ class Activity(_Proxy):
 
     - get only last 2 events from a project::
 
-        >>> list(p.activity.iter(count=2))
+        >>> p.activity.list(count=2)
         [{'event': 'job:completed', 'job': '123/2/3', 'user': 'jobrunner'},
          {'event': 'job:cancelled', 'job': '123/2/3', 'user': 'john'}]
     """
     def __init__(self, *args, **kwargs):
         super(Activity, self).__init__(*args, **kwargs)
         self._proxy_methods([('iter', 'list')])
+        self._wrap_iter_methods(['iter'])
 
     def add(self, *args, **kwargs):
-        self._origin.add(*args, **kwargs)
+        entry = dict(*args, **kwargs)
+        return self.post(entry)
 
-    def post(self, *args, **kwargs):
-        self._origin.post(*args, **kwargs)
+    def post(self, _value, **kwargs):
+        jobkey = _value.get('job') or kwargs.get('job')
+        if jobkey and parse_job_key(jobkey).projectid != self.key:
+            raise ValueError('Please use same project id')
+        self._origin.post(_value, **kwargs)
 
 
 class Collections(_Proxy):
@@ -934,6 +1060,8 @@ class Collections(_Proxy):
     Usage::
 
         >>> collections = project.collections
+        >>> collections.list()
+        [{'name': 'Pages', 'type': 's'}]
         >>> foo_store = collections.get_store('foo_store')
     """
 
@@ -953,6 +1081,39 @@ class Collections(_Proxy):
 
     def get_versioned_cached_store(self, colname):
         return self.get('vcs', colname)
+
+    def iter(self):
+        """Iterate through collections of a project."""
+        return self._origin.apiget('list')
+
+    def list(self):
+        """List collections of a project."""
+        return list(self.iter())
+
+
+class Frontier(_Proxy):
+    """Frontiers collection for a project."""
+
+    def __init__(self, *args, **kwargs):
+        super(Frontier, self).__init__(*args, **kwargs)
+        self._proxy_methods(['close', 'flush', 'add', 'read', 'delete',
+                             'delete_slot'])
+
+    @property
+    def newcount(self):
+        return self._origin.newcount
+
+    def iter(self):
+        return iter(self.list())
+
+    def list(self):
+        return next(self._origin.apiget('list'))
+
+    def iter_slots(self, name):
+        return iter(self.list_slots(name))
+
+    def list_slots(self, name):
+        return next(self._origin.apiget((name, 'list')))
 
 
 class Collection(object):
@@ -986,13 +1147,14 @@ class Collection(object):
 
     - iterate iterate over _key & value pair::
 
-        >>> list(foo_store.iter())
-            [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7',
-              'value': '1447221694537'}]
+        >>> for elem in foo_store.iter(count=1)):
+        >>> ... print(elem)
+        [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7',
+            'value': '1447221694537'}]
 
     - filter by multiple keys, only values for keys that exist will be returned::
 
-        >>> list(foo_store.iter(key=['002d050ee3ff6192dcbecc4e4b4457d7', 'blah']))
+        >>> foo_store.list(key=['002d050ee3ff6192dcbecc4e4b4457d7', 'blah'])
         [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'}]
 
     - delete an item by key::
@@ -1004,10 +1166,24 @@ class Collection(object):
         self._client = client
         self._origin = _Collection(coltype, colname, collections._origin)
         proxy_methods(self._origin, self, [
-            'create_writer', 'get', 'set', 'delete', 'count',
+            'create_writer', 'count',
             ('iter', 'iter_values'),
             ('iter_raw_json', 'iter_json'),
         ])
+        # simplified version of _Proxy._wrap_iter_methods logic
+        # to provide better support for filter param in iter methods
+        for method in ['iter', 'iter_raw_json']:
+            wrapped = wrap_kwargs(getattr(self, method), format_iter_filters)
+            setattr(self, method, wrapped)
+
+    def list(self, *args, **kwargs):
+        """Convenient shortcut to list iter results.
+
+        Please note that list() method can use a lot of memory and for a large
+        amount of elements it's recommended to iterate through it via iter()
+        method (all params and available filters are same for both methods).
+        """
+        return list(self.iter(*args, **kwargs))
 
     def get(self, key, *args, **kwargs):
         """Get item from collection by key.
@@ -1018,3 +1194,21 @@ class Collection(object):
         if key is None:
             raise ValueError("key cannot be None")
         return self._origin.get(key, *args, **kwargs)
+
+    def set(self, *args, **kwargs):
+        """Set item to collection by key.
+
+        The method returns None (original method returns an empty generator).
+        """
+        self._origin.set(*args, **kwargs)
+
+    def delete(self, keys):
+        """Delete item(s) from collection by key(s).
+
+        The method returns None (original method returns an empty generator).
+        """
+        if (not isinstance(keys, string_types) and
+                not isinstance(keys, collections.Iterable)):
+            raise ValueError("You should provide string key or iterable "
+                             "object providing string keys")
+        self._origin.delete(keys)

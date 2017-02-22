@@ -60,10 +60,10 @@ class Connection(object):
 
         assert not apikey.startswith('http://'), \
                 "Instantiating scrapinghub.Connection with url as first argument is not supported"
-        assert not password, \
-                "Authentication with user:pass is not supported, use your apikey instead"
-
+        if password:
+            warnings.warn("A lot of endpoints support authentication only via apikey.")
         self.apikey = apikey
+        self.password = password or ''
         self.url = url or self.DEFAULT_ENDPOINT
         self._session = self._create_session()
 
@@ -74,13 +74,13 @@ class Connection(object):
     def auth(self):
         warnings.warn("'auth' connection attribute is deprecated, "
                       "use 'apikey' attribute instead", stacklevel=2)
-        return (self.apikey, '')
+        return (self.apikey, self.password)
 
     def _create_session(self):
         from requests import session
         from scrapinghub import __version__
         s = session()
-        s.auth = (self.apikey, '')
+        s.auth = (self.apikey, self.password)
         s.headers.update({
             'User-Agent': 'python-scrapinghub/{0}'.format(__version__),
         })
@@ -146,6 +146,10 @@ class Connection(object):
             try:
                 if data['status'] == 'ok':
                     return data
+                elif (data['status'] == 'error' and
+                        data['message'] == 'Authentication failed'):
+                    raise APIError(data['message'],
+                                   _type=APIError.ERR_AUTH_ERROR)
                 elif data['status'] in ('error', 'badrequest'):
                     raise APIError(data['message'],
                                    _type=APIError.ERR_INVALID_USAGE)
@@ -402,6 +406,7 @@ class APIError(Exception):
     ERR_NOT_FOUND = 1
     ERR_VALUE_ERROR = 2
     ERR_INVALID_USAGE = 3
+    ERR_AUTH_ERROR = 4
 
     def __init__(self, message, _type=None):
         super(APIError, self).__init__(message)

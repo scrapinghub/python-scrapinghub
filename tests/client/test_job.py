@@ -9,8 +9,8 @@ from .conftest import TEST_SPIDER_NAME
 def test_job_base(client, spider):
     job = spider.jobs.schedule()
     assert isinstance(job, Job)
-    assert job.projectid == int(TEST_PROJECT_ID)
-    assert job.key.startswith(TEST_PROJECT_ID + '/' + str(spider.id))
+    assert job.projectid == TEST_PROJECT_ID
+    assert job.key.startswith(spider.key)
 
     assert isinstance(job.items, Items)
     assert isinstance(job.logs, Logs)
@@ -29,9 +29,10 @@ def test_job_update_metadata(spider):
 
 
 def test_job_update_tags(spider):
-    job1 = spider.jobs.schedule(subid='tags-1', add_tag=['tag1'])
-    job2 = spider.jobs.schedule(subid='tags-2', add_tag=['tag2'])
-
+    job1 = spider.jobs.schedule(spider_args={'subid': 'tags-1'},
+                                add_tag=['tag1'])
+    job2 = spider.jobs.schedule(spider_args={'subid': 'tags-2'},
+                                add_tag=['tag2'])
     # FIXME the endpoint normalises tags so it's impossible to send tags
     # having upper-cased symbols, let's add more tests when it's fixed
     assert job1.update_tags(add=['tag11', 'tag12']) == 1
@@ -72,8 +73,7 @@ def test_job_start_extras(spider):
         'false': False,
         'nil': None,
     }
-    started = next(job.start(**extras))
-    assert job.key == started['key']
+    assert job.start(**extras) == 'pending'
     for k, v in extras.items():
         if type(v) is float:
             assert abs(job.metadata.get(k) - v) < 0.0001
