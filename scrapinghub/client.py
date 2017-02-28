@@ -227,7 +227,7 @@ class Project(object):
         # proxied sub-resources
         self.activity = Activity(_Activity, client, projectid)
         self.collections = Collections(_Collections, client, projectid)
-        self.frontier = Frontier(_Frontier, client, projectid)
+        self.frontiers = Frontiers(_Frontier, client, projectid)
         self.settings = Settings(client._hsclient, projectid)
 
 
@@ -1051,6 +1051,54 @@ class Activity(_Proxy):
         self._origin.post(_value, **kwargs)
 
 
+class Frontiers(_Proxy):
+    """Frontiers collection for a project."""
+
+    def __init__(self, *args, **kwargs):
+        super(Frontiers, self).__init__(*args, **kwargs)
+        self._proxy_methods(['close', 'flush'])
+
+    def get(self, name):
+        return Frontier(self._client, self, name)
+
+    def iter(self):
+        return iter(self.list())
+
+    def list(self):
+        return next(self._origin.apiget('list'))
+
+    @property
+    def newcount(self):
+        return self._origin.newcount
+
+
+class Frontier(object):
+    """Representation of a frontier object."""
+
+    def __init__(self, client, frontiers, name):
+        self.key = name
+        self._client = client
+        self._frontiers = frontiers
+
+    def add(self, slot, fps):
+        return self._frontiers._origin.add(self.key, slot, fps)
+
+    def read(self, slot, mincount=None):
+        return self._frontiers._origin.read(self.key, slot, mincount)
+
+    def delete(self, slot, ids):
+        return self._frontiers._origin.delete(self.key, slot, ids)
+
+    def delete_slot(self, slot):
+        return self._frontiers._origin.delete_slot(self.key, slot)
+
+    def iter_slots(self):
+        return iter(self.list_slots())
+
+    def list_slots(self):
+        return next(self._frontiers._origin.apiget((self.key, 'list')))
+
+
 class Collections(_Proxy):
     """Access to project collections.
 
@@ -1089,31 +1137,6 @@ class Collections(_Proxy):
     def list(self):
         """List collections of a project."""
         return list(self.iter())
-
-
-class Frontier(_Proxy):
-    """Frontiers collection for a project."""
-
-    def __init__(self, *args, **kwargs):
-        super(Frontier, self).__init__(*args, **kwargs)
-        self._proxy_methods(['close', 'flush', 'add', 'read', 'delete',
-                             'delete_slot'])
-
-    @property
-    def newcount(self):
-        return self._origin.newcount
-
-    def iter(self):
-        return iter(self.list())
-
-    def list(self):
-        return next(self._origin.apiget('list'))
-
-    def iter_slots(self, name):
-        return iter(self.list_slots(name))
-
-    def list_slots(self, name):
-        return next(self._origin.apiget((name, 'list')))
 
 
 class Collection(object):
