@@ -95,7 +95,7 @@ Project instance also has the following fields:
 
 - activity - access to project activity records
 - collections - work with project collections (see ``Collections`` section)
-- frontier - using project frontier (see ``Frontier`` section)
+- frontiers - using project frontier (see ``Frontiers`` section)
 - settings - interface to project settings
 - spiders - access to spiders collection (see ``Spiders`` section)
 
@@ -411,44 +411,74 @@ Usual workflow with `Collections`_ would be::
 
 Collections are available on project level only.
 
-Frontier
---------
+Frontiers
+---------
 
 Typical workflow with `Frontier`_::
 
-    >>> frontier = project.frontier
+    >>> frontiers = project.frontiers
+
+Get all frontiers from a project to iterate through it::
+
+    >>> frontiers.iter()
+    <list_iterator at 0x103c93630>
+
+List all frontiers::
+
+    >>> frontiers.list()
+    ['test', 'test1', 'test2']
+
+Get a frontier by name::
+
+    >>> frontier = frontiers.get('test')
+    >>> frontier
+    <scrapinghub.client.Frontier at 0x1048ae4a8>
+
+Get an iterator to iterate through a frontier slots::
+
+    >>> frontier.iter_slots()
+    <list_iterator at 0x1030736d8>
+
+List all slots::
+
+    >>> frontier.list_slots()
+    ['example.com', 'example.com2']
 
 Add a request to the frontier::
 
-    >>> frontier.add('test', 'example.com', [{'fp': '/some/path.html'}])
+    >>> frontier.add('example.com', [{'fp': '/some/path.html'}])
     >>> frontier.flush()
-    >>> frontier.newcount
-    1
 
 Add requests with additional parameters::
 
-    >>> frontier.add('test', 'example.com', [{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
+    >>> frontier.add('example.com', [{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
     >>> frontier.flush()
-    >>> frontier.newcount
-    2
 
 To delete the slot ``example.com`` from the frontier::
 
-    >>> frontier.delete_slot('test', 'example.com')
+    >>> frontier.delete_slot('example.com')
 
 To retrieve requests for a given slot::
 
-    >>> reqs = frontier.read('test', 'example.com')
+    >>> reqs = frontier.read('example.com')
 
 To delete a batch of requests::
 
-    >>> frontier.delete('test', 'example.com', '00013967d8af7b0001')
+    >>> frontier.delete('example.com', '00013967d8af7b0001')
 
 To retrieve fingerprints for a given slot::
 
-    >>> fps = [req['requests'] for req in frontier.read('test', 'example.com')]
+    >>> fps = [req['requests'] for req in frontier.read('example.com')]
 
-Frontier is available on project level only.
+Flush data of all frontiers of a project::
+
+    >>> frontiers.flush()
+
+Close batch writers of all frontiers of a project::
+
+    >>> frontiers.close()
+
+Frontiers are available on project level only.
 
 Tags
 ----

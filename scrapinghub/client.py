@@ -1052,8 +1052,31 @@ class Activity(_Proxy):
 
 
 class Frontiers(_Proxy):
-    """Frontiers collection for a project."""
+    """Frontiers collection for a project.
 
+    Not a public constructor: use :class:`Project` instance to get a
+    :class:`Frontiers` instance. See :attr:`Project.frontiers` attribute.
+
+    Usage:
+
+    - get all frontiers from a project::
+        >>> project.frontiers.iter()
+        <list_iterator at 0x103c93630>
+
+    - list all frontiers
+        >>> project.frontiers.list()
+        ['test', 'test1', 'test2']
+
+    - get a frontier by name
+        >>> project.frontiers.get('test')
+        <scrapinghub.client.Frontier at 0x1048ae4a8>
+
+    - flush data of all frontiers of a project
+        >>> project.frontiers.flush()
+
+    - close batch writers of all frontiers of a project
+        >>> project.frontiers.close()
+    """
     def __init__(self, *args, **kwargs):
         super(Frontiers, self).__init__(*args, **kwargs)
         self._proxy_methods(['close', 'flush'])
@@ -1073,7 +1096,45 @@ class Frontiers(_Proxy):
 
 
 class Frontier(object):
-    """Representation of a frontier object."""
+    """Representation of a frontier object.
+
+    Not a public constructor: use :class:`Frontiers` instance to get a
+    :class:`Frontier` instance. See :meth:`Frontiers.get` method.
+
+    Usage:
+
+    - get iterator with all slots
+        >>> frontier.iter_slots()
+        <list_iterator at 0x1030736d8>
+
+    - list all slots
+        >>> frontier.list_slots()
+        ['example.com', 'example.com2']
+
+    - add request to a slot
+        >>> data = [{'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}]
+        >>> frontier.add('example.com', data)
+
+    - read requests from a slot
+        >>> data = frontier.read('example.com')
+        >>> data
+        <generator object jldecode at 0x1049aa9e8>
+        >>> list(data)
+        [{'id': '0115a8579633600006',
+          'requests': [['page1.html', {'depth': 1}]]}]
+
+    - delete a request from a slot
+        >>> frontier.delete('example.com', '0115a8579633600006')
+
+    - flush frontier data
+        >>> frontier.flush()
+
+    - flush data for a given slot only
+        >>> frontier.flush('example.com')
+
+    - delete slot by name
+        >>> frontier.delete_slot('example.com')
+    """
 
     def __init__(self, client, frontiers, name):
         self.key = name
@@ -1097,6 +1158,13 @@ class Frontier(object):
 
     def list_slots(self):
         return next(self._frontiers._origin.apiget((self.key, 'list')))
+
+    def flush(self, slot=None):
+        """Flush data for a whole frontier or for a given slot only."""
+        writers = self._frontiers._origin._writers
+        for (fname, fslot), writer in writers.items():
+            if fname == self.key and (slot is None or fslot == slot):
+                writer.flush()
 
 
 class Collections(_Proxy):
