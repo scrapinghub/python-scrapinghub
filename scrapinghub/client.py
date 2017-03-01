@@ -1158,6 +1158,9 @@ class FrontierSlot(object):
         >>> data = [{'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}]
         >>> slot.q.add('example.com', data)
 
+    - add fingerprints to a slot
+        >>> slot.f.add(['fp1', 'fp2'])
+
     - flush data for a slot
         >>> slot.flush()
 
@@ -1167,6 +1170,12 @@ class FrontierSlot(object):
         >>> slot.q.list()
         [{'id': '0115a8579633600006',
           'requests': [['page1.html', {'depth': 1}]]}]
+
+    - read fingerprints from a slot
+        >>> slot.f.iter()
+        <generator object jldecode at 0x103de4938>
+        >>> slot.f.list()
+        ['page1.html']
 
     - delete a batch with requests from a slot
         >>> slot.q.delete('0115a8579633600006')
@@ -1220,14 +1229,14 @@ class FrontierSlotFingerprints(object):
             writer.write({'fp': fp})
 
     def iter(self, **kwargs):
-        """Iterate through fingerprints."""
+        """Iterate through fingerprints in the slot."""
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'f')
         for fp in origin.apiget(path, params=kwargs):
             yield fp.get('fp')
 
     def list(self, **kwargs):
-        """List fingerprints in slot."""
+        """List fingerprints in the slot."""
         return list(self.iter(**kwargs))
 
 
@@ -1239,22 +1248,22 @@ class FrontierSlotQueue(object):
         self._slot = slot
 
     def add(self, fps):
-        """Add requests to slot."""
+        """Add requests to the queue."""
         origin = self._frontier._frontiers._origin
         return origin.add(self._frontier.key, self.key, fps)
 
     def iter(self, **kwargs):
-        """Iterate through batches in queue."""
+        """Iterate through batches in the queue."""
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'q')
         return origin.apiget(path, params=kwargs)
 
     def list(self, **kwargs):
-        """List request batches in slot."""
+        """List request batches in the queue."""
         return list(self.iter(**kwargs))
 
     def delete(self, ids):
-        """Delete request batches from slot."""
+        """Delete request batches from the queue."""
         origin = self._frontier._frontiers._origin
         return origin.delete(self._frontier.key, self.key, ids)
 

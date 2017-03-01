@@ -446,7 +446,8 @@ List all slots::
 
 Get a frontier slot by name::
 
-    >>> frontier.get('example.com')
+    >>> slot = frontier.get('example.com')
+    >>> slot
     <scrapinghub.client.FrontierSlot at 0x1049d8978>
 
 Add a request to the slot::
@@ -466,13 +467,17 @@ Add requests with additional parameters::
     >>> slot.q.add([{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
     >>> slot.flush()
 
-To list requests for a given slot::
+To retrieve all requests for a given slot::
 
-    >>> reqs = slot.q.list()
+    >>> reqs = slot.q.iter()
 
-To retrieve fingerprints for a given slot::
+To retrieve all fingerprints for a given slot::
 
-    >>> fps = [req['requests'] for req in slot.q.iter()]
+    >>> fps = slot.f.iter()
+
+To list all the requests use ``list()`` method (similar for ``fingerprints``)::
+
+    >>> fps = slot.q.list()
 
 To delete a batch of requests::
 
