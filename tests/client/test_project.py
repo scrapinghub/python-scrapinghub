@@ -14,7 +14,7 @@ from .utils import validate_default_meta
 
 
 def test_project_subresources(project):
-    assert project.id == int(TEST_PROJECT_ID)
+    assert project.key == TEST_PROJECT_ID
     assert isinstance(project.collections, Collections)
     assert isinstance(project.jobs, Jobs)
     assert isinstance(project.spiders, Spiders)
@@ -25,7 +25,7 @@ def test_project_subresources(project):
 
 def test_project_jobs(project):
     jobs = project.jobs
-    assert jobs.projectid == int(TEST_PROJECT_ID)
+    assert jobs.projectid == TEST_PROJECT_ID
     assert jobs.spider is None
 
 
@@ -38,13 +38,13 @@ def test_project_jobs_count(project):
 
     for i in range(2):
         project.jobs.schedule(TEST_SPIDER_NAME,
-                              subid='running-%s' % i,
+                              spider_args={'subid': 'running-%s' % i},
                               meta={'state': 'running'})
     assert project.jobs.count(state='running') == 2
 
     for i in range(3):
         project.jobs.schedule(TEST_SPIDER_NAME,
-                              subid='finished%s' % i,
+                              spider_args={'subid': 'finished%s' % i},
                               meta={'state': 'finished'})
     assert project.jobs.count(state='finished') == 3
 
@@ -82,6 +82,30 @@ def test_project_jobs_iter(project):
         next(jobs1)
 
 
+def test_project_jobs_list(project):
+    project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'running'})
+
+    # no finished jobs
+    jobs0 = project.jobs.list()
+    assert isinstance(jobs0, list)
+    assert len(jobs0) == 0
+
+    # filter by state must work like for iter
+    jobs1 = project.jobs.list(state='running')
+    assert len(jobs1) == 1
+    job = jobs1[0]
+    assert isinstance(job, dict)
+    ts = job.get('ts')
+    assert isinstance(ts, int) and ts > 0
+    running_time = job.get('running_time')
+    assert isinstance(running_time, int) and running_time > 0
+    elapsed = job.get('elapsed')
+    assert isinstance(elapsed, int) and elapsed > 0
+    assert job.get('key').startswith(TEST_PROJECT_ID)
+    assert job.get('spider') == TEST_SPIDER_NAME
+    assert job.get('state') == 'running'
+
+
 def test_project_jobs_schedule(project):
     # scheduling on project level requires spidername
     with pytest.raises(ValueError):
@@ -99,7 +123,7 @@ def test_project_jobs_schedule(project):
         project.jobs.schedule(TEST_SPIDER_NAME)
 
     job1 = project.jobs.schedule(TEST_SPIDER_NAME,
-                                 arg1='val1', arg2='val2',
+                                 spider_args={'arg1':'val1', 'arg2': 'val2'},
                                  priority=3, units=3,
                                  add_tag=['tagA', 'tagB'],
                                  meta={'state': 'running', 'meta1': 'val1'})
@@ -133,7 +157,7 @@ def test_project_jobs_summary(project):
     for state in sorted(counts):
         for i in range(counts[state]):
             job = project.jobs.schedule(TEST_SPIDER_NAME,
-                                        subid=state + str(i),
+                                        spider_args={'subid': state + str(i)},
                                         meta={'state': state})
             jobs[state].append(job.key)
     summary1 = project.jobs.summary()
@@ -178,7 +202,7 @@ def test_project_jobs_iter_last(project):
 
     # next iter_last should return last spider's job
     job2 = project.jobs.schedule(TEST_SPIDER_NAME,
-                                 subid=1,
+                                 spider_args={'subid': 1},
                                  meta={'state': 'finished'})
     lastsumm2 = list(project.jobs.iter_last())
     assert len(lastsumm2) == 1

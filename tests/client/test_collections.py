@@ -12,6 +12,19 @@ def _mkitem():
                 field3=3, field4={'v4k': 'v4v'})
 
 
+def test_collections_list(project):
+    # create/check test collections
+    project.collections.get_store(TEST_COLLECTION_NAME),
+    project.collections.get_cached_store(TEST_COLLECTION_NAME),
+    project.collections.get_versioned_store(TEST_COLLECTION_NAME),
+    project.collections.get_versioned_cached_store(TEST_COLLECTION_NAME),
+    collections = project.collections.list()
+    assert isinstance(collections, list)
+    assert len(collections) >= 4
+    for coltype in ('s', 'vs', 'cs', 'vcs'):
+        assert {'name': TEST_COLLECTION_NAME, 'type': coltype} in collections
+
+
 def test_simple_count(project, collection):
     test_item = dict(_mkitem())
     test_item['_key'] = 'a'

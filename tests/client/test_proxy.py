@@ -8,6 +8,7 @@ from six.moves import range
 from scrapinghub.client import LogLevel
 from scrapinghub.hubstorage.serialization import mpdecode
 
+from .conftest import TEST_PROJECT_ID
 
 # use some fixed timestamp to represent current time
 TEST_TS = 1476803148638
@@ -67,6 +68,45 @@ def test_logs_iter(spider):
     assert next(logs3).get('message') == 'error-msg'
     with pytest.raises(StopIteration):
         next(logs3).get('message')
+
+
+def test_logs_list(spider):
+    job = spider.jobs.schedule()
+    _add_test_logs(job)
+
+    logs1 = job.logs.list()
+    assert isinstance(logs1, list)
+    assert len(logs1) == 9
+    assert logs1[0].get('message') == 'simple-msg1'
+    assert logs1[1].get('message') == 'simple-msg2'
+    assert logs1[2].get('message') == 'simple-msg3'
+
+    # testing offset
+    logs2 = job.logs.list(offset=3)
+    assert len(logs2) == 6
+    assert logs2[0].get('message') == 'debug-msg'
+    assert logs2[1].get('message') == 'info-msg'
+
+    # testing level
+    logs3 = job.logs.list(level='ERROR')
+    assert len(logs3) == 1
+    assert logs3[0].get('message') == 'error-msg'
+
+
+def test_logs_list_filter(spider):
+    job = spider.jobs.schedule()
+    _add_test_logs(job)
+
+    logs1 = job.logs.list(filter='["message", "contains", ["simple"]]')
+    assert isinstance(logs1, list)
+    assert len(logs1) == 3
+    assert logs1[0].get('message') == 'simple-msg1'
+
+    logs2 = job.logs.list(filter=[['message', 'contains', ['simple']]])
+    assert len(logs2) == 3
+
+    logs3 = job.logs.list(filter=[('message', 'contains', ['simple'])])
+    assert len(logs3) == 3
 
 
 def test_logs_iter_raw_json(spider):
@@ -152,13 +192,18 @@ def test_requests_iter_raw_json(spider):
         next(rr)
 
 
-def test_samples_iter(spider):
-    job = spider.jobs.schedule(meta={'state': 'running'})
-    assert list(job.samples.iter()) == []
+def _add_test_samples(job):
     job.samples.write([TEST_TS, 1, 2, 3])
     job.samples.write([TEST_TS + 1, 5, 9, 4])
     job.samples.flush()
     job.samples.close()
+
+
+def test_samples_iter(spider):
+    job = spider.jobs.schedule(meta={'state': 'running'})
+    assert list(job.samples.iter()) == []
+    _add_test_samples(job)
+
     o = job.samples.iter()
     assert next(o) == [TEST_TS, 1, 2, 3]
     assert next(o) == [TEST_TS + 1, 5, 9, 4]
@@ -166,12 +211,26 @@ def test_samples_iter(spider):
         next(o)
 
 
-def test_items_iter(spider):
+def test_samples_list(spider):
     job = spider.jobs.schedule(meta={'state': 'running'})
+    _add_test_samples(job)
+    o = job.samples.list()
+    assert isinstance(o, list)
+    assert len(o) == 2
+    assert o[0] == [TEST_TS, 1, 2, 3]
+    assert o[1] == [TEST_TS + 1, 5, 9, 4]
+
+
+def _add_test_items(job):
     for i in range(3):
         job.items.write({'id': i, 'data': 'data' + str(i)})
     job.items.flush()
     job.items.close()
+
+
+def test_items_iter(spider):
+    job = spider.jobs.schedule(meta={'state': 'running'})
+    _add_test_items(job)
 
     o = job.items.iter()
     assert next(o) == {'id': 0, 'data': 'data0'}
@@ -196,3 +255,51 @@ def test_items_iter(spider):
     o = mpdecode(msgpacked_o)
     assert item['id'] == 2
     assert item['data'] == 'data2'
+
+
+def test_items_list(spider):
+    job = spider.jobs.schedule(meta={'state': 'running'})
+    _add_test_items(job)
+
+    o = job.items.list()
+    assert isinstance(o, list)
+    assert len(o) == 3
+    assert o[0] == {'id': 0, 'data': 'data0'}
+    assert o[1] == {'id': 1, 'data': 'data1'}
+    assert o[2] == {'id': 2, 'data': 'data2'}
+
+
+def _add_test_activity(project):
+    activity = project.activity
+    jobkey = TEST_PROJECT_ID + '/2/3'
+    activity.add(event='job:completed', job=jobkey, user='jobrunner')
+    activity.add(event='job:cancelled', job=jobkey, user='john')
+
+
+def test_activity_wrong_project(project):
+    with pytest.raises(ValueError):
+        project.activity.add(event='job:completed',
+                             job='123/1/1', user='user')
+
+
+def test_activity_iter(project):
+    _add_test_activity(project)
+    activity = project.activity.iter()
+    assert isinstance(activity, types.GeneratorType)
+    activity_item = next(activity)
+    assert activity_item == {'event': 'job:cancelled',
+                             'job': TEST_PROJECT_ID + '/2/3',
+                             'user': 'john'}
+
+
+def test_activity_list(project):
+    _add_test_activity(project)
+    activity = project.activity.list(count=2)
+    assert isinstance(activity, list)
+    assert len(activity) == 2
+    assert activity[0] == {'event': 'job:cancelled',
+                           'job': TEST_PROJECT_ID + '/2/3',
+                           'user': 'john'}
+    assert activity[1] == {'event': 'job:completed',
+                           'job': TEST_PROJECT_ID + '/2/3',
+                           'user': 'jobrunner'}
