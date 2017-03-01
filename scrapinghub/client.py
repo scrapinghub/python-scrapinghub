@@ -1185,14 +1185,15 @@ class FrontierSlot(object):
         origin = self._frontier._frontiers._origin
         return origin.add(self._frontier.key, self.key, fps)
 
-    def iter(self, mincount=None):
+    def iter(self, **kwargs):
         """Iterate requests in slot."""
         origin = self._frontier._frontiers._origin
-        return origin.read(self._frontier.key, self.key, mincount)
+        path = (self._frontier.key, 's', self.key, 'q')
+        return origin.apiget(path, params=kwargs)
 
-    def list(self, mincount=None):
+    def list(self, **kwargs):
         """List requests in slot."""
-        return list(self.iter(mincount=mincount))
+        return list(self.iter(**kwargs))
 
     def delete(self, ids=None):
         """Delete slot or some specific requests."""
