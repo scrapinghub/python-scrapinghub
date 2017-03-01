@@ -1173,10 +1173,10 @@ class FrontierSlot(object):
         [{'id': '0115a8579633600006',
           'requests': [['page1.html', {'depth': 1}]]}]
 
-    - delete a request from a slot
+    - delete a batch with requests from a slot
         >>> slot.delete('0115a8579633600006')
 
-    - flush slot data for a slot
+    - flush data for a slot
         >>> slot.flush()
     """
     def __init__(self, client, frontier, slot):
