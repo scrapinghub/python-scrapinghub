@@ -471,13 +471,13 @@ To delete a batch of requests::
 
     >>> slot.delete('00013967d8af7b0001')
 
+To delete the whole slot from the frontier::
+
+    >>> slot.delete()
+
 Flush data of the given frontier::
 
     >>> frontier.flush()
-
-To delete the slot ``example.com`` from the frontier::
-
-    >>> frontier.delete('example.com')
 
 Flush data of all frontiers of a project::
 

@@ -56,8 +56,6 @@ def test_frontier(project, frontier):
     assert isinstance(slot, FrontierSlot)
 
     frontier.flush()
-    frontier.delete(TEST_FRONTIER_SLOT)
-    assert TEST_FRONTIER_SLOT not in frontier.list()
 
 
 def test_frontier_slot(project, frontier):
@@ -95,3 +93,6 @@ def test_frontier_slot(project, frontier):
     # drop all batches and validate that slot is empty
     slot.delete([batch['id'] for batch in batches])
     assert slot.list() == []
+
+    slot.delete()
+    assert TEST_FRONTIER_SLOT not in frontier.list()

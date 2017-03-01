@@ -1120,11 +1120,7 @@ class Frontier(object):
 
     - flush frontier data
         >>> frontier.flush()
-
-    - delete slot by name
-        >>> frontier.delete('example.com')
     """
-
     def __init__(self, client, frontiers, name):
         self.key = name
         self._client = client
@@ -1133,10 +1129,6 @@ class Frontier(object):
     def get(self, slot):
         """Get a slot by name."""
         return FrontierSlot(self._client, self, slot)
-
-    def delete(self, slot):
-        """Delete a slot by name."""
-        return self._frontiers._origin.delete_slot(self.key, slot)
 
     def iter(self):
         """Iterate through slots."""
@@ -1166,6 +1158,9 @@ class FrontierSlot(object):
         >>> data = [{'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}]
         >>> slot.add('example.com', data)
 
+    - flush data for a slot
+        >>> slot.flush()
+
     - read requests from a slot
         >>> slot.iter()
         <generator object jldecode at 0x1049aa9e8>
@@ -1176,8 +1171,9 @@ class FrontierSlot(object):
     - delete a batch with requests from a slot
         >>> slot.delete('0115a8579633600006')
 
-    - flush data for a slot
-        >>> slot.flush()
+    - delete a whole slot
+        >>> slot.delete()
+
     """
     def __init__(self, client, frontier, slot):
         self.key = slot
@@ -1198,9 +1194,11 @@ class FrontierSlot(object):
         """List requests in slot."""
         return list(self.iter(mincount=mincount))
 
-    def delete(self, ids):
-        """Delete requests from slot."""
+    def delete(self, ids=None):
+        """Delete slot or some specific requests."""
         origin = self._frontier._frontiers._origin
+        if ids is None:
+            return origin.delete_slot(self._frontier.key, self.key)
         return origin.delete(self._frontier.key, self.key, ids)
 
     def flush(self):
