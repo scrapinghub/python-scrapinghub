@@ -1179,28 +1179,23 @@ class FrontierSlot(object):
         self.key = slot
         self._client = client
         self._frontier = frontier
+        self.fingerprints = FrontierSlotFingerprints(self)
+        self.queue = FrontierSlotQueue(self)
+        # proxy iter & list methods to FrontierSlotQueue instance
+        self.iter = self.queue.iter
+        self.list = self.queue.list
 
     def add(self, fps):
         """Add requests to slot."""
         origin = self._frontier._frontiers._origin
         return origin.add(self._frontier.key, self.key, fps)
 
-    def iter(self, **kwargs):
-        """Iterate requests in slot."""
-        origin = self._frontier._frontiers._origin
-        path = (self._frontier.key, 's', self.key, 'q')
-        return origin.apiget(path, params=kwargs)
-
-    def list(self, **kwargs):
-        """List requests in slot."""
-        return list(self.iter(**kwargs))
-
     def delete(self, ids=None):
         """Delete slot or some specific requests."""
         origin = self._frontier._frontiers._origin
         if ids is None:
             return origin.delete_slot(self._frontier.key, self.key)
-        return origin.delete(self._frontier.key, self.key, ids)
+        return self.queue.delete(ids)
 
     def flush(self):
         """Flush data for the slot."""
@@ -1208,6 +1203,48 @@ class FrontierSlot(object):
         writer = writers.get((self._frontier.key, self.key))
         if writer:
             writer.flush()
+
+
+class FrontierSlotFingerprints(object):
+
+    def __init__(self, slot):
+        self.key = slot.key
+        self._frontier = slot._frontier
+        self._slot = slot
+
+    def iter(self, **kwargs):
+        """Iterate through fingerprints."""
+        origin = self._frontier._frontiers._origin
+        path = (self._frontier.key, 's', self.key, 'f')
+        for fp in origin.apiget(path, params=kwargs):
+            yield fp.get('fp')
+
+    def list(self, **kwargs):
+        """List fingerprints in slot."""
+        return list(self.iter(**kwargs))
+
+
+class FrontierSlotQueue(object):
+
+    def __init__(self, slot):
+        self.key = slot.key
+        self._frontier = slot._frontier
+        self._slot = slot
+
+    def iter(self, **kwargs):
+        """Iterate through batches in queue."""
+        origin = self._frontier._frontiers._origin
+        path = (self._frontier.key, 's', self.key, 'q')
+        return origin.apiget(path, params=kwargs)
+
+    def list(self, **kwargs):
+        """List request batches in slot."""
+        return list(self.iter(**kwargs))
+
+    def delete(self, ids):
+        """Delete request batches from slot."""
+        origin = self._frontier._frontiers._origin
+        return origin.delete(self._frontier.key, self.key, ids)
 
 
 class Collections(_Proxy):
