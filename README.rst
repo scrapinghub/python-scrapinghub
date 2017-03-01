@@ -385,6 +385,32 @@ To retrieve all samples for a job::
     [1482233732452, 0, 0, 0, 0, 0]
 
 
+Activity
+--------
+
+To retrieve all activity events from a project::
+
+    >>> project.activity.iter()
+    <generator object jldecode at 0x1049ee990>
+
+    >>> project.activity.list()
+    [{'event': 'job:completed', 'job': '123/2/3', 'user': 'jobrunner'},
+     {'event': 'job:cancelled', 'job': '123/2/3', 'user': 'john'}]
+
+To post a new activity event::
+
+    >>> event = {'event': 'job:completed', 'job': '123/2/4', 'user': 'john'}
+    >>> project.activity.add(event)
+
+Or post multiple events at once::
+
+    >>> events = [
+        {'event': 'job:completed', 'job': '123/2/5', 'user': 'john'},
+        {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
+    ]
+    >>> project.activity.add(events)
+
+
 Collections
 -----------
 

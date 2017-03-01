@@ -1031,9 +1031,25 @@ class Activity(_Proxy):
 
     - get only last 2 events from a project::
 
-        >>> p.activity.list(count=2)
+        >>> project.activity.list(count=2)
         [{'event': 'job:completed', 'job': '123/2/3', 'user': 'jobrunner'},
-         {'event': 'job:cancelled', 'job': '123/2/3', 'user': 'john'}]
+         {'event': 'job:started', 'job': '123/2/3', 'user': 'john'}]
+
+    - post a new event::
+
+        >>> event = {'event': 'job:completed',
+                     'job': '123/2/4',
+                     'user': 'jobrunner'}
+        >>> project.activity.add(event)
+
+    - post multiple events at once::
+
+        >>> events = [
+            {'event': 'job:completed', 'job': '123/2/5', 'user': 'jobrunner'},
+            {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
+        ]
+        >>> project.activity.add(events)
+
     """
     def __init__(self, *args, **kwargs):
         super(Activity, self).__init__(*args, **kwargs)
