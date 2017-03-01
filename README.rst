@@ -451,25 +451,32 @@ Get a frontier slot by name::
 
 Add a request to the slot::
 
-    >>> slot.add([{'fp': '/some/path.html'}])
+    >>> slot.queue.add([{'fp': '/some/path.html'}])
     >>> slot.flush()
+
+Add a fingerprint only to the slot::
+
+    >>> slot.fingerprints.add(['fp1', 'fp2'])
+    >>> slot.flush()
+
+There are convenient shortcuts: ``f`` for ``fingerprints`` and ``q`` for ``queue``.
 
 Add requests with additional parameters::
 
-    >>> slot.add([{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
+    >>> slot.q.add([{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
     >>> slot.flush()
 
 To list requests for a given slot::
 
-    >>> reqs = slot.list()
+    >>> reqs = slot.q.list()
 
 To retrieve fingerprints for a given slot::
 
-    >>> fps = [req['requests'] for req in slot.iter()]
+    >>> fps = [req['requests'] for req in slot.q.iter()]
 
 To delete a batch of requests::
 
-    >>> slot.delete('00013967d8af7b0001')
+    >>> slot.q.delete('00013967d8af7b0001')
 
 To delete the whole slot from the frontier::
 

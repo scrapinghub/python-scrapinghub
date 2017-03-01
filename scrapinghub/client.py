@@ -1154,22 +1154,22 @@ class FrontierSlot(object):
 
     Usage:
 
-    - add request to a slot
+    - add request to a queue
         >>> data = [{'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}]
-        >>> slot.add('example.com', data)
+        >>> slot.q.add('example.com', data)
 
     - flush data for a slot
         >>> slot.flush()
 
     - read requests from a slot
-        >>> slot.iter()
+        >>> slot.q.iter()
         <generator object jldecode at 0x1049aa9e8>
-        >>> slot.list()
+        >>> slot.q.list()
         [{'id': '0115a8579633600006',
           'requests': [['page1.html', {'depth': 1}]]}]
 
     - delete a batch with requests from a slot
-        >>> slot.delete('0115a8579633600006')
+        >>> slot.q.delete('0115a8579633600006')
 
     - delete a whole slot
         >>> slot.delete()
@@ -1181,21 +1181,19 @@ class FrontierSlot(object):
         self._frontier = frontier
         self.fingerprints = FrontierSlotFingerprints(self)
         self.queue = FrontierSlotQueue(self)
-        # proxy iter & list methods to FrontierSlotQueue instance
-        self.iter = self.queue.iter
-        self.list = self.queue.list
 
-    def add(self, fps):
-        """Add requests to slot."""
-        origin = self._frontier._frontiers._origin
-        return origin.add(self._frontier.key, self.key, fps)
+    @property
+    def f(self):
+        return self.fingerprints
 
-    def delete(self, ids=None):
-        """Delete slot or some specific requests."""
+    @property
+    def q(self):
+        return self.queue
+
+    def delete(self):
+        """Delete the slot."""
         origin = self._frontier._frontiers._origin
-        if ids is None:
-            return origin.delete_slot(self._frontier.key, self.key)
-        return self.queue.delete(ids)
+        return origin.delete_slot(self._frontier.key, self.key)
 
     def flush(self):
         """Flush data for the slot."""
@@ -1211,6 +1209,15 @@ class FrontierSlotFingerprints(object):
         self.key = slot.key
         self._frontier = slot._frontier
         self._slot = slot
+
+    def add(self, fps):
+        origin = self._frontier._frontiers._origin
+        writer = origin._get_writer(self._frontier.key, self.key)
+        fps = list(fps) if not isinstance(fps, list) else fps
+        if not all(isinstance(fp, string_types) for fp in fps):
+            raise ValueError('Fingerprint should be of a string type')
+        for fp in fps:
+            writer.write({'fp': fp})
 
     def iter(self, **kwargs):
         """Iterate through fingerprints."""
@@ -1230,6 +1237,11 @@ class FrontierSlotQueue(object):
         self.key = slot.key
         self._frontier = slot._frontier
         self._slot = slot
+
+    def add(self, fps):
+        """Add requests to slot."""
+        origin = self._frontier._frontiers._origin
+        return origin.add(self._frontier.key, self.key, fps)
 
     def iter(self, **kwargs):
         """Iterate through batches in queue."""
