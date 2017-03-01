@@ -1031,24 +1031,41 @@ class Activity(_Proxy):
 
     - get only last 2 events from a project::
 
-        >>> p.activity.list(count=2)
+        >>> project.activity.list(count=2)
         [{'event': 'job:completed', 'job': '123/2/3', 'user': 'jobrunner'},
-         {'event': 'job:cancelled', 'job': '123/2/3', 'user': 'john'}]
+         {'event': 'job:started', 'job': '123/2/3', 'user': 'john'}]
+
+    - post a new event::
+
+        >>> event = {'event': 'job:completed',
+                     'job': '123/2/4',
+                     'user': 'jobrunner'}
+        >>> project.activity.add(event)
+
+    - post multiple events at once::
+
+        >>> events = [
+            {'event': 'job:completed', 'job': '123/2/5', 'user': 'jobrunner'},
+            {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
+        ]
+        >>> project.activity.add(events)
+
     """
     def __init__(self, *args, **kwargs):
         super(Activity, self).__init__(*args, **kwargs)
         self._proxy_methods([('iter', 'list')])
         self._wrap_iter_methods(['iter'])
 
-    def add(self, *args, **kwargs):
-        entry = dict(*args, **kwargs)
-        return self.post(entry)
-
-    def post(self, _value, **kwargs):
-        jobkey = _value.get('job') or kwargs.get('job')
-        if jobkey and parse_job_key(jobkey).projectid != self.key:
-            raise ValueError('Please use same project id')
-        self._origin.post(_value, **kwargs)
+    def add(self, values, **kwargs):
+        if not isinstance(values, list):
+            values = list(values)
+        for activity in values:
+            if not isinstance(activity, dict):
+                raise ValueError("Please pass events as dictionaries")
+            jobkey = activity.get('job')
+            if jobkey and parse_job_key(jobkey).projectid != self.key:
+                raise ValueError('Please use same project id')
+        self._origin.post(values, **kwargs)
 
 
 class Collections(_Proxy):
