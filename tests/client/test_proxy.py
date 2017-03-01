@@ -272,14 +272,15 @@ def test_items_list(spider):
 def _add_test_activity(project):
     activity = project.activity
     jobkey = TEST_PROJECT_ID + '/2/3'
-    activity.add(event='job:completed', job=jobkey, user='jobrunner')
-    activity.add(event='job:cancelled', job=jobkey, user='john')
+    events = [{'event': 'job:completed', 'job': jobkey, 'user': 'jobrunner'},
+              {'event': 'job:cancelled', 'job': jobkey, 'user': 'john'}]
+    activity.add(events)
 
 
 def test_activity_wrong_project(project):
+    event = {'event': 'job:completed', 'job': '123/1/1', 'user': 'user'}
     with pytest.raises(ValueError):
-        project.activity.add(event='job:completed',
-                             job='123/1/1', user='user')
+        project.activity.add(event)
 
 
 def test_activity_iter(project):

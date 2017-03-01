@@ -1040,15 +1040,16 @@ class Activity(_Proxy):
         self._proxy_methods([('iter', 'list')])
         self._wrap_iter_methods(['iter'])
 
-    def add(self, *args, **kwargs):
-        entry = dict(*args, **kwargs)
-        return self.post(entry)
-
-    def post(self, _value, **kwargs):
-        jobkey = _value.get('job') or kwargs.get('job')
-        if jobkey and parse_job_key(jobkey).projectid != self.key:
-            raise ValueError('Please use same project id')
-        self._origin.post(_value, **kwargs)
+    def add(self, values, **kwargs):
+        if not isinstance(values, list):
+            values = list(values)
+        for activity in values:
+            if not isinstance(activity, dict):
+                raise ValueError("Please pass events as dictionaries")
+            jobkey = activity.get('job')
+            if jobkey and parse_job_key(jobkey).projectid != self.key:
+                raise ValueError('Please use same project id')
+        self._origin.post(values, **kwargs)
 
 
 class Collections(_Proxy):
