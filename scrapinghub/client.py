@@ -1082,12 +1082,15 @@ class Frontiers(_Proxy):
         self._proxy_methods(['close', 'flush'])
 
     def get(self, name):
+        """Get a frontier by name."""
         return Frontier(self._client, self, name)
 
     def iter(self):
+        """Iterate through frontiers."""
         return iter(self.list())
 
     def list(self):
+        """List frontiers."""
         return next(self._origin.apiget('list'))
 
     @property
@@ -1104,36 +1107,22 @@ class Frontier(object):
     Usage:
 
     - get iterator with all slots
-        >>> frontier.iter_slots()
+        >>> frontier.iter()
         <list_iterator at 0x1030736d8>
 
     - list all slots
-        >>> frontier.list_slots()
+        >>> frontier.list()
         ['example.com', 'example.com2']
 
-    - add request to a slot
-        >>> data = [{'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}]
-        >>> frontier.add('example.com', data)
-
-    - read requests from a slot
-        >>> data = frontier.read('example.com')
-        >>> data
-        <generator object jldecode at 0x1049aa9e8>
-        >>> list(data)
-        [{'id': '0115a8579633600006',
-          'requests': [['page1.html', {'depth': 1}]]}]
-
-    - delete a request from a slot
-        >>> frontier.delete('example.com', '0115a8579633600006')
+    - get a slot by name
+        >>> frontier.get('example.com')
+        <scrapinghub.client.FrontierSlot at 0x1049d8978>
 
     - flush frontier data
         >>> frontier.flush()
 
-    - flush data for a given slot only
-        >>> frontier.flush('example.com')
-
     - delete slot by name
-        >>> frontier.delete_slot('example.com')
+        >>> frontier.delete('example.com')
     """
 
     def __init__(self, client, frontiers, name):
@@ -1141,30 +1130,85 @@ class Frontier(object):
         self._client = client
         self._frontiers = frontiers
 
-    def add(self, slot, fps):
-        return self._frontiers._origin.add(self.key, slot, fps)
+    def get(self, slot):
+        """Get a slot by name."""
+        return FrontierSlot(self._client, self, slot)
 
-    def read(self, slot, mincount=None):
-        return self._frontiers._origin.read(self.key, slot, mincount)
-
-    def delete(self, slot, ids):
-        return self._frontiers._origin.delete(self.key, slot, ids)
-
-    def delete_slot(self, slot):
+    def delete(self, slot):
+        """Delete a slot by name."""
         return self._frontiers._origin.delete_slot(self.key, slot)
 
-    def iter_slots(self):
-        return iter(self.list_slots())
+    def iter(self):
+        """Iterate through slots."""
+        return iter(self.list())
 
-    def list_slots(self):
+    def list(self):
+        """List all slots."""
         return next(self._frontiers._origin.apiget((self.key, 'list')))
 
-    def flush(self, slot=None):
-        """Flush data for a whole frontier or for a given slot only."""
+    def flush(self):
+        """Flush data for a whole frontier."""
         writers = self._frontiers._origin._writers
-        for (fname, fslot), writer in writers.items():
-            if fname == self.key and (slot is None or fslot == slot):
+        for (fname, _), writer in writers.items():
+            if fname == self.key:
                 writer.flush()
+
+
+class FrontierSlot(object):
+    """Representation of a frontier slot object.
+
+    Not a public constructor: use :class:`Frontier` instance to get a
+    :class:`FrontierSlot` instance. See :meth:`Frontier.get` method.
+
+    Usage:
+
+    - add request to a slot
+        >>> data = [{'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}]
+        >>> slot.add('example.com', data)
+
+    - read requests from a slot
+        >>> slot.iter()
+        <generator object jldecode at 0x1049aa9e8>
+        >>> slot.list()
+        [{'id': '0115a8579633600006',
+          'requests': [['page1.html', {'depth': 1}]]}]
+
+    - delete a request from a slot
+        >>> slot.delete('0115a8579633600006')
+
+    - flush slot data for a slot
+        >>> slot.flush()
+    """
+    def __init__(self, client, frontier, slot):
+        self.key = slot
+        self._client = client
+        self._frontier = frontier
+
+    def add(self, fps):
+        """Add requests to slot."""
+        origin = self._frontier._frontiers._origin
+        return origin.add(self._frontier.key, self.key, fps)
+
+    def iter(self, mincount=None):
+        """Iterate requests in slot."""
+        origin = self._frontier._frontiers._origin
+        return origin.read(self._frontier.key, self.key, mincount)
+
+    def list(self, mincount=None):
+        """List requests in slot."""
+        return list(self.iter(mincount=mincount))
+
+    def delete(self, ids):
+        """Delete requests from slot."""
+        origin = self._frontier._frontiers._origin
+        return origin.delete(self._frontier.key, self.key, ids)
+
+    def flush(self):
+        """Flush data for the slot."""
+        writers = self._frontier._frontiers._origin._writers
+        writer = writers.get((self._frontier.key, self.key))
+        if writer:
+            writer.flush()
 
 
 class Collections(_Proxy):

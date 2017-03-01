@@ -436,39 +436,48 @@ Get a frontier by name::
 
 Get an iterator to iterate through a frontier slots::
 
-    >>> frontier.iter_slots()
+    >>> frontier.iter()
     <list_iterator at 0x1030736d8>
 
 List all slots::
 
-    >>> frontier.list_slots()
+    >>> frontier.list()
     ['example.com', 'example.com2']
 
-Add a request to the frontier::
+Get a frontier slot by name::
 
-    >>> frontier.add('example.com', [{'fp': '/some/path.html'}])
-    >>> frontier.flush()
+    >>> frontier.get('example.com')
+    <scrapinghub.client.FrontierSlot at 0x1049d8978>
+
+Add a request to the slot::
+
+    >>> slot.add([{'fp': '/some/path.html'}])
+    >>> slot.flush()
 
 Add requests with additional parameters::
 
-    >>> frontier.add('example.com', [{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
+    >>> slot.add([{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
+    >>> slot.flush()
+
+To list requests for a given slot::
+
+    >>> reqs = slot.list()
+
+To retrieve fingerprints for a given slot::
+
+    >>> fps = [req['requests'] for req in slot.iter()]
+
+To delete a batch of requests::
+
+    >>> slot.delete('00013967d8af7b0001')
+
+Flush data of the given frontier::
+
     >>> frontier.flush()
 
 To delete the slot ``example.com`` from the frontier::
 
-    >>> frontier.delete_slot('example.com')
-
-To retrieve requests for a given slot::
-
-    >>> reqs = frontier.read('example.com')
-
-To delete a batch of requests::
-
-    >>> frontier.delete('example.com', '00013967d8af7b0001')
-
-To retrieve fingerprints for a given slot::
-
-    >>> fps = [req['requests'] for req in frontier.read('example.com')]
+    >>> frontier.delete('example.com')
 
 Flush data of all frontiers of a project::
 
