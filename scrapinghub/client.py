@@ -1105,6 +1105,10 @@ class Frontiers(_Proxy):
     - flush data of all frontiers of a project
         >>> project.frontiers.flush()
 
+    - show amount of new requests added for all frontiers
+        >>> project.frontiers.newcount
+        3
+
     - close batch writers of all frontiers of a project
         >>> project.frontiers.close()
     """
@@ -1151,6 +1155,10 @@ class Frontier(object):
 
     - flush frontier data
         >>> frontier.flush()
+
+    - show amount of new requests added to frontier
+        >>> frontier.newcount
+        3
     """
     def __init__(self, client, frontiers, name):
         self.key = name
@@ -1201,6 +1209,10 @@ class FrontierSlot(object):
     - flush data for a slot
         >>> slot.flush()
 
+    - show amount of new requests added to a slot
+        >>> slot.newcount
+        2
+
     - read requests from a slot
         >>> slot.q.iter()
         <generator object jldecode at 0x1049aa9e8>
@@ -1239,7 +1251,8 @@ class FrontierSlot(object):
     def delete(self):
         """Delete the slot."""
         origin = self._frontier._frontiers._origin
-        return origin.delete_slot(self._frontier.key, self.key)
+        origin.delete_slot(self._frontier.key, self.key)
+        origin.newcount.pop((self._frontier.key, self.key), None)
 
     def flush(self):
         """Flush data for the slot."""
