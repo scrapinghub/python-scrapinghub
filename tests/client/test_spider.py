@@ -5,10 +5,12 @@ import pytest
 from six import string_types
 from six.moves import range
 
-from scrapinghub.exceptions import NotFound, DuplicateJobError, InvalidUsage
-from scrapinghub.client import Jobs, Job
-from scrapinghub.client import Spider
-from scrapinghub.utils import JobKey
+from scrapinghub.client.exceptions import DuplicateJobError
+from scrapinghub.client.exceptions import InvalidUsage
+from scrapinghub.client.exceptions import NotFound
+from scrapinghub.client.jobs import Jobs, Job
+from scrapinghub.client.spiders import Spider
+from scrapinghub.client.utils import JobKey
 
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .utils import validate_default_meta

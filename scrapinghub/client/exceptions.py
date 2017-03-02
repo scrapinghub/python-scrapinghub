@@ -3,8 +3,8 @@ from functools import wraps
 
 from requests import HTTPError
 
-from .legacy import APIError
-from .hubstorage import ValueTooLarge as _ValueTooLarge
+from scrapinghub.legacy import APIError
+from scrapinghub.hubstorage import ValueTooLarge as _ValueTooLarge
 
 
 def _get_http_error_msg(exc):
