@@ -454,6 +454,15 @@ Add a request to the slot::
 
     >>> slot.queue.add([{'fp': '/some/path.html'}])
     >>> slot.flush()
+    >>> slot.newcount
+    1
+
+``newcount`` is defined per slot, but also available per frontier and globally::
+
+    >>> frontier.newcount
+    1
+    >>> frontiers.newcount
+    3
 
 Add a fingerprint only to the slot::
 

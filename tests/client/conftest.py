@@ -177,4 +177,4 @@ def clean_collection(collection):
 # Frontier helpers section
 
 def clean_frontier_slot(frontier):
-    frontier.delete(TEST_FRONTIER_SLOT)
+    frontier.get(TEST_FRONTIER_SLOT).delete()

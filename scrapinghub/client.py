@@ -1,5 +1,7 @@
 import json
 import collections
+from functools import partial
+from collections import defaultdict
 
 from six import string_types
 from requests.compat import urljoin
@@ -9,6 +11,7 @@ from scrapinghub import HubstorageClient as _HubstorageClient
 
 from .hubstorage.resourcetype import DownloadableResource
 from .hubstorage.resourcetype import ItemsResourceType
+from .hubstorage.utils import urlpathjoin
 
 # scrapinghub.hubstorage classes to use as-is
 from .hubstorage.job import JobMeta
@@ -227,7 +230,7 @@ class Project(object):
         # proxied sub-resources
         self.activity = Activity(_Activity, client, projectid)
         self.collections = Collections(_Collections, client, projectid)
-        self.frontiers = Frontiers(_Frontier, client, projectid)
+        self.frontiers = Frontiers(_HSFrontier, client, projectid)
         self.settings = Settings(client._hsclient, projectid)
 
 
@@ -1051,6 +1054,34 @@ class Activity(_Proxy):
         self._origin.post(_value, **kwargs)
 
 
+class _HSFrontier(_Frontier):
+    """Modified hubstorage Frontier with newcount per slot."""
+
+    def __init__(self, *args, **kwargs):
+        super(_HSFrontier, self).__init__(*args, **kwargs)
+        self.newcount = defaultdict(int)
+
+    def _get_writer(self, frontier, slot):
+        key = (frontier, slot)
+        writer = self._writers.get(key)
+        if not writer:
+            writer = self.client.batchuploader.create_writer(
+                url=urlpathjoin(self.url, frontier, 's', slot),
+                auth=self.auth,
+                size=self.batch_size,
+                start=self.batch_start,
+                interval=self.batch_interval,
+                qsize=self.batch_qsize,
+                content_encoding=self.batch_content_encoding,
+                callback=partial(self._writer_callback, key),
+            )
+            self._writers[key] = writer
+        return writer
+
+    def _writer_callback(self, key, response):
+        self.newcount[key] += response.json()["newcount"]
+
+
 class Frontiers(_Proxy):
     """Frontiers collection for a project.
 
@@ -1074,6 +1105,10 @@ class Frontiers(_Proxy):
     - flush data of all frontiers of a project
         >>> project.frontiers.flush()
 
+    - show amount of new requests added for all frontiers
+        >>> project.frontiers.newcount
+        3
+
     - close batch writers of all frontiers of a project
         >>> project.frontiers.close()
     """
@@ -1095,7 +1130,7 @@ class Frontiers(_Proxy):
 
     @property
     def newcount(self):
-        return self._origin.newcount
+        return sum(self._origin.newcount.values())
 
 
 class Frontier(object):
@@ -1120,6 +1155,10 @@ class Frontier(object):
 
     - flush frontier data
         >>> frontier.flush()
+
+    - show amount of new requests added to frontier
+        >>> frontier.newcount
+        3
     """
     def __init__(self, client, frontiers, name):
         self.key = name
@@ -1145,6 +1184,12 @@ class Frontier(object):
             if fname == self.key:
                 writer.flush()
 
+    @property
+    def newcount(self):
+        newcount_values = self._frontiers._origin.newcount
+        return sum(v for (frontier, _), v in newcount_values.items()
+                   if frontier == self.key)
+
 
 class FrontierSlot(object):
     """Representation of a frontier slot object.
@@ -1163,6 +1208,10 @@ class FrontierSlot(object):
 
     - flush data for a slot
         >>> slot.flush()
+
+    - show amount of new requests added to a slot
+        >>> slot.newcount
+        2
 
     - read requests from a slot
         >>> slot.q.iter()
@@ -1202,7 +1251,8 @@ class FrontierSlot(object):
     def delete(self):
         """Delete the slot."""
         origin = self._frontier._frontiers._origin
-        return origin.delete_slot(self._frontier.key, self.key)
+        origin.delete_slot(self._frontier.key, self.key)
+        origin.newcount.pop((self._frontier.key, self.key), None)
 
     def flush(self):
         """Flush data for the slot."""
@@ -1210,6 +1260,11 @@ class FrontierSlot(object):
         writer = writers.get((self._frontier.key, self.key))
         if writer:
             writer.flush()
+
+    @property
+    def newcount(self):
+        newcount_values = self._frontier._frontiers._origin.newcount
+        return newcount_values.get((self._frontier.key, self.key), 0)
 
 
 class FrontierSlotFingerprints(object):
