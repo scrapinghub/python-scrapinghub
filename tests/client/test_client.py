@@ -2,9 +2,11 @@ from scrapinghub import Connection
 from scrapinghub import HubstorageClient
 from scrapinghub import ScrapinghubClient
 
-from scrapinghub.client import Projects, Project, Job
+from scrapinghub.client.jobs import Job
+from scrapinghub.client.projects import Projects, Project
 
 from scrapinghub.hubstorage.utils import apipoll
+
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import TEST_USER_AUTH, TEST_DASH_ENDPOINT
 
