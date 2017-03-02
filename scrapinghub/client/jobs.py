@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 import json
 
-from scrapinghub.hubstorage.job import JobMeta
-from scrapinghub.hubstorage.job import Items as _Items
-from scrapinghub.hubstorage.job import Logs as _Logs
-from scrapinghub.hubstorage.job import Samples as _Samples
-from scrapinghub.hubstorage.job import Requests as _Requests
+from ..hubstorage.job import JobMeta
+from ..hubstorage.job import Items as _Items
+from ..hubstorage.job import Logs as _Logs
+from ..hubstorage.job import Samples as _Samples
+from ..hubstorage.job import Requests as _Requests
 
 from .items import Items
 from .logs import Logs

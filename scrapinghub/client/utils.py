@@ -8,9 +8,9 @@ import binascii
 from codecs import decode
 from six import string_types
 
-from scrapinghub.hubstorage.resourcetype import DownloadableResource
-from scrapinghub.hubstorage.resourcetype import ItemsResourceType
-from scrapinghub.hubstorage.collectionsrt import Collections
+from ..hubstorage.resourcetype import DownloadableResource
+from ..hubstorage.resourcetype import ItemsResourceType
+from ..hubstorage.collectionsrt import Collections
 
 from .exceptions import wrap_value_too_large
 

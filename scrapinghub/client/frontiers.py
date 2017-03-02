@@ -4,8 +4,8 @@ from collections import defaultdict
 
 from six import string_types
 
-from scrapinghub.hubstorage.frontier import Frontier as _Frontier
-from scrapinghub.hubstorage.utils import urlpathjoin
+from ..hubstorage.frontier import Frontier as _Frontier
+from ..hubstorage.utils import urlpathjoin
 
 from .utils import _Proxy
 

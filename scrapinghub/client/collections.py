@@ -3,7 +3,7 @@ import collections
 
 from six import string_types
 
-from scrapinghub.hubstorage.collectionsrt import Collection as _Collection
+from ..hubstorage.collectionsrt import Collection as _Collection
 
 from .utils import _Proxy
 from .utils import format_iter_filters

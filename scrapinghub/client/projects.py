@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 
-from scrapinghub.hubstorage.activity import Activity as _Activity
-from scrapinghub.hubstorage.collectionsrt import Collections as _Collections
-from scrapinghub.hubstorage.project import Settings
+from ..hubstorage.activity import Activity as _Activity
+from ..hubstorage.collectionsrt import Collections as _Collections
+from ..hubstorage.project import Settings
 
 from .activity import Activity
 from .collections import Collections

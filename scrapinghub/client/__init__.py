@@ -8,6 +8,9 @@ from .utils import parse_auth
 from .utils import parse_project_id, parse_job_key
 
 
+__all__ = ['ScrapinghubClient']
+
+
 class Connection(_Connection):
 
     @wrap_http_errors
