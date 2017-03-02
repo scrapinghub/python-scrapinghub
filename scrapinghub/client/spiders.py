@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 from requests.compat import urljoin
 
 from .jobs import Jobs

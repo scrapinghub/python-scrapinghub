@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import collections
 
 from six import string_types
@@ -150,5 +151,4 @@ class Collection(object):
     def iter_raw_msgpack(self, requests_params=None, **apiparams):
         return self._origin._collections.iter_msgpack(
             self._origin.coltype, self._origin.colname,
-            requests_params=requests_params, **apiparams,
-        )
+            requests_params=requests_params, **apiparams)
