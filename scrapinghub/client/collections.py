@@ -146,3 +146,9 @@ class Collection(object):
             raise ValueError("You should provide string key or iterable "
                              "object providing string keys")
         self._origin.delete(keys)
+
+    def iter_raw_msgpack(self, requests_params=None, **apiparams):
+        return self._origin._collections.iter_msgpack(
+            self._origin.coltype, self._origin.colname,
+            requests_params=requests_params, **apiparams,
+        )
