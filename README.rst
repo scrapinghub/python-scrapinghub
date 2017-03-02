@@ -95,7 +95,7 @@ Project instance also has the following fields:
 
 - activity - access to project activity records
 - collections - work with project collections (see ``Collections`` section)
-- frontier - using project frontier (see ``Frontier`` section)
+- frontiers - using project frontier (see ``Frontiers`` section)
 - settings - interface to project settings
 - spiders - access to spiders collection (see ``Spiders`` section)
 
@@ -385,6 +385,32 @@ To retrieve all samples for a job::
     [1482233732452, 0, 0, 0, 0, 0]
 
 
+Activity
+--------
+
+To retrieve all activity events from a project::
+
+    >>> project.activity.iter()
+    <generator object jldecode at 0x1049ee990>
+
+    >>> project.activity.list()
+    [{'event': 'job:completed', 'job': '123/2/3', 'user': 'jobrunner'},
+     {'event': 'job:cancelled', 'job': '123/2/3', 'user': 'john'}]
+
+To post a new activity event::
+
+    >>> event = {'event': 'job:completed', 'job': '123/2/4', 'user': 'john'}
+    >>> project.activity.add(event)
+
+Or post multiple events at once::
+
+    >>> events = [
+        {'event': 'job:completed', 'job': '123/2/5', 'user': 'john'},
+        {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
+    ]
+    >>> project.activity.add(events)
+
+
 Collections
 -----------
 
@@ -411,44 +437,104 @@ Usual workflow with `Collections`_ would be::
 
 Collections are available on project level only.
 
-Frontier
---------
+Frontiers
+---------
 
 Typical workflow with `Frontier`_::
 
-    >>> frontier = project.frontier
+    >>> frontiers = project.frontiers
 
-Add a request to the frontier::
+Get all frontiers from a project to iterate through it::
 
-    >>> frontier.add('test', 'example.com', [{'fp': '/some/path.html'}])
-    >>> frontier.flush()
+    >>> frontiers.iter()
+    <list_iterator at 0x103c93630>
+
+List all frontiers::
+
+    >>> frontiers.list()
+    ['test', 'test1', 'test2']
+
+Get a frontier by name::
+
+    >>> frontier = frontiers.get('test')
+    >>> frontier
+    <scrapinghub.client.Frontier at 0x1048ae4a8>
+
+Get an iterator to iterate through a frontier slots::
+
+    >>> frontier.iter()
+    <list_iterator at 0x1030736d8>
+
+List all slots::
+
+    >>> frontier.list()
+    ['example.com', 'example.com2']
+
+Get a frontier slot by name::
+
+    >>> slot = frontier.get('example.com')
+    >>> slot
+    <scrapinghub.client.FrontierSlot at 0x1049d8978>
+
+Add a request to the slot::
+
+    >>> slot.queue.add([{'fp': '/some/path.html'}])
+    >>> slot.flush()
+    >>> slot.newcount
+    1
+
+``newcount`` is defined per slot, but also available per frontier and globally::
+
     >>> frontier.newcount
     1
+    >>> frontiers.newcount
+    3
+
+Add a fingerprint only to the slot::
+
+    >>> slot.fingerprints.add(['fp1', 'fp2'])
+    >>> slot.flush()
+
+There are convenient shortcuts: ``f`` for ``fingerprints`` and ``q`` for ``queue``.
 
 Add requests with additional parameters::
 
-    >>> frontier.add('test', 'example.com', [{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
-    >>> frontier.flush()
-    >>> frontier.newcount
-    2
+    >>> slot.q.add([{'fp': '/'}, {'fp': 'page1.html', 'p': 1, 'qdata': {'depth': 1}}])
+    >>> slot.flush()
 
-To delete the slot ``example.com`` from the frontier::
+To retrieve all requests for a given slot::
 
-    >>> frontier.delete_slot('test', 'example.com')
+    >>> reqs = slot.q.iter()
 
-To retrieve requests for a given slot::
+To retrieve all fingerprints for a given slot::
 
-    >>> reqs = frontier.read('test', 'example.com')
+    >>> fps = slot.f.iter()
+
+To list all the requests use ``list()`` method (similar for ``fingerprints``)::
+
+    >>> fps = slot.q.list()
 
 To delete a batch of requests::
 
-    >>> frontier.delete('test', 'example.com', '00013967d8af7b0001')
+    >>> slot.q.delete('00013967d8af7b0001')
 
-To retrieve fingerprints for a given slot::
+To delete the whole slot from the frontier::
 
-    >>> fps = [req['requests'] for req in frontier.read('test', 'example.com')]
+    >>> slot.delete()
 
-Frontier is available on project level only.
+Flush data of the given frontier::
+
+    >>> frontier.flush()
+
+Flush data of all frontiers of a project::
+
+    >>> frontiers.flush()
+
+Close batch writers of all frontiers of a project::
+
+    >>> frontiers.close()
+
+Frontiers are available on project level only.
 
 Tags
 ----

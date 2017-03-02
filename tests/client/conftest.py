@@ -100,6 +100,14 @@ def collection(project, request):
     yield collection
 
 
+@pytest.fixture(scope='session')
+def frontier(project, request):
+    frontier = project.frontiers.get(TEST_FRONTIER_NAME)
+    if is_using_real_services(request):
+        clean_frontier_slot(frontier)
+    yield frontier
+
+
 @pytest.fixture(autouse=True, scope='session')
 def setup_session(client, project, collection, request):
     if is_using_real_services(request):
@@ -164,3 +172,9 @@ def clean_collection(collection):
             collection.delete(item['_key'])
     except NotFound:
         pass
+
+
+# Frontier helpers section
+
+def clean_frontier_slot(frontier):
+    frontier.get(TEST_FRONTIER_SLOT).delete()
