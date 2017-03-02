@@ -1,10 +1,18 @@
+from __future__ import absolute_import
+
 import os
 import json
 import logging
 import binascii
 
 from codecs import decode
-from six import string_types, binary_type
+from six import string_types
+
+from ..hubstorage.resourcetype import DownloadableResource
+from ..hubstorage.resourcetype import ItemsResourceType
+from ..hubstorage.collectionsrt import Collections
+
+from .exceptions import wrap_value_too_large
 
 
 class LogLevel(object):
@@ -61,6 +69,60 @@ def get_tags_for_update(**kwargs):
             raise ValueError("Add/remove field value must be a list")
         params[k] = v
     return params
+
+
+class _Proxy(object):
+    """A helper to create a class instance and proxy its methods to origin.
+
+    The internal proxy class is useful to link class attributes from its
+    origin depending on the origin base class as a part of init logic:
+
+    - :class:`ItemsResourceType` provides items-based attributes to access
+    items in an arbitrary collection with get/write/flush/close/stats/iter
+    methods.
+
+    - :class:`DownloadableResource` provides download-based attributes to
+    iter through collection with or without msgpack support.
+    """
+
+    def __init__(self, cls, client, key):
+        self.key = key
+        self._client = client
+        self._origin = cls(client._hsclient, key)
+
+        if issubclass(cls, ItemsResourceType):
+            self._proxy_methods(['get', 'write', 'flush', 'close',
+                                 'stats', ('iter', 'list')])
+            # redefine write method to wrap hubstorage.ValueTooLarge error
+            origin_method = getattr(self, 'write')
+            setattr(self, 'write', wrap_value_too_large(origin_method))
+
+        # DType iter_values() has more priority than IType list()
+        # plus Collections interface doesn't need the iter methods
+        if issubclass(cls, DownloadableResource) and cls is not Collections:
+            methods = [('iter', 'iter_values'),
+                       ('iter_raw_msgpack', 'iter_msgpack'),
+                       ('iter_raw_json', 'iter_json')]
+            self._proxy_methods(methods)
+            self._wrap_iter_methods([method[0] for method in methods])
+
+    def _proxy_methods(self, methods):
+        """A little helper for cleaner interface."""
+        proxy_methods(self._origin, self, methods)
+
+    def _wrap_iter_methods(self, methods):
+        """Modify kwargs for all passed self.iter* methods."""
+        for method in methods:
+            wrapped = wrap_kwargs(getattr(self, method),
+                                  self._modify_iter_params)
+            setattr(self, method, wrapped)
+
+    def _modify_iter_params(self, params):
+        """Modify iter() params on-the-fly."""
+        return format_iter_filters(params)
+
+    def list(self, *args, **kwargs):
+        return list(self.iter(*args, **kwargs))
 
 
 def wrap_kwargs(fn, kwargs_fn):

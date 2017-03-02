@@ -4,10 +4,13 @@ from collections import defaultdict
 import pytest
 from six.moves import range
 
-from scrapinghub.client import Jobs, Job
-from scrapinghub.exceptions import DuplicateJobError
-from scrapinghub.client import Activity, Collections, Spiders
-from scrapinghub.client import Frontiers, Settings
+from scrapinghub.client.activity import Activity
+from scrapinghub.client.collections import Collections
+from scrapinghub.client.exceptions import DuplicateJobError
+from scrapinghub.client.frontiers import Frontiers
+from scrapinghub.client.jobs import Jobs, Job
+from scrapinghub.client.projects import Settings
+from scrapinghub.client.spiders import Spiders
 
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .utils import validate_default_meta
@@ -123,7 +126,7 @@ def test_project_jobs_schedule(project):
         project.jobs.schedule(TEST_SPIDER_NAME)
 
     job1 = project.jobs.schedule(TEST_SPIDER_NAME,
-                                 spider_args={'arg1':'val1', 'arg2': 'val2'},
+                                 spider_args={'arg1': 'val1', 'arg2': 'val2'},
                                  priority=3, units=3,
                                  add_tag=['tagA', 'tagB'],
                                  meta={'state': 'running', 'meta1': 'val1'})

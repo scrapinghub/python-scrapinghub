@@ -5,7 +5,7 @@ from numbers import Integral
 import pytest
 from six.moves import range
 
-from scrapinghub.client import LogLevel
+from scrapinghub.client.utils import LogLevel
 from scrapinghub.hubstorage.serialization import mpdecode
 
 from .conftest import TEST_PROJECT_ID

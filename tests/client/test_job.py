@@ -1,6 +1,9 @@
-from scrapinghub.client import Job
-from scrapinghub.client import Items, Logs, Requests
-from scrapinghub.client import Samples, JobMeta
+from scrapinghub.client.items import Items
+from scrapinghub.client.jobs import Job
+from scrapinghub.client.jobs import JobMeta
+from scrapinghub.client.logs import Logs
+from scrapinghub.client.requests import Requests
+from scrapinghub.client.samples import Samples
 
 from .conftest import TEST_PROJECT_ID
 from .conftest import TEST_SPIDER_NAME

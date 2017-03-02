@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
 from functools import wraps
 
 from requests import HTTPError
 
-from .legacy import APIError
-from .hubstorage import ValueTooLarge as _ValueTooLarge
+from ..legacy import APIError
+from ..hubstorage import ValueTooLarge as _ValueTooLarge
 
 
 def _get_http_error_msg(exc):
