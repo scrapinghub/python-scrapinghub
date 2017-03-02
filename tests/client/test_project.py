@@ -7,7 +7,7 @@ from six.moves import range
 from scrapinghub.client import Jobs, Job
 from scrapinghub.exceptions import DuplicateJobError
 from scrapinghub.client import Activity, Collections, Spiders
-from scrapinghub.client import Frontier, Settings
+from scrapinghub.client import Frontiers, Settings
 
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .utils import validate_default_meta
@@ -19,7 +19,7 @@ def test_project_subresources(project):
     assert isinstance(project.jobs, Jobs)
     assert isinstance(project.spiders, Spiders)
     assert isinstance(project.activity, Activity)
-    assert isinstance(project.frontier, Frontier)
+    assert isinstance(project.frontiers, Frontiers)
     assert isinstance(project.settings, Settings)
 
 
