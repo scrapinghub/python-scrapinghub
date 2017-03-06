@@ -111,10 +111,15 @@ class _Proxy(object):
             methods = ['ignore_fields', 'expire', 'save', 'liveget',
                        ('iter', '__iter__')]
             self._proxy_methods(methods)
-            spec_methods = ['__str__', '__repr__', '__iter__', '__len__',
-                            '__getitem__', '__setitem__', '__delitem__']
+            # the following methods are special and should be set to class
+            # 1) the methods are always defined: enforce setting them
+            str_methods = ['__str__', '__repr__']
             proxy_methods(self._origin, self.__class__,
-                          spec_methods, force=True)
+                          str_methods, force=True)
+            # 2) these are not always defined and can be redefined
+            other_methods = ['__getitem__', '__setitem__', '__delitem__',
+                             '__iter__', '__len__']
+            proxy_methods(self._origin, self.__class__, other_methods)
 
     def _proxy_methods(self, methods):
         """A little helper for cleaner interface."""
