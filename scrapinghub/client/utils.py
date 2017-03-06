@@ -108,7 +108,7 @@ class _Proxy(object):
             self._wrap_iter_methods([method[0] for method in methods])
 
         if issubclass(cls, MappingResourceType):
-            methods = ['_cached', 'ignore_fields', 'expire', 'save', 'liveget',
+            methods = ['ignore_fields', 'expire', 'save', 'liveget',
                        ('iter', '__iter__')]
             self._proxy_methods(methods)
             spec_methods = ['__str__', '__repr__', '__iter__', '__len__',

@@ -306,7 +306,7 @@ class Job(object):
         >>> job.metadata['state']
         'finished'
     """
-    def __init__(self, client, jobkey, metadata=None):
+    def __init__(self, client, jobkey):
         self.projectid = parse_job_key(jobkey).projectid
         self.key = jobkey
 
@@ -320,7 +320,6 @@ class Job(object):
         self.requests = Requests(_Requests, client, jobkey)
         self.samples = Samples(_Samples, client, jobkey)
 
-        # FIXME pass cached=metadata
         self.metadata = JobMeta(_JobMeta, client, jobkey)
 
     def update_metadata(self, *args, **kwargs):
