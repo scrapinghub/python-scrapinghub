@@ -446,4 +446,53 @@ class Job(object):
 
 
 class JobMeta(_Proxy):
-    pass
+    """Class representing job metadata.
+
+    Not a public constructor: use :class:`Job` instance to get a
+    :class:`Jobmeta` instance. See :attr:`Job.metadata` attribute.
+
+    Usage::
+
+    - request job metadata
+
+        >>> meta = job.metadata
+        >>> meta
+        JobMeta({'project': 123, 'tags': ['tagA'], 'version': 'test'})
+
+    - get length of job metadata
+
+        >>> len(job.metadata)
+        3
+
+    - iterate through job metadata keys
+
+        >>> job.metadata.iter()
+        <dict_keyiterator at 0x1049ac188>
+
+    - list job metadata keys
+
+        >>> job.metadata.list()
+        ['project', 'tags', 'version']
+
+    - get meta field value by name
+
+        >>> job.metadata['version']
+        'test'
+
+    - get meta field value by name from server
+
+        >>> job.metadata.liveget('version')
+        'test'
+
+    - update job meta field value (some meta fields are read-only)
+
+        >>> job.metadata['my-meta'] = 'test'
+
+    - save updated metadata on server
+
+        >>> job.metadata.save()
+
+    - expire metadata local cache
+
+        >>> job.meta.expire()
+    """

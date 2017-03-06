@@ -126,4 +126,53 @@ class Project(object):
 
 
 class Settings(_Proxy):
-    pass
+    """Class representing job metadata.
+
+    Not a public constructor: use :class:`Project` instance to get a
+    :class:`Settings` instance. See :attr:`Project.settings` attribute.
+
+    Usage::
+
+    - request project settings
+
+        >>> settings = project.settings
+        >>> settings
+        Settings({'default_job_units': 1, 'job_runtime_limit': 24})
+
+    - get length of project settings
+
+        >>> len(project.settings)
+        2
+
+    - iterate through project settings keys
+
+        >>> project.settings.iter()
+        <dict_keyiterator at 0x106ae9cc8>
+
+    - list project settings keys
+
+        >>> project.settings.list()
+        ['default_job_units', 'job_runtime_limit']
+
+    - get setting value by name
+
+        >>> project.settings['default_job_units']
+        1
+
+    - get setting value by name from server
+
+        >>> project.settings.liveget('default_job_units')
+        1
+
+    - update setting value (some settings are read-only)
+
+        >>> project.setting['default_job_units'] = 2
+
+    - save updated settings on server
+
+        >>> project.settings.save()
+
+    - expire project settings local cache
+
+        >>> project.settings.expire()
+    """
