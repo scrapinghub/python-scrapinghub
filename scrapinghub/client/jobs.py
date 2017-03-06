@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import json
 
-from ..hubstorage.job import JobMeta
+from ..hubstorage.job import JobMeta as _JobMeta
 from ..hubstorage.job import Items as _Items
 from ..hubstorage.job import Logs as _Logs
 from ..hubstorage.job import Samples as _Samples
@@ -13,6 +13,7 @@ from .requests import Requests
 from .samples import Samples
 from .exceptions import NotFound, InvalidUsage, DuplicateJobError
 from .utils import get_tags_for_update
+from .utils import _Proxy
 from .utils import parse_job_key
 
 
@@ -319,7 +320,8 @@ class Job(object):
         self.requests = Requests(_Requests, client, jobkey)
         self.samples = Samples(_Samples, client, jobkey)
 
-        self.metadata = JobMeta(client._hsclient, jobkey, cached=metadata)
+        # FIXME pass cached=metadata
+        self.metadata = JobMeta(_JobMeta, client, jobkey)
 
     def update_metadata(self, *args, **kwargs):
         """Update job metadata.
@@ -442,3 +444,7 @@ class Job(object):
         """
         self.delete()
         self.metadata.expire()
+
+
+class JobMeta(_Proxy):
+    pass

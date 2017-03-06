@@ -2,13 +2,14 @@ from __future__ import absolute_import
 
 from ..hubstorage.activity import Activity as _Activity
 from ..hubstorage.collectionsrt import Collections as _Collections
-from ..hubstorage.project import Settings
+from ..hubstorage.project import Settings as _Settings
 
 from .activity import Activity
 from .collections import Collections
 from .frontiers import _HSFrontier, Frontiers
 from .jobs import Jobs
 from .spiders import Spiders
+from .utils import _Proxy
 from .utils import parse_project_id
 
 
@@ -121,4 +122,8 @@ class Project(object):
         self.activity = Activity(_Activity, client, projectid)
         self.collections = Collections(_Collections, client, projectid)
         self.frontiers = Frontiers(_HSFrontier, client, projectid)
-        self.settings = Settings(client._hsclient, projectid)
+        self.settings = Settings(_Settings, client, projectid)
+
+
+class Settings(_Proxy):
+    pass

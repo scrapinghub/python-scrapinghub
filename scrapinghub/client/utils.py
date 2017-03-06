@@ -10,6 +10,7 @@ from six import string_types
 
 from ..hubstorage.resourcetype import DownloadableResource
 from ..hubstorage.resourcetype import ItemsResourceType
+from ..hubstorage.resourcetype import MappingResourceType
 from ..hubstorage.collectionsrt import Collections
 
 from .exceptions import wrap_value_too_large
@@ -106,6 +107,15 @@ class _Proxy(object):
             self._proxy_methods(methods)
             self._wrap_iter_methods([method[0] for method in methods])
 
+        if issubclass(cls, MappingResourceType):
+            methods = ['_cached', 'ignore_fields', 'expire', 'save', 'liveget',
+                       ('iter', '__iter__')]
+            self._proxy_methods(methods)
+            spec_methods = ['__str__', '__repr__', '__iter__', '__len__',
+                            '__getitem__', '__setitem__', '__delitem__']
+            proxy_methods(self._origin, self.__class__,
+                          spec_methods, force=True)
+
     def _proxy_methods(self, methods):
         """A little helper for cleaner interface."""
         proxy_methods(self._origin, self, methods)
@@ -133,8 +143,10 @@ def wrap_kwargs(fn, kwargs_fn):
     return wrapped
 
 
-def proxy_methods(origin, successor, methods):
+def proxy_methods(origin, successor, methods, force=False):
     """A helper to proxy methods from origin to successor.
+
+    force param enforces rewriting attribute even if it exists in successor.
 
     Accepts a list with strings and tuples:
     - each string defines:
@@ -147,7 +159,7 @@ def proxy_methods(origin, successor, methods):
             successor_name, origin_name = method
         else:
             successor_name, origin_name = method, method
-        if not hasattr(successor, successor_name):
+        if not hasattr(successor, successor_name) or force:
             setattr(successor, successor_name, getattr(origin, origin_name))
 
 
