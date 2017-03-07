@@ -12,9 +12,7 @@ from .logs import Logs
 from .requests import Requests
 from .samples import Samples
 from .exceptions import NotFound, InvalidUsage, DuplicateJobError
-from .utils import get_tags_for_update
-from .utils import _Proxy
-from .utils import parse_job_key
+from .utils import _MappingProxy, get_tags_for_update, parse_job_key
 
 
 class Jobs(object):
@@ -445,7 +443,7 @@ class Job(object):
         self.metadata.expire()
 
 
-class JobMeta(_Proxy):
+class JobMeta(_MappingProxy):
     """Class representing job metadata.
 
     Not a public constructor: use :class:`Job` instance to get a
@@ -494,5 +492,5 @@ class JobMeta(_Proxy):
 
     - expire metadata local cache
 
-        >>> job.meta.expire()
+        >>> job.metadata.expire()
     """

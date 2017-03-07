@@ -10,7 +10,6 @@ from six import string_types
 
 from ..hubstorage.resourcetype import DownloadableResource
 from ..hubstorage.resourcetype import ItemsResourceType
-from ..hubstorage.resourcetype import MappingResourceType
 from ..hubstorage.collectionsrt import Collections
 
 from .exceptions import wrap_value_too_large
@@ -72,11 +71,24 @@ def get_tags_for_update(**kwargs):
     return params
 
 
-class _Proxy(object):
+class _ProxyBase(object):
     """A helper to create a class instance and proxy its methods to origin.
 
     The internal proxy class is useful to link class attributes from its
-    origin depending on the origin base class as a part of init logic:
+    origin depending on the origin base class as a part of init logic.
+    """
+    def __init__(self, cls, client, key):
+        self.key = key
+        self._client = client
+        self._origin = cls(client._hsclient, key)
+
+    def _proxy_methods(self, methods):
+        """A little helper for cleaner interface."""
+        proxy_methods(self._origin, self, methods)
+
+
+class _Proxy(_ProxyBase):
+    """
 
     - :class:`ItemsResourceType` provides items-based attributes to access
     items in an arbitrary collection with get/write/flush/close/stats/iter
@@ -84,13 +96,11 @@ class _Proxy(object):
 
     - :class:`DownloadableResource` provides download-based attributes to
     iter through collection with or without msgpack support.
+
     """
 
     def __init__(self, cls, client, key):
-        self.key = key
-        self._client = client
-        self._origin = cls(client._hsclient, key)
-
+        super(_Proxy, self).__init__(cls, client, key)
         if issubclass(cls, ItemsResourceType):
             self._proxy_methods(['get', 'write', 'flush', 'close',
                                  'stats', ('iter', 'list')])
@@ -107,24 +117,6 @@ class _Proxy(object):
             self._proxy_methods(methods)
             self._wrap_iter_methods([method[0] for method in methods])
 
-        if issubclass(cls, MappingResourceType):
-            methods = ['ignore_fields', 'expire', 'save', 'liveget',
-                       ('iter', '__iter__')]
-            self._proxy_methods(methods)
-            # the following methods are special and should be set to class
-            # 1) the methods are always defined: enforce setting them
-            str_methods = ['__str__', '__repr__']
-            proxy_methods(self._origin, self.__class__,
-                          str_methods, force=True)
-            # 2) these are not always defined and can be redefined
-            other_methods = ['__getitem__', '__setitem__', '__delitem__',
-                             '__iter__', '__len__']
-            proxy_methods(self._origin, self.__class__, other_methods)
-
-    def _proxy_methods(self, methods):
-        """A little helper for cleaner interface."""
-        proxy_methods(self._origin, self, methods)
-
     def _wrap_iter_methods(self, methods):
         """Modify kwargs for all passed self.iter* methods."""
         for method in methods:
@@ -140,6 +132,46 @@ class _Proxy(object):
         return list(self.iter(*args, **kwargs))
 
 
+class _MappingProxy(_ProxyBase):
+
+    def __init__(self, cls, client, key):
+        super(_MappingProxy, self).__init__(cls, client, key)
+        methods = ['ignore_fields', 'expire', 'save', 'liveget']
+        self._proxy_methods(methods)
+        self.iterkeys = self.__iter__
+
+    def __str__(self):
+        return str(self._origin._data)
+
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__,
+                               repr(self._origin._data))
+
+    def __getitem__(self, key):
+        return self._origin[key]
+
+    def __setitem__(self, key, value):
+        self._origin[key] = value
+
+    def __delitem__(self, key):
+        del self._origin[key]
+
+    def __iter__(self):
+        return iter(self._origin)
+
+    def __len__(self):
+        return len(self._origin)
+
+    def keys(self):
+        return list(self.iterkeys())
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+
 def wrap_kwargs(fn, kwargs_fn):
     """Tiny wrapper to prepare modified version of function kwargs"""
     def wrapped(*args, **kwargs):
@@ -148,7 +180,7 @@ def wrap_kwargs(fn, kwargs_fn):
     return wrapped
 
 
-def proxy_methods(origin, successor, methods, force=False):
+def proxy_methods(origin, successor, methods):
     """A helper to proxy methods from origin to successor.
 
     force param enforces rewriting attribute even if it exists in successor.
@@ -164,7 +196,7 @@ def proxy_methods(origin, successor, methods, force=False):
             successor_name, origin_name = method
         else:
             successor_name, origin_name = method, method
-        if not hasattr(successor, successor_name) or force:
+        if not hasattr(successor, successor_name):
             setattr(successor, successor_name, getattr(origin, origin_name))
 
 

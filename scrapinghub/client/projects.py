@@ -9,8 +9,7 @@ from .collections import Collections
 from .frontiers import _HSFrontier, Frontiers
 from .jobs import Jobs
 from .spiders import Spiders
-from .utils import _Proxy
-from .utils import parse_project_id
+from .utils import _MappingProxy, parse_project_id
 
 
 class Projects(object):
@@ -125,7 +124,7 @@ class Project(object):
         self.settings = Settings(_Settings, client, projectid)
 
 
-class Settings(_Proxy):
+class Settings(_MappingProxy):
     """Class representing job metadata.
 
     Not a public constructor: use :class:`Project` instance to get a
