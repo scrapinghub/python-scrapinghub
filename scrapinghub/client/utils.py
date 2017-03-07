@@ -4,8 +4,9 @@ import os
 import json
 import logging
 import binascii
-
 from codecs import decode
+from collections import MutableMapping
+
 from six import string_types
 
 from ..hubstorage.resourcetype import DownloadableResource
@@ -136,40 +137,31 @@ class _MappingProxy(_ProxyBase):
 
     def __init__(self, cls, client, key):
         super(_MappingProxy, self).__init__(cls, client, key)
-        methods = ['ignore_fields', 'expire', 'save', 'liveget']
-        self._proxy_methods(methods)
-        self.iterkeys = self.__iter__
 
-    def __str__(self):
-        return str(self._origin._data)
+        # cls_methods methods will be imported from origin class
+        origin_cls_methods = ['__iter__', '__len__', '__str__', '__repr__',
+                              '__getitem__', '__setitem__', '__delitem__']
 
-    def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__,
-                               repr(self._origin._data))
+        other_attrs = ['ignore_fields', 'expire', '_data', '_deleted',
+                       'save', 'liveget', ('iter', '__iter__')]
 
-    def __getitem__(self, key):
-        return self._origin[key]
+        # blacklisted attributes should be just skipped on proxying
+        blacklisted_attrs = ['__class__', '__init__', '__str__', '__repr__']
 
-    def __setitem__(self, key, value):
-        self._origin[key] = value
+        # proxy all the main methods from MutableMapping
+        methods = [method for method in dir(MutableMapping)
+                   if callable(getattr(MutableMapping, method))
+                   and method not in origin_cls_methods
+                   and method not in blacklisted_attrs]
+        proxy_methods(MutableMapping, self.__class__, methods, force=True)
+        # proxy whitelisted methods from origin
+        proxy_methods(self._origin.__class__, self.__class__,
+                      origin_cls_methods, force=True)
+        proxy_methods(self._origin, self, other_attrs)
 
-    def __delitem__(self, key):
-        del self._origin[key]
-
-    def __iter__(self):
-        return iter(self._origin)
-
-    def __len__(self):
-        return len(self._origin)
-
-    def keys(self):
-        return list(self.iterkeys())
-
-    def get(self, key, default=None):
-        try:
-            return self[key]
-        except KeyError:
-            return default
+    @property
+    def _data(self):
+        return self._origin._data
 
 
 def wrap_kwargs(fn, kwargs_fn):
@@ -180,7 +172,7 @@ def wrap_kwargs(fn, kwargs_fn):
     return wrapped
 
 
-def proxy_methods(origin, successor, methods):
+def proxy_methods(origin, successor, methods, force=False):
     """A helper to proxy methods from origin to successor.
 
     force param enforces rewriting attribute even if it exists in successor.
@@ -196,7 +188,7 @@ def proxy_methods(origin, successor, methods):
             successor_name, origin_name = method
         else:
             successor_name, origin_name = method, method
-        if not hasattr(successor, successor_name):
+        if not hasattr(successor, successor_name) or force:
             setattr(successor, successor_name, getattr(origin, origin_name))
 
 
