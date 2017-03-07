@@ -143,7 +143,7 @@ class _MappingProxy(_ProxyBase):
                               '__getitem__', '__setitem__', '__delitem__']
 
         other_attrs = ['ignore_fields', 'expire', '_data', '_deleted',
-                       'save', 'liveget', ('iter', '__iter__')]
+                       'save', 'liveget', ('iterkeys', '__iter__')]
 
         # blacklisted attributes should be just skipped on proxying
         blacklisted_attrs = ['__class__', '__init__', '__str__', '__repr__']
