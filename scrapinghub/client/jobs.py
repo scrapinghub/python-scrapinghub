@@ -478,7 +478,7 @@ class JobMeta(_MappingProxy):
 
     - update job meta field value (some meta fields are read-only)
 
-        >>> job.metadata.set('my-meta') = 'test'
+        >>> job.metadata.set('my-meta', 'test')
 
     - update multiple meta fields at once
 
