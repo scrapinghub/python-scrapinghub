@@ -8,6 +8,7 @@ from ..hubstorage.project import Settings as _Settings
 
 from .activity import Activity
 from .collections import Collections
+from .exceptions import InvalidUsage
 from .frontiers import _HSFrontier, Frontiers
 from .jobs import Jobs
 from .spiders import Spiders
@@ -161,8 +162,8 @@ class Settings(_MappingProxy):
 
     - update multiple settings at once
 
-        >>> project.setting.set({'default_job_units': 1,
-        ...                      'job_runtime_limit': 20})
+        >>> project.setting.update({'default_job_units': 1,
+        ...                         'job_runtime_limit': 20})
 
     - delete project setting by name
 
@@ -172,8 +173,8 @@ class Settings(_MappingProxy):
         # FIXME drop the method when get-by-key is implemented on server side
         return next(self._origin.apiget()).get(key)
 
-    def set(self, key_or_values, value=None):
+    def set(self, key, value):
         # FIXME drop the method when post-by-key is implemented on server side
-        if isinstance(key_or_values, six.string_types):
-            key_or_values = {key_or_values: value}
-        super(Settings, self).set(key_or_values)
+        if not isinstance(key, six.string_types):
+            raise InvalidUsage("key should be a string")
+        self.update({key: value})

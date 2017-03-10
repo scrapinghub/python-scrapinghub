@@ -119,8 +119,8 @@ To update a project setting value by name::
 
 Or update a few project settings at once::
 
-    >> update = {'default_job_units': 1, 'job_runtime_limit': 20}
-    >>> project.setting.set(update)
+    >>> project.settings.update({'default_job_units': 1,
+    ...                          'job_runtime_limit': 20})
 
 
 Spiders
@@ -355,7 +355,7 @@ Job details can be found in jobs metadata and it's scrapystats::
 
 Anything can be stored in metadata, here is example how to add tags::
 
-    >>> job.metadata.set({'tags': 'obsolete'})
+    >>> job.metadata.set('tags', ['obsolete'])
 
 Items
 ^^^^^

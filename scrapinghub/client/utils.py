@@ -130,19 +130,19 @@ class _MappingProxy(_Proxy):
     def get(self, key):
         return next(self._origin.apiget(key))
 
-    def set(self, key_or_values, value=None):
-        if isinstance(key_or_values, six.string_types):
-            self._origin.apipost(key_or_values,
-                                 data=json.dumps(value),
-                                 is_idempotent=True)
-        elif isinstance(key_or_values, dict):
-            data = next(self._origin.apiget())
-            data.update(key_or_values)
-            self._origin.apipost(jl={k: v for k, v in six.iteritems(data)
-                                     if k not in self._origin.ignore_fields},
-                                 is_idempotent=True)
-        else:
-            raise InvalidUsage("key_or_values should be string or dict")
+    def set(self, key, value):
+        if not key or not isinstance(key, six.string_types):
+            raise InvalidUsage("key should be a string")
+        self._origin.apipost(key, data=json.dumps(value), is_idempotent=True)
+
+    def update(self, values):
+        if not isinstance(values, dict):
+            raise InvalidUsage("values should be a dict")
+        data = next(self._origin.apiget())
+        data.update(values)
+        self._origin.apipost(jl={k: v for k, v in six.iteritems(data)
+                                 if k not in self._origin.ignore_fields},
+                             is_idempotent=True)
 
     def delete(self, key):
         self._origin.apidelete(key)
