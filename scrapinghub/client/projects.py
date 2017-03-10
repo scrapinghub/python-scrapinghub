@@ -169,10 +169,6 @@ class Settings(_MappingProxy):
 
         >>> project.settings.delete('job_runtime_limit')
     """
-    def get(self, key):
-        # FIXME drop the method when get-by-key is implemented on server side
-        return next(self._origin.apiget()).get(key)
-
     def set(self, key, value):
         # FIXME drop the method when post-by-key is implemented on server side
         if not isinstance(key, six.string_types):
