@@ -127,9 +127,6 @@ class _Proxy(object):
 
 class _MappingProxy(_Proxy):
 
-    def count(self):
-        return len(next(self._origin.apiget()))
-
     def get(self, key):
         return next(self._origin.apiget(key))
 

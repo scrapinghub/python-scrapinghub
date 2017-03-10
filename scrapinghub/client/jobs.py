@@ -439,11 +439,6 @@ class JobMeta(_MappingProxy):
         >>> job.metadata
         <scrapinghub.client.jobs.JobMeta at 0x10494f198>
 
-    - get length of job metadata
-
-        >>> job.metadata.count()
-        26
-
     - iterate through job metadata
 
         >>> job.metadata.iter()

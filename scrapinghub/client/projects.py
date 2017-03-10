@@ -139,11 +139,6 @@ class Settings(_MappingProxy):
         >>> project.settings
         <scrapinghub.client.projects.Settings at 0x10ecf1250>
 
-    - get length of project settings
-
-        >>> project.settings.count()
-        2
-
     - iterate through project settings
 
         >>> project.settings.iter()
