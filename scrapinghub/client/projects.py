@@ -163,7 +163,7 @@ class Settings(_MappingProxy):
     - update multiple settings at once
 
         >>> project.settings.update({'default_job_units': 1,
-        ...                         'job_runtime_limit': 20})
+        ...                          'job_runtime_limit': 20})
 
     - delete project setting by name
 
