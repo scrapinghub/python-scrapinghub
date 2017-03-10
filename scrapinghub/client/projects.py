@@ -158,16 +158,16 @@ class Settings(_MappingProxy):
 
     - update setting value (some settings are read-only)
 
-        >>> project.setting.set('default_job_units', 2)
+        >>> project.settings.set('default_job_units', 2)
 
     - update multiple settings at once
 
-        >>> project.setting.update({'default_job_units': 1,
+        >>> project.settings.update({'default_job_units': 1,
         ...                         'job_runtime_limit': 20})
 
     - delete project setting by name
 
-        >>> project.setting.delete('job_runtime_limit')
+        >>> project.settings.delete('job_runtime_limit')
     """
     def get(self, key):
         # FIXME drop the method when get-by-key is implemented on server side
