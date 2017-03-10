@@ -204,7 +204,7 @@ count
 
 It's also possible to count jobs for a given project/spider::
 
-    >> spider.jobs.count()
+    >>> spider.jobs.count()
     5
 
 Count logic supports different filters, as described for `count endpoint`_.
