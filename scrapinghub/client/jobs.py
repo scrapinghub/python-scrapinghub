@@ -301,7 +301,7 @@ class Job(object):
         >>> job = project.job('123/1/2')
         >>> job.key
         '123/1/2'
-        >>> job.metadata['state']
+        >>> job.metadata.get('state')
         'finished'
     """
     def __init__(self, client, jobkey):
@@ -319,23 +319,6 @@ class Job(object):
         self.samples = Samples(_Samples, client, jobkey)
 
         self.metadata = JobMeta(_JobMeta, client, jobkey)
-
-    def update_metadata(self, *args, **kwargs):
-        """Update job metadata.
-
-        :param \*\*kwargs: keyword arguments representing job metadata
-
-        Usage:
-
-        - update job outcome::
-
-            >>> job.update_metadata(close_reason='custom reason')
-
-        - change job tags::
-
-            >>> job.update_metadata({'tags': 'obsolete'})
-        """
-        self._job.update_metadata(*args, **kwargs)
 
     def update_tags(self, add=None, remove=None):
         """Partially update job tags.
@@ -425,7 +408,7 @@ class Job(object):
         Usage::
 
             >>> job.cancel()
-            >>> job.metadata['cancelled_by']
+            >>> job.metadata.get('cancelled_by')
             'John'
         """
         self._project.jobq.request_cancel(self)
@@ -436,7 +419,7 @@ class Job(object):
         Usage::
 
             >>> job.purge()
-            >>> job.metadata['state']
+            >>> job.metadata.get('state')
             'deleted'
         """
         self.delete()
