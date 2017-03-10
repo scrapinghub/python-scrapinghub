@@ -5,15 +5,14 @@ import json
 import logging
 import binascii
 from codecs import decode
-from collections import MutableMapping
 
-from six import string_types
+import six
 
 from ..hubstorage.resourcetype import DownloadableResource
 from ..hubstorage.resourcetype import ItemsResourceType
 from ..hubstorage.collectionsrt import Collections
 
-from .exceptions import wrap_value_too_large
+from .exceptions import wrap_value_too_large, InvalidUsage
 
 
 class LogLevel(object):
@@ -47,7 +46,7 @@ def parse_project_id(projectid):
 def parse_job_key(jobkey):
     if isinstance(jobkey, tuple):
         parts = jobkey
-    elif isinstance(jobkey, string_types):
+    elif isinstance(jobkey, six.string_types):
         parts = jobkey.split('/')
     else:
         raise ValueError("Job key should be a string or a tuple")
@@ -72,24 +71,11 @@ def get_tags_for_update(**kwargs):
     return params
 
 
-class _ProxyBase(object):
+class _Proxy(object):
     """A helper to create a class instance and proxy its methods to origin.
 
     The internal proxy class is useful to link class attributes from its
-    origin depending on the origin base class as a part of init logic.
-    """
-    def __init__(self, cls, client, key):
-        self.key = key
-        self._client = client
-        self._origin = cls(client._hsclient, key)
-
-    def _proxy_methods(self, methods):
-        """A little helper for cleaner interface."""
-        proxy_methods(self._origin, self, methods)
-
-
-class _Proxy(_ProxyBase):
-    """
+    origin depending on the origin base class as a part of init logic:
 
     - :class:`ItemsResourceType` provides items-based attributes to access
     items in an arbitrary collection with get/write/flush/close/stats/iter
@@ -97,11 +83,13 @@ class _Proxy(_ProxyBase):
 
     - :class:`DownloadableResource` provides download-based attributes to
     iter through collection with or without msgpack support.
-
     """
 
     def __init__(self, cls, client, key):
-        super(_Proxy, self).__init__(cls, client, key)
+        self.key = key
+        self._client = client
+        self._origin = cls(client._hsclient, key)
+
         if issubclass(cls, ItemsResourceType):
             self._proxy_methods(['get', 'write', 'flush', 'close',
                                  'stats', ('iter', 'list')])
@@ -118,6 +106,10 @@ class _Proxy(_ProxyBase):
             self._proxy_methods(methods)
             self._wrap_iter_methods([method[0] for method in methods])
 
+    def _proxy_methods(self, methods):
+        """A little helper for cleaner interface."""
+        proxy_methods(self._origin, self, methods)
+
     def _wrap_iter_methods(self, methods):
         """Modify kwargs for all passed self.iter* methods."""
         for method in methods:
@@ -133,35 +125,33 @@ class _Proxy(_ProxyBase):
         return list(self.iter(*args, **kwargs))
 
 
-class _MappingProxy(_ProxyBase):
+class _MappingProxy(_Proxy):
 
-    def __init__(self, cls, client, key):
-        super(_MappingProxy, self).__init__(cls, client, key)
+    def count(self):
+        return len(next(self._origin.apiget()))
 
-        # cls_methods methods will be imported from origin class
-        origin_cls_methods = ['__iter__', '__len__', '__str__', '__repr__',
-                              '__getitem__', '__setitem__', '__delitem__']
+    def get(self, key):
+        return next(self._origin.apiget(key))
 
-        other_attrs = ['ignore_fields', 'expire', '_data', '_deleted',
-                       'save', 'liveget', ('iterkeys', '__iter__')]
+    def set(self, key_or_values, value=None):
+        if isinstance(key_or_values, six.string_types):
+            self._origin.apipost(key_or_values,
+                                 data=json.dumps(value),
+                                 is_idempotent=True)
+        elif isinstance(key_or_values, dict):
+            data = next(self._origin.apiget())
+            data.update(key_or_values)
+            self._origin.apipost(jl={k: v for k, v in six.iteritems(data)
+                                     if k not in self._origin.ignore_fields},
+                                 is_idempotent=True)
+        else:
+            raise InvalidUsage("key_or_values should be string or dict")
 
-        # blacklisted attributes should be just skipped on proxying
-        blacklisted_attrs = ['__class__', '__init__', '__str__', '__repr__']
+    def delete(self, key):
+        self._origin.apidelete(key)
 
-        # proxy all the main methods from MutableMapping
-        methods = [method for method in dir(MutableMapping)
-                   if callable(getattr(MutableMapping, method))
-                   and method not in origin_cls_methods
-                   and method not in blacklisted_attrs]
-        proxy_methods(MutableMapping, self.__class__, methods, force=True)
-        # proxy whitelisted methods from origin
-        proxy_methods(self._origin.__class__, self.__class__,
-                      origin_cls_methods, force=True)
-        proxy_methods(self._origin, self, other_attrs)
-
-    @property
-    def _data(self):
-        return self._origin._data
+    def iter(self):
+        return six.iteritems(next(self._origin.apiget()))
 
 
 def wrap_kwargs(fn, kwargs_fn):
@@ -172,10 +162,8 @@ def wrap_kwargs(fn, kwargs_fn):
     return wrapped
 
 
-def proxy_methods(origin, successor, methods, force=False):
+def proxy_methods(origin, successor, methods):
     """A helper to proxy methods from origin to successor.
-
-    force param enforces rewriting attribute even if it exists in successor.
 
     Accepts a list with strings and tuples:
     - each string defines:
@@ -188,7 +176,7 @@ def proxy_methods(origin, successor, methods, force=False):
             successor_name, origin_name = method
         else:
             successor_name, origin_name = method, method
-        if not hasattr(successor, successor_name) or force:
+        if not hasattr(successor, successor_name):
             setattr(successor, successor_name, getattr(origin, origin_name))
 
 
@@ -201,7 +189,7 @@ def format_iter_filters(params):
     if filters and isinstance(filters, list):
         filter_data = []
         for elem in params.pop('filter'):
-            if isinstance(elem, string_types):
+            if isinstance(elem, six.string_types):
                 filter_data.append(elem)
             elif isinstance(elem, (list, tuple)):
                 filter_data.append(json.dumps(elem))
@@ -236,12 +224,12 @@ def parse_auth(auth):
         return (apikey, '')
 
     if isinstance(auth, tuple):
-        all_strings = all(isinstance(k, string_types) for k in auth)
+        all_strings = all(isinstance(k, six.string_types) for k in auth)
         if len(auth) != 2 or not all_strings:
             raise ValueError("Wrong authentication credentials")
         return auth
 
-    if not isinstance(auth, string_types):
+    if not isinstance(auth, six.string_types):
         raise ValueError("Wrong authentication credentials")
 
     jwt_auth = _search_for_jwt_credentials(auth)
@@ -258,7 +246,7 @@ def _search_for_jwt_credentials(auth):
     except (binascii.Error, TypeError):
         return
     try:
-        if not isinstance(decoded_auth, string_types):
+        if not isinstance(decoded_auth, six.string_types):
             decoded_auth = decoded_auth.decode('ascii')
         login, _, password = decoded_auth.partition(':')
         if password and parse_job_key(login):

@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import six
+
 from ..hubstorage.activity import Activity as _Activity
 from ..hubstorage.collectionsrt import Collections as _Collections
 from ..hubstorage.project import Settings as _Settings
@@ -132,46 +134,51 @@ class Settings(_MappingProxy):
 
     Usage::
 
-    - request project settings
+    - get project settings instance
 
-        >>> settings = project.settings
-        >>> settings
-        Settings({'default_job_units': 1, 'job_runtime_limit': 24})
+        >>> project.settings
+        <scrapinghub.client.projects.Settings at 0x10ecf1250>
 
     - get length of project settings
 
-        >>> len(project.settings)
+        >>> project.settings.count()
         2
 
-    - iterate through project settings keys
+    - iterate through project settings
 
         >>> project.settings.iter()
-        <dict_keyiterator at 0x106ae9cc8>
+        <dictionary-itemiterator at 0x10ed11578>
 
-    - list project settings keys
+    - list project settings
 
         >>> project.settings.list()
-        ['default_job_units', 'job_runtime_limit']
+        [(u'default_job_units', 2),
+         (u'job_runtime_limit', 20)]
 
     - get setting value by name
 
-        >>> project.settings['default_job_units']
-        1
-
-    - get setting value by name from server
-
-        >>> project.settings.liveget('default_job_units')
-        1
+        >>> project.settings.get('default_job_units')
+        2
 
     - update setting value (some settings are read-only)
 
-        >>> project.setting['default_job_units'] = 2
+        >>> project.setting.set('default_job_units', 2)
 
-    - save updated settings on server
+    - update multiple settings at once
 
-        >>> project.settings.save()
+        >>> project.setting.set({'default_job_units': 1,
+        ...                      'job_runtime_limit': 20})
 
-    - expire project settings local cache
+    - delete project setting by name
 
-        >>> project.settings.expire()
+        >>> project.setting.delete('job_runtime_limit')
     """
+    def get(self, key):
+        # FIXME drop the method when get-by-key is implemented on server side
+        return next(self._origin.apiget()).get(key)
+
+    def set(self, key_or_values, value=None):
+        # FIXME drop the method when post-by-key is implemented on server side
+        if isinstance(key_or_values, six.string_types):
+            key_or_values = {key_or_values: value}
+        super(Settings, self).set(key_or_values)

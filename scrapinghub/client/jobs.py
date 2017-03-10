@@ -451,46 +451,40 @@ class JobMeta(_MappingProxy):
 
     Usage::
 
-    - request job metadata
+    - get job metadata instance
 
-        >>> meta = job.metadata
-        >>> meta
-        JobMeta({'project': 123, 'tags': ['tagA'], 'version': 'test'})
+        >>> job.metadata
+        <scrapinghub.client.jobs.JobMeta at 0x10494f198>
 
     - get length of job metadata
 
-        >>> len(job.metadata)
-        3
+        >>> job.metadata.count()
+        26
 
-    - iterate through job metadata keys
+    - iterate through job metadata
 
         >>> job.metadata.iter()
-        <dict_keyiterator at 0x1049ac188>
+        <dict_itemiterator at 0x104adbd18>
 
-    - list job metadata keys
+    - list job metadata
 
         >>> job.metadata.list()
-        ['project', 'tags', 'version']
+        [('project', 123), ('units', 1), ('state', 'finished'), ...]
 
     - get meta field value by name
 
-        >>> job.metadata['version']
-        'test'
-
-    - get meta field value by name from server
-
-        >>> job.metadata.liveget('version')
+        >>> job.metadata.get('version')
         'test'
 
     - update job meta field value (some meta fields are read-only)
 
-        >>> job.metadata['my-meta'] = 'test'
+        >>> job.metadata.set('my-meta') = 'test'
 
-    - save updated metadata on server
+    - update multiple meta fields at once
 
-        >>> job.metadata.save()
+        >>> job.metadata.set({'my-meta1': 'test1', 'my-meta2': 'test2})
 
-    - expire metadata local cache
+    - delete meta field by name
 
-        >>> job.metadata.expire()
+        >>> job.metadata.delete('my-meta')
     """
