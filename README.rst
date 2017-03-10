@@ -100,6 +100,29 @@ Project instance also has the following fields:
 - spiders - access to spiders collection (see ``Spiders`` section)
 
 
+Settings
+--------
+
+To get a list of the project settings::
+
+    >>> project.settings.list()
+    [(u'default_job_units', 2), (u'job_runtime_limit', 24)]]
+
+To get a project setting value by name::
+
+    >>> project.settings.get('job_runtime_limit')
+    24
+
+To update a project setting value by name::
+
+    >>> project.settings.set('job_runtime_limit', 20)
+
+Or update a few project settings at once::
+
+    >> update = {'default_job_units': 1, 'job_runtime_limit': 20}
+    >>> project.setting.set(update)
+
+
 Spiders
 -------
 
@@ -314,9 +337,9 @@ Metadata
 
 Job details can be found in jobs metadata and it's scrapystats::
 
-    >>> job.metadata['version']
+    >>> job.metadata.get('version')
     '5123a86-master'
-    >>> job.metadata['scrapystats']
+    >>> job.metadata.get('scrapystats')
     ...
     'downloader/response_count': 104,
     'downloader/response_status_count/200': 104,
@@ -332,7 +355,7 @@ Job details can be found in jobs metadata and it's scrapystats::
 
 Anything can be stored in metadata, here is example how to add tags::
 
-    >>> job.update_metadata({'tags': 'obsolete'})
+    >>> job.metadata.set({'tags': 'obsolete'})
 
 Items
 ^^^^^
