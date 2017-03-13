@@ -4,17 +4,61 @@ from collections import defaultdict
 import pytest
 from six.moves import range
 
+from scrapinghub import ScrapinghubClient
 from scrapinghub.client.activity import Activity
 from scrapinghub.client.collections import Collections
 from scrapinghub.client.exceptions import DuplicateJobError
 from scrapinghub.client.frontiers import Frontiers
 from scrapinghub.client.jobs import Jobs, Job
-from scrapinghub.client.projects import Settings
+from scrapinghub.client.projects import Project, Settings
 from scrapinghub.client.spiders import Spiders
 
+from scrapinghub.hubstorage.utils import apipoll
+
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
+from .conftest import TEST_USER_AUTH, TEST_DASH_ENDPOINT
 from .utils import validate_default_meta
 
+
+# Projects class tests
+
+
+def test_client_projects_get_project(client):
+    projects = client.projects
+    # testing with int project id
+    p1 = projects.get(int(TEST_PROJECT_ID))
+    assert isinstance(p1, Project)
+    # testing with string project id
+    p2 = projects.get(TEST_PROJECT_ID)
+    assert isinstance(p2, Project)
+    assert p1.key == p2.key
+
+
+def test_client_projects_list_projects(client):
+    projects = client.projects.list()
+    assert client.projects.list() == []
+
+    # use user apikey to list test projects
+    client = ScrapinghubClient(TEST_USER_AUTH, TEST_DASH_ENDPOINT)
+    projects = client.projects.list()
+    assert isinstance(projects, list)
+    assert int(TEST_PROJECT_ID) in projects
+
+
+def test_client_projects_summary(client, project):
+    # add at least one running or pending job to ensure summary is returned
+    project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'running'})
+
+    def _get_summary():
+        summaries = {str(js['project']): js
+                     for js in client.projects.summary()}
+        return summaries.get(TEST_PROJECT_ID)
+
+    summary = apipoll(_get_summary)
+    assert summary is not None
+
+
+#  Project class tests
 
 def test_project_subresources(project):
     assert project.key == TEST_PROJECT_ID
