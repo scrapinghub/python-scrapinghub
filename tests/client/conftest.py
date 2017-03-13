@@ -141,10 +141,9 @@ def setup_vcrpy(request, project):
 
 
 def remove_all_jobs(project):
-    for k in list(project.settings.keys()):
+    for k, _ in project.settings.iter():
         if k != 'botgroups':
-            del project.settings[k]
-    project.settings.save()
+            project.settings.delete(k)
 
     # Cleanup JobQ: run 2 times to ensure we covered all jobs
     for queuename in ('pending', 'running', 'finished')*2:

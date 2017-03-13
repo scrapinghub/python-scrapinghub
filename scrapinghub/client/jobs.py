@@ -413,18 +413,6 @@ class Job(object):
         """
         self._project.jobq.request_cancel(self)
 
-    def purge(self):
-        """Delete job and expire its local metadata.
-
-        Usage::
-
-            >>> job.purge()
-            >>> job.metadata.get('state')
-            'deleted'
-        """
-        self.delete()
-        self.metadata.expire()
-
 
 class JobMeta(_MappingProxy):
     """Class representing job metadata.

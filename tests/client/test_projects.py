@@ -162,7 +162,7 @@ def test_project_jobs_schedule(project):
     assert isinstance(job0, Job)
     validate_default_meta(job0.metadata, state='pending')
     assert isinstance(job0.metadata.get('pending_time'), int)
-    assert job0.metadata['pending_time'] > 0
+    assert job0.metadata.get('pending_time') > 0
     assert job0.metadata.get('scheduled_by')
 
     # running the same spider with same args leads to duplicate error
@@ -181,7 +181,7 @@ def test_project_jobs_schedule(project):
     assert meta.get('meta1') == 'val1'
     assert meta.get('spider_args') == {'arg1': 'val1', 'arg2': 'val2'}
     assert isinstance(meta.get('running_time'), int)
-    assert meta['running_time'] > 0
+    assert meta.get('running_time') > 0
     assert meta.get('started_by')
 
 

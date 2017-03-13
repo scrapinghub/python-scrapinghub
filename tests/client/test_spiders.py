@@ -156,7 +156,7 @@ def test_spider_jobs_schedule(spider):
     assert job1.metadata.get('meta1') == 'val1'
     assert job1.metadata.get('spider_args') == {'arg1': 'val1', 'arg2': 'val2'}
     assert isinstance(job1.metadata.get('running_time'), int)
-    assert job1.metadata['running_time'] > 0
+    assert job1.metadata.get('running_time') > 0
     assert job1.metadata.get('started_by')
 
 
