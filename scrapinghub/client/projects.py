@@ -8,7 +8,6 @@ from ..hubstorage.project import Settings as _Settings
 
 from .activity import Activity
 from .collections import Collections
-from .exceptions import InvalidUsage
 from .frontiers import _HSFrontier, Frontiers
 from .jobs import Jobs
 from .spiders import Spiders
@@ -172,5 +171,5 @@ class Settings(_MappingProxy):
     def set(self, key, value):
         # FIXME drop the method when post-by-key is implemented on server side
         if not isinstance(key, six.string_types):
-            raise InvalidUsage("key should be a string")
+            raise TypeError("key should be a string")
         self.update({key: value})

@@ -12,7 +12,7 @@ from ..hubstorage.resourcetype import DownloadableResource
 from ..hubstorage.resourcetype import ItemsResourceType
 from ..hubstorage.collectionsrt import Collections
 
-from .exceptions import wrap_value_too_large, InvalidUsage
+from .exceptions import wrap_value_too_large
 
 
 class LogLevel(object):
@@ -135,7 +135,7 @@ class _MappingProxy(_Proxy):
 
     def update(self, values):
         if not isinstance(values, dict):
-            raise InvalidUsage("values should be a dict")
+            raise TypeError("values should be a dict")
         data = next(self._origin.apiget())
         data.update(values)
         self._origin.apipost(jl={k: v for k, v in six.iteritems(data)

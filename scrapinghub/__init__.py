@@ -1,6 +1,6 @@
 __all__ = ["APIError", "Connection", "HubstorageClient",
            "ScrapinghubClient", "ScrapinghubAPIError",
-           "DuplicateJobError", "InvalidUsage", "NotFound",
+           "DuplicateJobError", "BadRequest", "NotFound",
            "Unauthorized", "ValueTooLarge"]
 
 import pkgutil
@@ -15,7 +15,7 @@ from .client import ScrapinghubClient
 from .client.exceptions import (
     ScrapinghubAPIError,
     DuplicateJobError,
-    InvalidUsage,
+    BadRequest,
     NotFound,
     Unauthorized,
     ValueTooLarge,

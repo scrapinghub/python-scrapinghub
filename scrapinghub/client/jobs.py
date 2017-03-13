@@ -11,7 +11,7 @@ from .items import Items
 from .logs import Logs
 from .requests import Requests
 from .samples import Samples
-from .exceptions import NotFound, InvalidUsage, DuplicateJobError
+from .exceptions import NotFound, BadRequest, DuplicateJobError
 from .utils import _MappingProxy, get_tags_for_update, parse_job_key
 
 
@@ -149,7 +149,7 @@ class Jobs(object):
         try:
             response = self._client._connection._post(
                 'schedule', 'json', params)
-        except InvalidUsage as exc:
+        except BadRequest as exc:
             if 'already scheduled' in str(exc):
                 raise DuplicateJobError(exc)
             raise

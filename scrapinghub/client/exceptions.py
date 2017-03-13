@@ -32,7 +32,7 @@ class ScrapinghubAPIError(Exception):
         super(ScrapinghubAPIError, self).__init__(message)
 
 
-class InvalidUsage(ScrapinghubAPIError):
+class BadRequest(ScrapinghubAPIError):
     pass
 
 
@@ -60,7 +60,7 @@ def wrap_http_errors(method):
         except HTTPError as exc:
             status_code = exc.response.status_code
             if status_code == 400:
-                raise InvalidUsage(http_error=exc)
+                raise BadRequest(http_error=exc)
             elif status_code == 401:
                 raise Unauthorized(http_error=exc)
             elif status_code == 404:
@@ -76,8 +76,8 @@ def wrap_http_errors(method):
                 raise NotFound(msg)
             elif exc._type == APIError.ERR_VALUE_ERROR:
                 raise ValueError(msg)
-            elif exc._type == APIError.ERR_INVALID_USAGE:
-                raise InvalidUsage(msg)
+            elif exc._type == APIError.ERR_BAD_REQUEST:
+                raise BadRequest(msg)
             elif exc._type == APIError.ERR_AUTH_ERROR:
                 raise Unauthorized(http_error=exc)
             raise ScrapinghubAPIError(msg)
