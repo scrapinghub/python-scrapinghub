@@ -1,5 +1,5 @@
 import types
-from collections import defaultdict
+from collections import defaultdict, Iterator
 
 import pytest
 from six.moves import range
@@ -23,7 +23,7 @@ from .utils import validate_default_meta
 # Projects class tests
 
 
-def test_client_projects_get_project(client):
+def test_projects_get(client):
     projects = client.projects
     # testing with int project id
     p1 = projects.get(int(TEST_PROJECT_ID))
@@ -34,7 +34,7 @@ def test_client_projects_get_project(client):
     assert p1.key == p2.key
 
 
-def test_client_projects_list_projects(client):
+def test_projects_list(client):
     projects = client.projects.list()
     assert client.projects.list() == []
 
@@ -45,7 +45,7 @@ def test_client_projects_list_projects(client):
     assert int(TEST_PROJECT_ID) in projects
 
 
-def test_client_projects_summary(client, project):
+def test_projects_summary(client, project):
     # add at least one running or pending job to ensure summary is returned
     project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'running'})
 
@@ -60,7 +60,7 @@ def test_client_projects_summary(client, project):
 
 #  Project class tests
 
-def test_project_subresources(project):
+def test_project_base(project):
     assert project.key == TEST_PROJECT_ID
     assert isinstance(project.collections, Collections)
     assert isinstance(project.jobs, Jobs)
@@ -254,3 +254,30 @@ def test_project_jobs_iter_last(project):
     lastsumm2 = list(project.jobs.iter_last())
     assert len(lastsumm2) == 1
     assert lastsumm2[0].get('key') == job2.key
+
+
+def test_settings_get_set(project):
+    project.settings.set('job_runtime_limit', 20)
+    assert project.settings.get('job_runtime_limit') == 20
+    project.settings.set('job_runtime_limit', 24)
+    assert project.settings.get('job_runtime_limit') == 24
+
+
+def test_settings_update(project):
+    project.settings.set('job_runtime_limit', 20)
+    project.settings.update({'job_runtime_limit': 24})
+    assert project.settings.get('job_runtime_limit') == 24
+
+
+def test_settings_delete(project):
+    project.settings.delete('job_runtime_limit')
+    assert not project.settings.get('job_runtime_limit')
+
+
+def test_settings_iter_list(project):
+    project.settings.set('job_runtime_limit', 24)
+    settings_iter = project.settings.iter()
+    assert isinstance(settings_iter, Iterator)
+    settings_list = project.settings.list()
+    assert ('job_runtime_limit', 24) in settings_list
+    assert settings_list == list(settings_iter)
