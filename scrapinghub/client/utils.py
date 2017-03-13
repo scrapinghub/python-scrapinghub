@@ -131,8 +131,6 @@ class _MappingProxy(_Proxy):
         return next(self._origin.apiget(key))
 
     def set(self, key, value):
-        if not key or not isinstance(key, six.string_types):
-            raise InvalidUsage("key should be a string")
         self._origin.apipost(key, data=json.dumps(value), is_idempotent=True)
 
     def update(self, values):
