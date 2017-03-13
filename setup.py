@@ -22,7 +22,7 @@ setup(
     author_email='info@scrapinghub.com',
     url='http://github.com/scrapinghub/python-scrapinghub',
     platforms = ['Any'],
-    packages=['scrapinghub', 'scrapinghub.hubstorage'],
+    packages=['scrapinghub', 'scrapinghub.client', 'scrapinghub.hubstorage'],
     package_data={'scrapinghub': ['VERSION']},
     install_requires=['requests', 'retrying>=1.3.3', 'six>=1.10.0'],
     extras_require = {'msgpack': [mpack_required]},
