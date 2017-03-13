@@ -22,6 +22,9 @@ TEST_DASH_ENDPOINT = os.getenv('DASH_ENDPOINT', 'http://33.33.33.51:8080/api/')
 TEST_HS_ENDPOINT = os.getenv('HS_ENDPOINT',
                              'http://storage.vm.scrapinghub.com')
 
+# use some fixed timestamp to represent current time
+TEST_TS = 1476803148638
+
 # vcrpy creates the cassetes automatically under VCR_CASSETES_DIR
 VCR_CASSETES_DIR = 'tests/client/cassetes'
 
@@ -138,10 +141,9 @@ def setup_vcrpy(request, project):
 
 
 def remove_all_jobs(project):
-    for k in list(project.settings.keys()):
+    for k, _ in project.settings.iter():
         if k != 'botgroups':
-            del project.settings[k]
-    project.settings.save()
+            project.settings.delete(k)
 
     # Cleanup JobQ: run 2 times to ensure we covered all jobs
     for queuename in ('pending', 'running', 'finished')*2:

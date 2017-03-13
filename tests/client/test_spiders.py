@@ -6,7 +6,7 @@ from six import string_types
 from six.moves import range
 
 from scrapinghub.client.exceptions import DuplicateJobError
-from scrapinghub.client.exceptions import InvalidUsage
+from scrapinghub.client.exceptions import BadRequest
 from scrapinghub.client.exceptions import NotFound
 from scrapinghub.client.jobs import Jobs, Job
 from scrapinghub.client.spiders import Spider
@@ -42,7 +42,7 @@ def test_spider_base(project, spider):
 
 def test_spider_list_update_tags(project, spider):
     # FIXME empty update should fail
-    with pytest.raises(InvalidUsage):
+    with pytest.raises(BadRequest):
         spider.update_tags()
 
     spider.update_tags(add=['new1', 'new2'])
@@ -156,7 +156,7 @@ def test_spider_jobs_schedule(spider):
     assert job1.metadata.get('meta1') == 'val1'
     assert job1.metadata.get('spider_args') == {'arg1': 'val1', 'arg2': 'val2'}
     assert isinstance(job1.metadata.get('running_time'), int)
-    assert job1.metadata['running_time'] > 0
+    assert job1.metadata.get('running_time') > 0
     assert job1.metadata.get('started_by')
 
 

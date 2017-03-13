@@ -152,7 +152,7 @@ class Connection(object):
                                    _type=APIError.ERR_AUTH_ERROR)
                 elif data['status'] in ('error', 'badrequest'):
                     raise APIError(data['message'],
-                                   _type=APIError.ERR_INVALID_USAGE)
+                                   _type=APIError.ERR_BAD_REQUEST)
                 else:
                     raise APIError("Unknown response status: {0[status]}".format(data))
             except KeyError:
@@ -405,7 +405,7 @@ class APIError(Exception):
     ERR_DEFAULT = 0
     ERR_NOT_FOUND = 1
     ERR_VALUE_ERROR = 2
-    ERR_INVALID_USAGE = 3
+    ERR_BAD_REQUEST = 3
     ERR_AUTH_ERROR = 4
 
     def __init__(self, message, _type=None):

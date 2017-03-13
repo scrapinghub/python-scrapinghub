@@ -4,9 +4,9 @@ import os
 import json
 import logging
 import binascii
-
 from codecs import decode
-from six import string_types
+
+import six
 
 from ..hubstorage.resourcetype import DownloadableResource
 from ..hubstorage.resourcetype import ItemsResourceType
@@ -46,7 +46,7 @@ def parse_project_id(projectid):
 def parse_job_key(jobkey):
     if isinstance(jobkey, tuple):
         parts = jobkey
-    elif isinstance(jobkey, string_types):
+    elif isinstance(jobkey, six.string_types):
         parts = jobkey.split('/')
     else:
         raise ValueError("Job key should be a string or a tuple")
@@ -125,6 +125,30 @@ class _Proxy(object):
         return list(self.iter(*args, **kwargs))
 
 
+class _MappingProxy(_Proxy):
+
+    def get(self, key):
+        return next(self._origin.apiget(key))
+
+    def set(self, key, value):
+        self._origin.apipost(key, data=json.dumps(value), is_idempotent=True)
+
+    def update(self, values):
+        if not isinstance(values, dict):
+            raise TypeError("values should be a dict")
+        data = next(self._origin.apiget())
+        data.update(values)
+        self._origin.apipost(jl={k: v for k, v in six.iteritems(data)
+                                 if k not in self._origin.ignore_fields},
+                             is_idempotent=True)
+
+    def delete(self, key):
+        self._origin.apidelete(key)
+
+    def iter(self):
+        return six.iteritems(next(self._origin.apiget()))
+
+
 def wrap_kwargs(fn, kwargs_fn):
     """Tiny wrapper to prepare modified version of function kwargs"""
     def wrapped(*args, **kwargs):
@@ -160,7 +184,7 @@ def format_iter_filters(params):
     if filters and isinstance(filters, list):
         filter_data = []
         for elem in params.pop('filter'):
-            if isinstance(elem, string_types):
+            if isinstance(elem, six.string_types):
                 filter_data.append(elem)
             elif isinstance(elem, (list, tuple)):
                 filter_data.append(json.dumps(elem))
@@ -195,12 +219,12 @@ def parse_auth(auth):
         return (apikey, '')
 
     if isinstance(auth, tuple):
-        all_strings = all(isinstance(k, string_types) for k in auth)
+        all_strings = all(isinstance(k, six.string_types) for k in auth)
         if len(auth) != 2 or not all_strings:
             raise ValueError("Wrong authentication credentials")
         return auth
 
-    if not isinstance(auth, string_types):
+    if not isinstance(auth, six.string_types):
         raise ValueError("Wrong authentication credentials")
 
     jwt_auth = _search_for_jwt_credentials(auth)
@@ -217,7 +241,7 @@ def _search_for_jwt_credentials(auth):
     except (binascii.Error, TypeError):
         return
     try:
-        if not isinstance(decoded_auth, string_types):
+        if not isinstance(decoded_auth, six.string_types):
             decoded_auth = decoded_auth.decode('ascii')
         login, _, password = decoded_auth.partition(':')
         if password and parse_job_key(login):

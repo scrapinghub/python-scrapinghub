@@ -1,15 +1,17 @@
 from __future__ import absolute_import
 
+import six
+
 from ..hubstorage.activity import Activity as _Activity
 from ..hubstorage.collectionsrt import Collections as _Collections
-from ..hubstorage.project import Settings
+from ..hubstorage.project import Settings as _Settings
 
 from .activity import Activity
 from .collections import Collections
 from .frontiers import _HSFrontier, Frontiers
 from .jobs import Jobs
 from .spiders import Spiders
-from .utils import parse_project_id
+from .utils import _MappingProxy, parse_project_id
 
 
 class Projects(object):
@@ -121,4 +123,53 @@ class Project(object):
         self.activity = Activity(_Activity, client, projectid)
         self.collections = Collections(_Collections, client, projectid)
         self.frontiers = Frontiers(_HSFrontier, client, projectid)
-        self.settings = Settings(client._hsclient, projectid)
+        self.settings = Settings(_Settings, client, projectid)
+
+
+class Settings(_MappingProxy):
+    """Class representing job metadata.
+
+    Not a public constructor: use :class:`Project` instance to get a
+    :class:`Settings` instance. See :attr:`Project.settings` attribute.
+
+    Usage::
+
+    - get project settings instance
+
+        >>> project.settings
+        <scrapinghub.client.projects.Settings at 0x10ecf1250>
+
+    - iterate through project settings
+
+        >>> project.settings.iter()
+        <dictionary-itemiterator at 0x10ed11578>
+
+    - list project settings
+
+        >>> project.settings.list()
+        [(u'default_job_units', 2),
+         (u'job_runtime_limit', 20)]
+
+    - get setting value by name
+
+        >>> project.settings.get('default_job_units')
+        2
+
+    - update setting value (some settings are read-only)
+
+        >>> project.settings.set('default_job_units', 2)
+
+    - update multiple settings at once
+
+        >>> project.settings.update({'default_job_units': 1,
+        ...                          'job_runtime_limit': 20})
+
+    - delete project setting by name
+
+        >>> project.settings.delete('job_runtime_limit')
+    """
+    def set(self, key, value):
+        # FIXME drop the method when post-by-key is implemented on server side
+        if not isinstance(key, six.string_types):
+            raise TypeError("key should be a string")
+        self.update({key: value})

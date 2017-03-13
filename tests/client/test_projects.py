@@ -1,22 +1,66 @@
 import types
-from collections import defaultdict
+from collections import defaultdict, Iterator
 
 import pytest
 from six.moves import range
 
+from scrapinghub import ScrapinghubClient
 from scrapinghub.client.activity import Activity
 from scrapinghub.client.collections import Collections
 from scrapinghub.client.exceptions import DuplicateJobError
 from scrapinghub.client.frontiers import Frontiers
 from scrapinghub.client.jobs import Jobs, Job
-from scrapinghub.client.projects import Settings
+from scrapinghub.client.projects import Project, Settings
 from scrapinghub.client.spiders import Spiders
 
+from scrapinghub.hubstorage.utils import apipoll
+
 from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
+from .conftest import TEST_USER_AUTH, TEST_DASH_ENDPOINT
 from .utils import validate_default_meta
 
 
-def test_project_subresources(project):
+# Projects class tests
+
+
+def test_projects_get(client):
+    projects = client.projects
+    # testing with int project id
+    p1 = projects.get(int(TEST_PROJECT_ID))
+    assert isinstance(p1, Project)
+    # testing with string project id
+    p2 = projects.get(TEST_PROJECT_ID)
+    assert isinstance(p2, Project)
+    assert p1.key == p2.key
+
+
+def test_projects_list(client):
+    projects = client.projects.list()
+    assert client.projects.list() == []
+
+    # use user apikey to list test projects
+    client = ScrapinghubClient(TEST_USER_AUTH, TEST_DASH_ENDPOINT)
+    projects = client.projects.list()
+    assert isinstance(projects, list)
+    assert int(TEST_PROJECT_ID) in projects
+
+
+def test_projects_summary(client, project):
+    # add at least one running or pending job to ensure summary is returned
+    project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'running'})
+
+    def _get_summary():
+        summaries = {str(js['project']): js
+                     for js in client.projects.summary()}
+        return summaries.get(TEST_PROJECT_ID)
+
+    summary = apipoll(_get_summary)
+    assert summary is not None
+
+
+#  Project class tests
+
+def test_project_base(project):
     assert project.key == TEST_PROJECT_ID
     assert isinstance(project.collections, Collections)
     assert isinstance(project.jobs, Jobs)
@@ -118,7 +162,7 @@ def test_project_jobs_schedule(project):
     assert isinstance(job0, Job)
     validate_default_meta(job0.metadata, state='pending')
     assert isinstance(job0.metadata.get('pending_time'), int)
-    assert job0.metadata['pending_time'] > 0
+    assert job0.metadata.get('pending_time') > 0
     assert job0.metadata.get('scheduled_by')
 
     # running the same spider with same args leads to duplicate error
@@ -137,7 +181,7 @@ def test_project_jobs_schedule(project):
     assert meta.get('meta1') == 'val1'
     assert meta.get('spider_args') == {'arg1': 'val1', 'arg2': 'val2'}
     assert isinstance(meta.get('running_time'), int)
-    assert meta['running_time'] > 0
+    assert meta.get('running_time') > 0
     assert meta.get('started_by')
 
 
@@ -210,3 +254,30 @@ def test_project_jobs_iter_last(project):
     lastsumm2 = list(project.jobs.iter_last())
     assert len(lastsumm2) == 1
     assert lastsumm2[0].get('key') == job2.key
+
+
+def test_settings_get_set(project):
+    project.settings.set('job_runtime_limit', 20)
+    assert project.settings.get('job_runtime_limit') == 20
+    project.settings.set('job_runtime_limit', 24)
+    assert project.settings.get('job_runtime_limit') == 24
+
+
+def test_settings_update(project):
+    project.settings.set('job_runtime_limit', 20)
+    project.settings.update({'job_runtime_limit': 24})
+    assert project.settings.get('job_runtime_limit') == 24
+
+
+def test_settings_delete(project):
+    project.settings.delete('job_runtime_limit')
+    assert not project.settings.get('job_runtime_limit')
+
+
+def test_settings_iter_list(project):
+    project.settings.set('job_runtime_limit', 24)
+    settings_iter = project.settings.iter()
+    assert isinstance(settings_iter, Iterator)
+    settings_list = project.settings.list()
+    assert ('job_runtime_limit', 24) in settings_list
+    assert settings_list == list(settings_iter)

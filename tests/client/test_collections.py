@@ -3,7 +3,7 @@ from contextlib import closing
 import pytest
 from six.moves import range
 
-from scrapinghub.client.exceptions import InvalidUsage
+from scrapinghub.client.exceptions import BadRequest
 from scrapinghub.client.exceptions import NotFound
 from scrapinghub.client.exceptions import ValueTooLarge
 
@@ -115,7 +115,7 @@ def test_errors_bad_key(collection):
         {'_key': []},
 ])
 def test_errors(collection, testarg):
-    with pytest.raises(InvalidUsage):
+    with pytest.raises(BadRequest):
         collection.set(testarg)
 
 

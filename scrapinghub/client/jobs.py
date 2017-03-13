@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import json
 
-from ..hubstorage.job import JobMeta
+from ..hubstorage.job import JobMeta as _JobMeta
 from ..hubstorage.job import Items as _Items
 from ..hubstorage.job import Logs as _Logs
 from ..hubstorage.job import Samples as _Samples
@@ -11,9 +11,8 @@ from .items import Items
 from .logs import Logs
 from .requests import Requests
 from .samples import Samples
-from .exceptions import NotFound, InvalidUsage, DuplicateJobError
-from .utils import get_tags_for_update
-from .utils import parse_job_key
+from .exceptions import NotFound, BadRequest, DuplicateJobError
+from .utils import _MappingProxy, get_tags_for_update, parse_job_key
 
 
 class Jobs(object):
@@ -150,7 +149,7 @@ class Jobs(object):
         try:
             response = self._client._connection._post(
                 'schedule', 'json', params)
-        except InvalidUsage as exc:
+        except BadRequest as exc:
             if 'already scheduled' in str(exc):
                 raise DuplicateJobError(exc)
             raise
@@ -302,10 +301,10 @@ class Job(object):
         >>> job = project.job('123/1/2')
         >>> job.key
         '123/1/2'
-        >>> job.metadata['state']
+        >>> job.metadata.get('state')
         'finished'
     """
-    def __init__(self, client, jobkey, metadata=None):
+    def __init__(self, client, jobkey):
         self.projectid = parse_job_key(jobkey).projectid
         self.key = jobkey
 
@@ -319,24 +318,7 @@ class Job(object):
         self.requests = Requests(_Requests, client, jobkey)
         self.samples = Samples(_Samples, client, jobkey)
 
-        self.metadata = JobMeta(client._hsclient, jobkey, cached=metadata)
-
-    def update_metadata(self, *args, **kwargs):
-        """Update job metadata.
-
-        :param \*\*kwargs: keyword arguments representing job metadata
-
-        Usage:
-
-        - update job outcome::
-
-            >>> job.update_metadata(close_reason='custom reason')
-
-        - change job tags::
-
-            >>> job.update_metadata({'tags': 'obsolete'})
-        """
-        self._job.update_metadata(*args, **kwargs)
+        self.metadata = JobMeta(_JobMeta, client, jobkey)
 
     def update_tags(self, add=None, remove=None):
         """Partially update job tags.
@@ -426,19 +408,49 @@ class Job(object):
         Usage::
 
             >>> job.cancel()
-            >>> job.metadata['cancelled_by']
+            >>> job.metadata.get('cancelled_by')
             'John'
         """
         self._project.jobq.request_cancel(self)
 
-    def purge(self):
-        """Delete job and expire its local metadata.
 
-        Usage::
+class JobMeta(_MappingProxy):
+    """Class representing job metadata.
 
-            >>> job.purge()
-            >>> job.metadata['state']
-            'deleted'
-        """
-        self.delete()
-        self.metadata.expire()
+    Not a public constructor: use :class:`Job` instance to get a
+    :class:`Jobmeta` instance. See :attr:`Job.metadata` attribute.
+
+    Usage::
+
+    - get job metadata instance
+
+        >>> job.metadata
+        <scrapinghub.client.jobs.JobMeta at 0x10494f198>
+
+    - iterate through job metadata
+
+        >>> job.metadata.iter()
+        <dict_itemiterator at 0x104adbd18>
+
+    - list job metadata
+
+        >>> job.metadata.list()
+        [('project', 123), ('units', 1), ('state', 'finished'), ...]
+
+    - get meta field value by name
+
+        >>> job.metadata.get('version')
+        'test'
+
+    - update job meta field value (some meta fields are read-only)
+
+        >>> job.metadata.set('my-meta', 'test')
+
+    - update multiple meta fields at once
+
+        >>> job.metadata.update({'my-meta1': 'test1', 'my-meta2': 'test2})
+
+    - delete meta field by name
+
+        >>> job.metadata.delete('my-meta')
+    """
