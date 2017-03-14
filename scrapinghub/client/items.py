@@ -35,21 +35,22 @@ class Items(_Proxy):
             'size': 100000,
         }]
 
-    - retrieve 1 item with multiple filters:
+    - retrieve 1 item with multiple filters::
+
         >>> filters = [("size", ">", [30000]), ("size", "<", [40000])]
         >>> job.items.list(count=1, filter=filters)
         [{
             'name': ['Some other item'],
             'url': 'http://some-url/other-item.html',
-            'size': 50000,
+            'size': 35000,
         }]
     """
 
     def _modify_iter_params(self, params):
         """Modify iter filter to convert offset to start parameter.
 
-        Returns:
-            dict: updated set of params
+        :return: a dict with updated set of params.
+        :rtype: dict
         """
         params = super(Items, self)._modify_iter_params(params)
         offset = params.pop('offset', None)

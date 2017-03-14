@@ -14,56 +14,61 @@ class Spiders(object):
     Not a public constructor: use :class:`Project` instance to get
     a :class:`Spiders` instance. See :attr:`Project.spiders` attribute.
 
-    :ivar projectid: integer project id.
+    :ivar project_id: string project id.
 
     Usage::
 
         >>> project.spiders
-        <scrapinghub.client.Spiders at 0x1049ca630>
+        <scrapinghub.client.spiders.Spiders at 0x1049ca630>
     """
 
-    def __init__(self, client, projectid):
-        self.projectid = projectid
+    def __init__(self, client, project_id):
+        self.project_id = project_id
         self._client = client
 
-    def get(self, spidername, **params):
+    def get(self, spider, **params):
         """Get a spider object for a given spider name.
 
         The method gets/sets spider id (and checks if spider exists).
 
-        :param spidername: a string spider name.
+        :param spider: a string spider name.
         :return: :class:`Spider` object.
-        :rtype: scrapinghub.client.Spider.
+        :rtype: scrapinghub.client.spiders.Spider
 
         Usage::
 
             >>> project.spiders.get('spider2')
-            <scrapinghub.client.Spider at 0x106ee3748>
+            <scrapinghub.client.spiders.Spider at 0x106ee3748>
             >>> project.spiders.get('non-existing')
             NotFound: Spider non-existing doesn't exist.
         """
-        project = self._client._hsclient.get_project(self.projectid)
-        spiderid = project.ids.spider(spidername, **params)
-        if spiderid is None:
-            raise NotFound("Spider {} doesn't exist.".format(spidername))
-        return Spider(self._client, self.projectid, spiderid, spidername)
+        project = self._client._hsclient.get_project(self.project_id)
+        spider_id = project.ids.spider(spider, **params)
+        if spider_id is None:
+            raise NotFound("Spider {} doesn't exist.".format(spider))
+        return Spider(self._client, self.project_id, spider_id, spider)
 
     def list(self):
         """Get a list of spiders for a project.
 
         :return: a list of dictionaries with spiders metadata.
+        :rtype: list[dict]
 
-        Usage::  # noqa
+        Usage::
 
             >>> project.spiders.list()
             [{'id': 'spider1', 'tags': [], 'type': 'manual', 'version': '123'},
              {'id': 'spider2', 'tags': [], 'type': 'manual', 'version': '123'}]
         """
-        project = self._client._connection[self.projectid]
+        project = self._client._connection[self.project_id]
         return project.spiders()
 
     def iter(self):
         """Iterate through a list of spiders for a project.
+
+        :return: an iterator over spiders list where each spider is represented
+            as a dict containing its metadata.
+        :rtype: collection.Iterable[dict]
 
         Provided for the sake of API consistency.
         """
@@ -76,7 +81,8 @@ class Spider(object):
     Not a public constructor: use :class:`Spiders` instance to get
     a :class:`Spider` instance. See :meth:`Spiders.get` method.
 
-    :ivar projectid: integer project id.
+    :ivar project_id: a string project id.
+    :ivar key: a string key in format 'project_id/spider_id'.
     :ivar name: a spider name string.
     :ivar jobs: a collection of jobs, :class:`Jobs` object.
 
@@ -89,18 +95,23 @@ class Spider(object):
         'spider1'
     """
 
-    def __init__(self, client, projectid, spiderid, spidername):
-        self.projectid = projectid
-        self.key = '{}/{}'.format(str(projectid), str(spiderid))
-        self._id = str(spiderid)
-        self.name = spidername
-        self.jobs = Jobs(client, projectid, self)
+    def __init__(self, client, project_id, spider_id, spider):
+        self.project_id = project_id
+        self.key = '{}/{}'.format(str(project_id), str(spider_id))
+        self._id = str(spider_id)
+        self.name = spider
+        self.jobs = Jobs(client, project_id, self)
         self._client = client
 
     @wrap_http_errors
     def update_tags(self, add=None, remove=None):
+        """Update tags for the spider.
+
+        :param add: (optional) a list of string tags to add.
+        :param remove: (optional) a list of string tags to remove.
+        """
         params = get_tags_for_update(add=add, remove=remove)
-        path = 'v2/projects/{}/spiders/{}/tags'.format(self.projectid,
+        path = 'v2/projects/{}/spiders/{}/tags'.format(self.project_id,
                                                        self._id)
         url = urljoin(self._client._connection.url, path)
         response = self._client._connection._session.patch(url, json=params)
@@ -108,7 +119,12 @@ class Spider(object):
 
     @wrap_http_errors
     def list_tags(self):
-        path = 'v2/projects/{}/spiders/{}'.format(self.projectid, self._id)
+        """List spider tags.
+
+        :return: a list of spider tags.
+        :rtype: list[str]
+        """
+        path = 'v2/projects/{}/spiders/{}'.format(self.project_id, self._id)
         url = urljoin(self._client._connection.url, path)
         response = self._client._connection._session.get(url)
         response.raise_for_status()

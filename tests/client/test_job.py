@@ -14,7 +14,7 @@ from .conftest import TEST_SPIDER_NAME
 def test_job_base(client, spider):
     job = spider.jobs.schedule()
     assert isinstance(job, Job)
-    assert job.projectid == TEST_PROJECT_ID
+    assert job.project_id == TEST_PROJECT_ID
     assert job.key.startswith(spider.key)
 
     assert isinstance(job.items, Items)
@@ -25,22 +25,21 @@ def test_job_base(client, spider):
 
 
 def test_job_update_tags(spider):
-    job1 = spider.jobs.schedule(spider_args={'subid': 'tags-1'},
+    job1 = spider.jobs.schedule(job_args={'subid': 'tags-1'},
                                 add_tag=['tag1'])
-    job2 = spider.jobs.schedule(spider_args={'subid': 'tags-2'},
+    job2 = spider.jobs.schedule(job_args={'subid': 'tags-2'},
                                 add_tag=['tag2'])
-    # FIXME the endpoint normalises tags so it's impossible to send tags
-    # having upper-cased symbols, let's add more tests when it's fixed
-    assert job1.update_tags(add=['tag11', 'tag12']) == 1
-    assert job1.metadata.get('tags') == ['tag1', 'tag11', 'tag12']
+    job1.update_tags(add=['tagA1', 'tagA2'])
+    assert job1.metadata.get('tags') == ['tag1', 'tagA1', 'tagA2']
 
-    assert job1.update_tags(remove=['tag1', 'tagx']) == 1
-    assert job1.metadata.get('tags') == ['tag11', 'tag12']
+    job1.update_tags(remove=['tag1', 'tagx'])
+    assert job1.metadata.get('tags') == ['tagA1', 'tagA2']
+
+    job1.update_tags(add=['tagB'], remove=['tagA2'])
+    assert job1.metadata.get('tags') == ['tagA1', 'tagB']
 
     # assert that 2nd job tags weren't changed
     assert job2.metadata.get('tags') == ['tag2']
-    # FIXME adding and removing tags at the same time doesn't work neither:
-    # remove-tag field is ignored if there's non-void add-tag field
 
 
 def test_job_start(spider):

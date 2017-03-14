@@ -30,13 +30,13 @@ class Requests(_Proxy):
 
         >>> job.requests.list(count=1)
         [{
-        'duration': 354,
-        'fp': '6d748741a927b10454c83ac285b002cd239964ea',
-        'method': 'GET',
-        'rs': 1270,
-        'status': 200,a
-        'time': 1482233733870,
-        'url': 'https://example.com'
+            'duration': 354,
+            'fp': '6d748741a927b10454c83ac285b002cd239964ea',
+            'method': 'GET',
+            'rs': 1270,
+            'status': 200,a
+            'time': 1482233733870,
+            'url': 'https://example.com'
         }]
     """
     def __init__(self, *args, **kwargs):

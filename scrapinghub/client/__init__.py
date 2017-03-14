@@ -51,44 +51,43 @@ class ScrapinghubClient(object):
                                       url=dash_endpoint)
         self._hsclient = HubstorageClient(auth=(login, password), **kwargs)
 
-    def get_project(self, projectid):
+    def get_project(self, project_id):
         """Get :class:`Project` instance with a given project id.
 
         The method is a shortcut for client.projects.get().
 
-        :param projectid: integer or string numeric project id.
+        :param project_id: integer or string numeric project id.
         :return: :class:`Project` object.
-        :rtype: scrapinghub.client.Project.
+        :rtype: scrapinghub.client.projects.Project
 
         Usage::
 
             >>> project = client.get_project(123)
             >>> project
-            <scrapinghub.client.Project at 0x106cdd6a0>
+            <scrapinghub.client.projects.Project at 0x106cdd6a0>
         """
-        return self.projects.get(parse_project_id(projectid))
+        return self.projects.get(parse_project_id(project_id))
 
-    def get_job(self, jobkey):
-        """Get Job with a given jobkey.
+    def get_job(self, job_key):
+        """Get Job with a given job key.
 
-        :param jobkey: job key string in format 'project/spider/job',
+        :param job_key: job key string in format 'project_id/spider_id/job_id',
             where all the components are integers.
         :return: :class:`Job` object.
-        :rtype: scrapinghub.client.Job.
+        :rtype: scrapinghub.client.jobs.Job
 
         Usage::
 
             >>> job = client.get_job('123/1/1')
             >>> job
-            <scrapinghub.client.Job at 0x10afe2eb1>
+            <scrapinghub.client.jobs.Job at 0x10afe2eb1>
         """
-        projectid = parse_job_key(jobkey).projectid
-        return self.projects.get(projectid).jobs.get(jobkey)
+        project_id = parse_job_key(job_key).project_id
+        return self.projects.get(project_id).jobs.get(job_key)
 
     def close(self, timeout=None):
         """Close client instance.
 
-        :param timeout: (optional) float timeout secs to stop everything
-            gracefully.
+        :param timeout: (optional) float timeout secs to stop gracefully.
         """
         self._hsclient.close(timeout=timeout)

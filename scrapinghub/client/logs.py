@@ -36,13 +36,13 @@ class Logs(_Proxy):
             'time': 1482233733976,
         }]
 
-    - retrive logs with a given log level and filter by a word
+    - retrive logs with a given log level and filter by a word::
 
-        >>> filters = [("message", "contains", ["logger"])]
+        >>> filters = [("message", "contains", ["mymessage"])]
         >>> job.logs.list(level='WARNING', filter=filters)
         [{
             'level': 30,
-            'message': 'Some warning message',
+            'message': 'Some warning: mymessage',
             'time': 1486375511188,
         }]
     """
@@ -58,8 +58,9 @@ class Logs(_Proxy):
         - convert offset to start parameter
         - check log level and create a corresponding meta filter
 
-        :param params: an original dictionary with params
-        :return: a modified dictionary with params
+        :param params: an original dictionary with params.
+        :return: a modified dictionary with params.
+        :rtype: dict
         """
         params = super(Logs, self)._modify_iter_params(params)
         offset = params.pop('offset', None)
