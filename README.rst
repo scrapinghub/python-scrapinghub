@@ -750,7 +750,7 @@ To see last jobs summaries::
 
 To get job summary per spider::
 
-    >>> summary = project.spiders.lastjobsummary(spider_id='1')
+    >>> summary = project.spiders.lastjobsummary(spiderid='1')
 
 Job
 ---
