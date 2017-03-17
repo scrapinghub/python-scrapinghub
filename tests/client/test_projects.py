@@ -2,12 +2,14 @@ import types
 from collections import defaultdict, Iterator
 
 import pytest
+import responses
 from six.moves import range
+from requests.compat import urljoin
 
 from scrapinghub import ScrapinghubClient
 from scrapinghub.client.activity import Activity
 from scrapinghub.client.collections import Collections
-from scrapinghub.client.exceptions import DuplicateJobError
+from scrapinghub.client.exceptions import DuplicateJobError, ServerError
 from scrapinghub.client.frontiers import Frontiers
 from scrapinghub.client.jobs import Jobs, Job
 from scrapinghub.client.projects import Project, Settings
@@ -43,6 +45,15 @@ def test_projects_list(client):
     projects = client.projects.list()
     assert isinstance(projects, list)
     assert int(TEST_PROJECT_ID) in projects
+
+
+@responses.activate
+def test_projects_list_server_error(client):
+    url = urljoin(TEST_DASH_ENDPOINT, 'scrapyd/listprojects.json')
+    responses.add(responses.GET, url, body='some error body', status=500)
+    with pytest.raises(ServerError):
+        client.projects.list()
+    assert len(responses.calls) == 1
 
 
 def test_projects_summary(client, project):
