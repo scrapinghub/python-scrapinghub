@@ -26,32 +26,33 @@ class LogLevel(object):
 
 class JobKey(object):
 
-    def __init__(self, projectid, spiderid, jobid):
-        self.projectid = projectid
-        self.spiderid = spiderid
-        self.jobid = jobid
+    def __init__(self, project_id, spider_id, job_id):
+        self.project_id = project_id
+        self.spider_id = spider_id
+        self.job_id = job_id
 
     def __str__(self):
-        return '{}/{}/{}'.format(self.projectid, self.spiderid, self.jobid)
+        return '{}/{}/{}'.format(self.project_id, self.spider_id, self.job_id)
 
 
-def parse_project_id(projectid):
+def parse_project_id(project_id):
     try:
-        int(projectid)
+        int(project_id)
     except ValueError:
         raise ValueError("Project id should be convertible to integer")
-    return str(projectid)
+    return str(project_id)
 
 
-def parse_job_key(jobkey):
-    if isinstance(jobkey, tuple):
-        parts = jobkey
-    elif isinstance(jobkey, six.string_types):
-        parts = jobkey.split('/')
+def parse_job_key(job_key):
+    if isinstance(job_key, tuple):
+        parts = job_key
+    elif isinstance(job_key, six.string_types):
+        parts = job_key.split('/')
     else:
         raise ValueError("Job key should be a string or a tuple")
     if len(parts) != 3:
-        raise ValueError("Job key should consist of projectid/spiderid/jobid")
+        raise ValueError(
+            "Job key should consist of project_id/spider_id/job_id")
     try:
         map(int, parts)
     except ValueError:
@@ -78,11 +79,11 @@ class _Proxy(object):
     origin depending on the origin base class as a part of init logic:
 
     - :class:`ItemsResourceType` provides items-based attributes to access
-    items in an arbitrary collection with get/write/flush/close/stats/iter
-    methods.
+        items in an arbitrary collection with get/write/flush/close/stats/
+        iter methods.
 
     - :class:`DownloadableResource` provides download-based attributes to
-    iter through collection with or without msgpack support.
+        iter through collection with or without msgpack support.
     """
 
     def __init__(self, cls, client, key):
@@ -118,22 +119,53 @@ class _Proxy(object):
             setattr(self, method, wrapped)
 
     def _modify_iter_params(self, params):
-        """Modify iter() params on-the-fly."""
+        """A helper to modify iter() params on-the-fly.
+
+        The method is internal and should be redefined in subclasses.
+
+        :param params: a dictionary with input parameters.
+        :return: an updated dictionary with parameters.
+        :rtype: dict
+        """
         return format_iter_filters(params)
 
     def list(self, *args, **kwargs):
+        """Convenient shortcut to list iter results.
+
+        Please note that list() method can use a lot of memory and for a large
+        amount of elements it's recommended to iterate through it via iter()
+        method (all params and available filters are same for both methods).
+        """
         return list(self.iter(*args, **kwargs))
 
 
 class _MappingProxy(_Proxy):
+    """A helper class to support basic get/set interface for dict-like
+    collections of elements.
+    """
 
     def get(self, key):
+        """Get element value by key.
+
+        :param key: a string key
+        """
         return next(self._origin.apiget(key))
 
     def set(self, key, value):
+        """Set element value.
+
+        :param key: a string key
+        :param value: new value to set for the key
+        """
         self._origin.apipost(key, data=json.dumps(value), is_idempotent=True)
 
     def update(self, values):
+        """Update multiple elements at once.
+
+        The method provides convenient interface for partial updates.
+
+        :param values: a dictionary with key/values to update.
+        """
         if not isinstance(values, dict):
             raise TypeError("values should be a dict")
         data = next(self._origin.apiget())
@@ -143,9 +175,18 @@ class _MappingProxy(_Proxy):
                              is_idempotent=True)
 
     def delete(self, key):
+        """Delete element by key.
+
+        :param key: a string key
+        """
         self._origin.apidelete(key)
 
     def iter(self):
+        """Iterate through key/value pairs.
+
+        :return: an iterator over key/value pairs.
+        :rtype: collections.Iterable
+        """
         return six.iteritems(next(self._origin.apiget()))
 
 
@@ -161,6 +202,7 @@ def proxy_methods(origin, successor, methods):
     """A helper to proxy methods from origin to successor.
 
     Accepts a list with strings and tuples:
+
     - each string defines:
         a successor method name to proxy 1:1 with origin method
     - each tuple should consist of 2 strings:
@@ -194,6 +236,11 @@ def format_iter_filters(params):
         if filter_data:
             params['filter'] = filter_data
     return params
+
+
+def update_kwargs(kwargs, **params):
+    kwargs.update({k: json.dumps(v) if isinstance(v, dict) else v
+                   for k, v in params.items() if v is not None})
 
 
 def parse_auth(auth):

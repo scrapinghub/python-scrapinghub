@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-import six
-
 from ..hubstorage.activity import Activity as _Activity
 from ..hubstorage.collectionsrt import Collections as _Collections
 from ..hubstorage.project import Settings as _Settings
@@ -23,31 +21,32 @@ class Projects(object):
     Usage::
 
         >>> client.projects
-        <scrapinghub.client.Projects at 0x1047ada58>
+        <scrapinghub.client.projects.Projects at 0x1047ada58>
     """
 
     def __init__(self, client):
         self._client = client
 
-    def get(self, projectid):
+    def get(self, project_id):
         """Get project for a given project id.
 
-        :param projectid: integer or string numeric project id.
+        :param project_id: integer or string numeric project id.
         :return: :class:`Project` object.
-        :rtype: scrapinghub.client.Project.
+        :rtype: scrapinghub.client.projects.Project
 
         Usage::
 
             >>> project = client.projects.get(123)
             >>> project
-            <scrapinghub.client.Project at 0x106cdd6a0>
+            <scrapinghub.client.projects.Project at 0x106cdd6a0>
         """
-        return Project(self._client, parse_project_id(projectid))
+        return Project(self._client, parse_project_id(project_id))
 
     def list(self):
         """Get list of projects available to current user.
 
-        :return: a list of integer project ids.
+        :return: a list of project ids.
+        :rtype: list[int]
 
         Usage::
 
@@ -60,15 +59,20 @@ class Projects(object):
         """Iterate through list of projects available to current user.
 
         Provided for the sake of API consistency.
+
+        :return: an iterator over project ids list.
+        :rtype: collections.Iterable[int]
         """
         return iter(self.list())
 
-    def summary(self, **params):
+    def summary(self, state=None, **params):
         """Get short summaries for all available user projects.
 
+        :param state: a string state or a list of states.
         :return: a list of dictionaries: each dictionary represents a project
             summary (amount of pending/running/finished jobs and a flag if it
             has a capacity to schedule new jobs).
+        :rtype: list[dict]
 
         Usage::
 
@@ -84,6 +88,8 @@ class Projects(object):
               'project': 456,
               'running': 2}]
         """
+        if state:
+            params['state'] = state
         return self._client._hsclient.projects.jobsummaries(**params)
 
 
@@ -92,12 +98,12 @@ class Project(object):
 
     Not a public constructor: use :class:`ScrapinghubClient` instance or
     :class:`Projects` instance to get a :class:`Project` instance. See
-    :meth:`Scrapinghub.get_project` or :meth:`Projects.get_project` methods.
+    :meth:`Scrapinghub.get_project` or :meth:`Projects.get` methods.
 
-    :ivar id: integer project id.
+    :ivar key: string project id.
     :ivar activity: :class:`Activity` resource object.
     :ivar collections: :class:`Collections` resource object.
-    :ivar frontier: :class:`Frontier` resource object.
+    :ivar frontiers: :class:`Frontiers` resource object.
     :ivar jobs: :class:`Jobs` resource object.
     :ivar settings: :class:`Settings` resource object.
     :ivar spiders: :class:`Spiders` resource object.
@@ -106,24 +112,24 @@ class Project(object):
 
         >>> project = client.get_project(123)
         >>> project
-        <scrapinghub.client.Project at 0x106cdd6a0>
+        <scrapinghub.client.projects.Project at 0x106cdd6a0>
         >>> project.key
         '123'
     """
 
-    def __init__(self, client, projectid):
-        self.key = str(projectid)
+    def __init__(self, client, project_id):
+        self.key = str(project_id)
         self._client = client
 
         # sub-resources
-        self.jobs = Jobs(client, projectid)
-        self.spiders = Spiders(client, projectid)
+        self.jobs = Jobs(client, project_id)
+        self.spiders = Spiders(client, project_id)
 
         # proxied sub-resources
-        self.activity = Activity(_Activity, client, projectid)
-        self.collections = Collections(_Collections, client, projectid)
-        self.frontiers = Frontiers(_HSFrontier, client, projectid)
-        self.settings = Settings(_Settings, client, projectid)
+        self.activity = Activity(_Activity, client, project_id)
+        self.collections = Collections(_Collections, client, project_id)
+        self.frontiers = Frontiers(_HSFrontier, client, project_id)
+        self.settings = Settings(_Settings, client, project_id)
 
 
 class Settings(_MappingProxy):
@@ -132,44 +138,41 @@ class Settings(_MappingProxy):
     Not a public constructor: use :class:`Project` instance to get a
     :class:`Settings` instance. See :attr:`Project.settings` attribute.
 
-    Usage::
+    Usage:
 
-    - get project settings instance
+    - get project settings instance::
 
         >>> project.settings
         <scrapinghub.client.projects.Settings at 0x10ecf1250>
 
-    - iterate through project settings
+    - iterate through project settings::
 
         >>> project.settings.iter()
         <dictionary-itemiterator at 0x10ed11578>
 
-    - list project settings
+    - list project settings::
 
         >>> project.settings.list()
-        [(u'default_job_units', 2),
-         (u'job_runtime_limit', 20)]
+        [(u'default_job_units', 2), (u'job_runtime_limit', 20)]
 
-    - get setting value by name
+    - get setting value by name::
 
         >>> project.settings.get('default_job_units')
         2
 
-    - update setting value (some settings are read-only)
+    - update setting value (some settings are read-only)::
 
         >>> project.settings.set('default_job_units', 2)
 
-    - update multiple settings at once
+    - update multiple settings at once::
 
         >>> project.settings.update({'default_job_units': 1,
         ...                          'job_runtime_limit': 20})
 
-    - delete project setting by name
+    - delete project setting by name::
 
         >>> project.settings.delete('job_runtime_limit')
     """
     def set(self, key, value):
         # FIXME drop the method when post-by-key is implemented on server side
-        if not isinstance(key, six.string_types):
-            raise TypeError("key should be a string")
         self.update({key: value})

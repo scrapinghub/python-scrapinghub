@@ -34,14 +34,13 @@ def test_spiders_list(project):
 def test_spider_base(project, spider):
     assert isinstance(spider._id, string_types)
     assert isinstance(spider.key, string_types)
-    assert spider.key == spider.projectid + '/' + spider._id
+    assert spider.key == spider.project_id + '/' + spider._id
     assert spider.name == TEST_SPIDER_NAME
-    assert spider.projectid == TEST_PROJECT_ID
+    assert spider.project_id == TEST_PROJECT_ID
     assert isinstance(project.jobs, Jobs)
 
 
 def test_spider_list_update_tags(project, spider):
-    # FIXME empty update should fail
     with pytest.raises(BadRequest):
         spider.update_tags()
 
@@ -55,7 +54,7 @@ def test_spider_list_update_tags(project, spider):
 
 def test_spider_jobs(spider):
     jobs = spider.jobs
-    assert jobs.projectid == TEST_PROJECT_ID
+    assert jobs.project_id == TEST_PROJECT_ID
     assert jobs.spider is spider
 
 
@@ -173,7 +172,7 @@ def test_spider_jobs_get(spider):
     with pytest.raises(ValueError):
         spider.jobs.get(TEST_PROJECT_ID + '/2/3')
 
-    fake_job_id = str(JobKey(spider.projectid, spider._id, 3))
+    fake_job_id = str(JobKey(spider.project_id, spider._id, 3))
     fake_job = spider.jobs.get(fake_job_id)
     assert isinstance(fake_job, Job)
 

@@ -72,7 +72,7 @@ def test_project_base(project):
 
 def test_project_jobs(project):
     jobs = project.jobs
-    assert jobs.projectid == TEST_PROJECT_ID
+    assert jobs.project_id == TEST_PROJECT_ID
     assert jobs.spider is None
 
 

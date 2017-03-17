@@ -49,12 +49,17 @@ class Activity(_Proxy):
         self._wrap_iter_methods(['iter'])
 
     def add(self, values, **kwargs):
+        """Add new event to the project activity.
+
+        :param values: a single event or a list of events, where event is
+            represented with a dictionary of ('event', 'job', 'user') keys.
+        """
         if not isinstance(values, list):
             values = list(values)
         for activity in values:
             if not isinstance(activity, dict):
                 raise ValueError("Please pass events as dictionaries")
-            jobkey = activity.get('job')
-            if jobkey and parse_job_key(jobkey).projectid != self.key:
+            job_key = activity.get('job')
+            if job_key and parse_job_key(job_key).project_id != self.key:
                 raise ValueError('Please use same project id')
         self._origin.post(values, **kwargs)
