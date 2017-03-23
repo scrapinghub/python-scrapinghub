@@ -32,11 +32,6 @@ def test_connection_init_assert_apikey_not_url():
         Connection(password='testpass', apikey='http://some-url')
 
 
-def test_connection_init_with_password():
-    with pytest.raises(AssertionError):
-        Connection(apikey='testkey', password='testpass')
-
-
 def test_connection_init_with_default_url():
     conn = Connection(apikey='testkey')
     assert conn.url == Connection.DEFAULT_ENDPOINT
@@ -154,6 +149,7 @@ def test_connection_request_handle_post(connection):
 
 def test_connection_decode_response_raw(connection):
     response = mock.Mock()
+    response.status_code = 200
     response.raw = 'expected'
     assert connection._decode_response(
         response, 'json', raw=True) == 'expected'
@@ -161,6 +157,7 @@ def test_connection_decode_response_raw(connection):
 
 def test_connection_decode_response_json_ok(connection):
     response = mock.Mock()
+    response.status_code = 200
     response.text = '{"status":"ok","data":"some-data"}'
     assert connection._decode_response(
         response, 'json', raw=False) == {"status": "ok", "data": "some-data"}
@@ -168,6 +165,7 @@ def test_connection_decode_response_json_ok(connection):
 
 def test_connection_decode_response_json_error(connection):
     response = mock.Mock()
+    response.status_code = 400
     for status in ['error', 'badrequest']:
         response.text = json.dumps({"status": status, "message": "error"})
         with pytest.raises(APIError) as exc:
@@ -177,6 +175,7 @@ def test_connection_decode_response_json_error(connection):
 
 def test_connection_decode_response_json_unknown(connection):
     response = mock.Mock()
+    response.status_code = 400
     response.text = json.dumps({"status": "unexpected", "message": "error"})
     with pytest.raises(APIError) as exc:
         connection._decode_response(response, 'json', raw=False)
@@ -186,6 +185,7 @@ def test_connection_decode_response_json_unknown(connection):
 def test_connection_decode_response_jl(connection):
     jl_data = [{'row1': 'data1'}, {'row2': 'data2'}]
     response = mock.Mock()
+    response.status_code = 200
     response.iter_lines.return_value = [json.dumps(x) for x in jl_data]
     assert list(connection._decode_response(
         response, 'jl', raw=False)) == jl_data

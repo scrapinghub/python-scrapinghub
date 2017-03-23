@@ -60,10 +60,10 @@ class Connection(object):
 
         assert not apikey.startswith('http://'), \
                 "Instantiating scrapinghub.Connection with url as first argument is not supported"
-        assert not password, \
-                "Authentication with user:pass is not supported, use your apikey instead"
-
+        if password:
+            warnings.warn("A lot of endpoints support authentication only via apikey.")
         self.apikey = apikey
+        self.password = password or ''
         self.url = url or self.DEFAULT_ENDPOINT
         self._session = self._create_session()
 
@@ -74,13 +74,13 @@ class Connection(object):
     def auth(self):
         warnings.warn("'auth' connection attribute is deprecated, "
                       "use 'apikey' attribute instead", stacklevel=2)
-        return (self.apikey, '')
+        return (self.apikey, self.password)
 
     def _create_session(self):
         from requests import session
         from scrapinghub import __version__
         s = session()
-        s.auth = (self.apikey, '')
+        s.auth = (self.apikey, self.password)
         s.headers.update({
             'User-Agent': 'python-scrapinghub/{0}'.format(__version__),
         })
@@ -97,7 +97,8 @@ class Connection(object):
         try:
             base_path = self.API_METHODS[method]
         except KeyError:
-            raise APIError("Unknown method: {0}".format(method))
+            raise APIError("Unknown method: {0}".format(method),
+                           _type=APIError.ERR_VALUE_ERROR)
         else:
             path = "{0}.{1}".format(base_path, format)
             return urljoin(self.url, path)
@@ -126,7 +127,8 @@ class Connection(object):
         Raises APIError if json response have error status.
         """
         if format not in ('json', 'jl') and not raw:
-            raise APIError("format must be either json or jl")
+            raise APIError("format must be either json or jl",
+                           _type=APIError.ERR_VALUE_ERROR)
 
         if data is None and files is None:
             response = self._session.get(url, headers=headers)
@@ -136,6 +138,11 @@ class Connection(object):
         return self._decode_response(response, format, raw)
 
     def _decode_response(self, response, format, raw):
+        if response.status_code == 404:
+            raise APIError("Not found", _type=APIError.ERR_NOT_FOUND)
+        elif 500 <= response.status_code < 600:
+            raise APIError("Internal server error",
+                           _type=APIError.ERR_SERVER_ERROR)
         if raw:
             return response.raw
         elif format == 'json':
@@ -144,8 +151,13 @@ class Connection(object):
             try:
                 if data['status'] == 'ok':
                     return data
+                elif (data['status'] == 'error' and
+                        data['message'] == 'Authentication failed'):
+                    raise APIError(data['message'],
+                                   _type=APIError.ERR_AUTH_ERROR)
                 elif data['status'] in ('error', 'badrequest'):
-                    raise APIError(data['message'])
+                    raise APIError(data['message'],
+                                   _type=APIError.ERR_BAD_REQUEST)
                 else:
                     raise APIError("Unknown response status: {0[status]}".format(data))
             except KeyError:
@@ -394,4 +406,14 @@ class Job(RequestProxyMixin):
 
 
 class APIError(Exception):
-    pass
+
+    ERR_DEFAULT = "err_default"
+    ERR_NOT_FOUND = "err_not_found"
+    ERR_VALUE_ERROR = "err_value_error"
+    ERR_BAD_REQUEST = "err_bad_request"
+    ERR_AUTH_ERROR = "err_auth_error"
+    ERR_SERVER_ERROR = "err_server_error"
+
+    def __init__(self, message, _type=None):
+        super(APIError, self).__init__(message)
+        self._type = _type or self.ERR_DEFAULT
