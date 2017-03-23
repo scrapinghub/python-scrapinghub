@@ -52,6 +52,10 @@ class DuplicateJobError(ScrapinghubAPIError):
     pass
 
 
+class ServerError(ScrapinghubAPIError):
+    pass
+
+
 def wrap_http_errors(method):
     @wraps(method)
     def wrapped(*args, **kwargs):
@@ -69,6 +73,8 @@ def wrap_http_errors(method):
                 raise ValueTooLarge(http_error=exc)
             elif 400 <= status_code < 500:
                 raise ScrapinghubAPIError(http_error=exc)
+            elif 500 <= status_code < 600:
+                raise ServerError(http_error=exc)
             raise
         except APIError as exc:
             msg = exc.args[0]
@@ -80,6 +86,8 @@ def wrap_http_errors(method):
                 raise BadRequest(msg)
             elif exc._type == APIError.ERR_AUTH_ERROR:
                 raise Unauthorized(http_error=exc)
+            elif exc._type == APIError.ERR_SERVER_ERROR:
+                raise ServerError(http_error=exc)
             raise ScrapinghubAPIError(msg)
     return wrapped
 

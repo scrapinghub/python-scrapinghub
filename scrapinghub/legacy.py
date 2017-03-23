@@ -138,6 +138,11 @@ class Connection(object):
         return self._decode_response(response, format, raw)
 
     def _decode_response(self, response, format, raw):
+        if response.status_code == 404:
+            raise APIError("Not found", _type=APIError.ERR_NOT_FOUND)
+        elif 500 <= response.status_code < 600:
+            raise APIError("Internal server error",
+                           _type=APIError.ERR_SERVER_ERROR)
         if raw:
             return response.raw
         elif format == 'json':
@@ -402,11 +407,12 @@ class Job(RequestProxyMixin):
 
 class APIError(Exception):
 
-    ERR_DEFAULT = 0
-    ERR_NOT_FOUND = 1
-    ERR_VALUE_ERROR = 2
-    ERR_BAD_REQUEST = 3
-    ERR_AUTH_ERROR = 4
+    ERR_DEFAULT = "err_default"
+    ERR_NOT_FOUND = "err_not_found"
+    ERR_VALUE_ERROR = "err_value_error"
+    ERR_BAD_REQUEST = "err_bad_request"
+    ERR_AUTH_ERROR = "err_auth_error"
+    ERR_SERVER_ERROR = "err_server_error"
 
     def __init__(self, message, _type=None):
         super(APIError, self).__init__(message)
