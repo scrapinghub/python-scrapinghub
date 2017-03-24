@@ -88,7 +88,7 @@ Jobs instance is described well in ``Jobs`` section below.
 
 For example, to schedule a spider run (it returns a job object)::
 
-    >>> project.jobs.schedule('spider1', job_args={'arg1':'val1'})
+    >>> project.jobs.run('spider1', job_args={'arg1':'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
 
 Project instance also has the following fields:
@@ -151,7 +151,7 @@ Like project instance, spider instance has ``jobs`` field to work with the spide
 
 To schedule a spider run::
 
-    >>> spider.jobs.schedule(job_args={'arg1:'val1'})
+    >>> spider.jobs.run(job_args={'arg1:'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
 
 Note that you don't need to specify spider name explicitly.
@@ -174,30 +174,30 @@ Also there's a shortcut to get same job with client instance::
 
     >>> job = client.get_job('123/1/2')
 
-schedule
-^^^^^^^^
+run
+^^^
 
-Use ``schedule`` method to schedule a new job for project/spider::
+Use ``run`` method to run a new job for project/spider::
 
-    >>> job = spider.jobs.schedule()
+    >>> job = spider.jobs.run()
 
 Scheduling logic supports different options, like
 
 - spider_args to provide spider arguments for the job
-- units to specify amount of units to schedule the job
+- units to specify amount of units to run the job
 - job_settings to pass additional settings for the job
 - priority to set higher/lower priority of the job
 - add_tag to create a job with a set of initial tags
 - meta to pass additional custom metadata
 
-For example, to schedule a new job for a given spider with custom params::
+For example, to run a new job for a given spider with custom params::
 
-    >>> job = spider.jobs.schedule(units=2, job_settings={'SETTING': 'VALUE'},
+    >>> job = spider.jobs.run(units=2, job_settings={'SETTING': 'VALUE'},
         priority=1, add_tag=['tagA','tagB'], meta={'custom-data': 'val1'})
 
-Note that if you schedule a job on project level, spider name is required::
+Note that if you run a job on project level, spider name is required::
 
-    >>> job = project.jobs.schedule('spider1')
+    >>> job = project.jobs.run('spider1')
 
 count
 ^^^^^

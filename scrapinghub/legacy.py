@@ -45,7 +45,8 @@ class Connection(object):
         'eggs_list': 'eggs/list',
         'as_project_slybot': 'as/project-slybot',
         'as_spider_properties': 'as/spider-properties',
-        'schedule': 'schedule',
+        'run': 'run',
+        'schedule': 'schedule',  # deprecated in favour of run
         'items': 'items',
         'log': 'log',
         'spiders': 'spiders/list',

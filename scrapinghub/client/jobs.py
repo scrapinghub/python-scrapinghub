@@ -179,9 +179,9 @@ class Jobs(object):
                       lacks_tag=lacks_tag, startts=startts, endts=endts)
         return list(self.iter(**params))
 
-    def schedule(self, spider=None, units=None, priority=None, meta=None,
-                 add_tag=None, job_args=None, job_settings=None, cmd_args=None,
-                 **params):
+    def run(self, spider=None, units=None, priority=None, meta=None,
+            add_tag=None, job_args=None, job_settings=None, cmd_args=None,
+            **params):
         """Schedule a new job and returns its job key.
 
         :param spider: a spider name string
@@ -200,7 +200,7 @@ class Jobs(object):
 
         Usage::
 
-            >>> project.jobs.schedule('spider1', job_args={'arg1': 'val1'})
+            >>> project.jobs.run('spider1', job_args={'arg1': 'val1'})
             '123/1/1'
         """
         if not spider and not self.spider:
@@ -218,10 +218,9 @@ class Jobs(object):
         update_kwargs(params, units=units, priority=priority, add_tag=add_tag,
                       cmd_args=cmd_args, job_settings=job_settings, meta=meta)
 
-        # FIXME improve to schedule multiple jobs
+        # FIXME improve to run multiple jobs
         try:
-            response = self._client._connection._post(
-                'schedule', 'json', params)
+            response = self._client._connection._post('run', 'json', params)
         except BadRequest as exc:
             if 'already scheduled' in str(exc):
                 raise DuplicateJobError(exc)

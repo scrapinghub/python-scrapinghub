@@ -71,7 +71,7 @@ class Projects(object):
         :param state: a string state or a list of states.
         :return: a list of dictionaries: each dictionary represents a project
             summary (amount of pending/running/finished jobs and a flag if it
-            has a capacity to schedule new jobs).
+            has a capacity to run new jobs).
         :rtype: list[dict]
 
         Usage::
