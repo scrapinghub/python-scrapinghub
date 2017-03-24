@@ -1,6 +1,15 @@
 scrapinghub.client package
 ==========================
 
+Module contents
+---------------
+
+.. automodule:: scrapinghub.client
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 Submodules
 ----------
 
@@ -96,15 +105,6 @@ scrapinghub.client.utils module
 -------------------------------
 
 .. automodule:: scrapinghub.client.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: scrapinghub.client
     :members:
     :undoc-members:
     :show-inheritance:

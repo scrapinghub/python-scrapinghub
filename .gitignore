@@ -9,3 +9,5 @@ dist
 /.cache
 .coverage
 
+# documentation
+docs/_build
