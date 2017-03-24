@@ -91,7 +91,7 @@ class Collections(_Proxy):
 
         :return: a list of collections where each collection is
             represented by a dictionary with ('name','type') fields.
-        :rtype: list[dict]
+        :rtype: list of dicts
         """
         return list(self.iter())
 
@@ -171,7 +171,7 @@ class Collection(object):
         :param requests_params: (optional) a dict with optional requests params.
         :param \*\*params: (optional) additional query params for the request.
         :return: a list of items where each item is represented with a dict.
-        :rtype: list[dict]
+        :rtype: list of dicts
 
         # FIXME there should be similar docstrings for iter/iter_raw_json
         # but as we proxy them as-is, it's not in place, should be improved

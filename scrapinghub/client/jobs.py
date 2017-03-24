@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import json
 
 from ..hubstorage.job import JobMeta as _JobMeta
 from ..hubstorage.job import Items as _Items
@@ -113,16 +112,16 @@ class Jobs(object):
             >>> [job['key'] for job in jobs_summary]
             ['123/1/3', '123/1/2', '123/1/1']
 
-        - job summary fieldset is less detailed than job.metadata but
-        contains few new fields as well. Additional fields can be requested
-        using ``meta`` parameter. If it's used, then it's up to the user
-        to list all the required fields, so only few default fields would
-        be added except requested ones::
+        - job summary fieldset is less detailed than job.metadata but contains
+            few new fields as well. Additional fields can be requested using
+            ``meta`` parameter. If it's used, then it's up to the user to list
+            all the required fields, so only few default fields would be added
+            except requested ones::
 
             >>> jobs_summary = project.jobs.iter(meta=['scheduled_by', ])
 
         - by default :meth:`Jobs.iter` returns maximum last 1000 results.
-        Pagination is available using start parameter::
+            Pagination is available using start parameter::
 
             >>> jobs_summary = spider.jobs.iter(start=1000)
 
@@ -165,7 +164,7 @@ class Jobs(object):
         :param \*\*params: (optional) other filter params.
 
         :return: list of dictionaries of jobs summary for a given filter params
-        :rtype: list[dict]
+        :rtype: list of dicts
 
         Please note that list() method can use a lot of memory and for a large
         amount of jobs it's recommended to iterate through it via iter()
@@ -257,11 +256,11 @@ class Jobs(object):
 
         :param state: (optional) a string state to filter jobs.
         :param spider: (optional) a spider name
-            (not needed if instantiated with :cls:`Spider`).
+            (not needed if instantiated with :class:`Spider`).
         :param \*\*params: (optional) additional keyword args.
         :return: a list of dictionaries of jobs summary
             for a given filter params grouped by job state.
-        :rtype: list[dict]
+        :rtype: list of dicts
 
         Usage::
 
@@ -285,7 +284,7 @@ class Jobs(object):
         :param start_after: (optional)
         :param count: (optional)
         :param spider: (optional) a spider name
-            (not needed if instantiated with :cls:`Spider`).
+            (not needed if instantiated with :class:`Spider`).
         :param \*\*params: (optional) additional keyword args.
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.

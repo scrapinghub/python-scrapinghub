@@ -52,7 +52,7 @@ class Spiders(object):
         """Get a list of spiders for a project.
 
         :return: a list of dictionaries with spiders metadata.
-        :rtype: list[dict]
+        :rtype: list of dicts
 
         Usage::
 
@@ -122,7 +122,7 @@ class Spider(object):
         """List spider tags.
 
         :return: a list of spider tags.
-        :rtype: list[str]
+        :rtype: list of strings
         """
         path = 'v2/projects/{}/spiders/{}'.format(self.project_id, self._id)
         url = urljoin(self._client._connection.url, path)
