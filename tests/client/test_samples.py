@@ -11,7 +11,7 @@ def _add_test_samples(job):
 
 
 def test_samples_iter(spider):
-    job = spider.jobs.schedule(meta={'state': 'running'})
+    job = spider.jobs.run(meta={'state': 'running'})
     assert list(job.samples.iter()) == []
     _add_test_samples(job)
 
@@ -23,7 +23,7 @@ def test_samples_iter(spider):
 
 
 def test_samples_list(spider):
-    job = spider.jobs.schedule(meta={'state': 'running'})
+    job = spider.jobs.run(meta={'state': 'running'})
     _add_test_samples(job)
     o = job.samples.list()
     assert isinstance(o, list)

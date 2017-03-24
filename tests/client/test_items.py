@@ -14,7 +14,7 @@ def _add_test_items(job):
 
 
 def test_items_iter(spider):
-    job = spider.jobs.schedule(meta={'state': 'running'})
+    job = spider.jobs.run(meta={'state': 'running'})
     _add_test_items(job)
 
     o = job.items.iter()
@@ -43,7 +43,7 @@ def test_items_iter(spider):
 
 
 def test_items_list(spider):
-    job = spider.jobs.schedule(meta={'state': 'running'})
+    job = spider.jobs.run(meta={'state': 'running'})
     _add_test_items(job)
 
     o = job.items.list()

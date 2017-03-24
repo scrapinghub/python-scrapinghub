@@ -58,7 +58,7 @@ def test_projects_list_server_error(client):
 
 def test_projects_summary(client, project):
     # add at least one running or pending job to ensure summary is returned
-    project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'running'})
+    project.jobs.run(TEST_SPIDER_NAME, meta={'state': 'running'})
 
     def _get_summary():
         summaries = {str(js['project']): js
@@ -91,19 +91,19 @@ def test_project_jobs_count(project):
     assert project.jobs.count() == 0
     assert project.jobs.count(state=['pending', 'running', 'finished']) == 0
 
-    project.jobs.schedule(TEST_SPIDER_NAME)
+    project.jobs.run(TEST_SPIDER_NAME)
     assert project.jobs.count(state='pending') == 1
 
     for i in range(2):
-        project.jobs.schedule(TEST_SPIDER_NAME,
-                              spider_args={'subid': 'running-%s' % i},
-                              meta={'state': 'running'})
+        project.jobs.run(TEST_SPIDER_NAME,
+                         job_args={'subid': 'running-%s' % i},
+                         meta={'state': 'running'})
     assert project.jobs.count(state='running') == 2
 
     for i in range(3):
-        project.jobs.schedule(TEST_SPIDER_NAME,
-                              spider_args={'subid': 'finished%s' % i},
-                              meta={'state': 'finished'})
+        project.jobs.run(TEST_SPIDER_NAME,
+                         job_args={'subid': 'finished%s' % i},
+                         meta={'state': 'finished'})
     assert project.jobs.count(state='finished') == 3
 
     assert project.jobs.count(state=['pending', 'running', 'finished']) == 6
@@ -114,7 +114,7 @@ def test_project_jobs_count(project):
 
 
 def test_project_jobs_iter(project):
-    project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'running'})
+    project.jobs.run(TEST_SPIDER_NAME, meta={'state': 'running'})
 
     # no finished jobs
     jobs0 = project.jobs.iter()
@@ -141,7 +141,7 @@ def test_project_jobs_iter(project):
 
 
 def test_project_jobs_list(project):
-    project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'running'})
+    project.jobs.run(TEST_SPIDER_NAME, meta={'state': 'running'})
 
     # no finished jobs
     jobs0 = project.jobs.list()
@@ -164,12 +164,12 @@ def test_project_jobs_list(project):
     assert job.get('state') == 'running'
 
 
-def test_project_jobs_schedule(project):
+def test_project_jobs_run(project):
     # scheduling on project level requires spidername
     with pytest.raises(ValueError):
-        project.jobs.schedule()
+        project.jobs.run()
 
-    job0 = project.jobs.schedule(TEST_SPIDER_NAME)
+    job0 = project.jobs.run(TEST_SPIDER_NAME)
     assert isinstance(job0, Job)
     validate_default_meta(job0.metadata, state='pending')
     assert isinstance(job0.metadata.get('pending_time'), int)
@@ -178,13 +178,13 @@ def test_project_jobs_schedule(project):
 
     # running the same spider with same args leads to duplicate error
     with pytest.raises(DuplicateJobError):
-        project.jobs.schedule(TEST_SPIDER_NAME)
+        project.jobs.run(TEST_SPIDER_NAME)
 
-    job1 = project.jobs.schedule(TEST_SPIDER_NAME,
-                                 spider_args={'arg1': 'val1', 'arg2': 'val2'},
-                                 priority=3, units=3,
-                                 add_tag=['tagA', 'tagB'],
-                                 meta={'state': 'running', 'meta1': 'val1'})
+    job1 = project.jobs.run(TEST_SPIDER_NAME,
+                            job_args={'arg1': 'val1', 'arg2': 'val2'},
+                            priority=3, units=3,
+                            add_tag=['tagA', 'tagB'],
+                            meta={'state': 'running', 'meta1': 'val1'})
     assert isinstance(job1, Job)
     meta = job1.metadata
     validate_default_meta(meta, state='running', units=3, priority=3,
@@ -214,9 +214,9 @@ def test_project_jobs_summary(project):
     jobs = defaultdict(list)
     for state in sorted(counts):
         for i in range(counts[state]):
-            job = project.jobs.schedule(TEST_SPIDER_NAME,
-                                        spider_args={'subid': state + str(i)},
-                                        meta={'state': state})
+            job = project.jobs.run(TEST_SPIDER_NAME,
+                                   job_args={'subid': state + str(i)},
+                                   meta={'state': state})
             jobs[state].append(job.key)
     summary1 = project.jobs.summary()
     for summ in summary1:
@@ -248,7 +248,7 @@ def test_project_jobs_iter_last(project):
     assert isinstance(lastsumm0, types.GeneratorType)
     assert list(lastsumm0) == []
 
-    job1 = project.jobs.schedule(TEST_SPIDER_NAME, meta={'state': 'finished'})
+    job1 = project.jobs.run(TEST_SPIDER_NAME, meta={'state': 'finished'})
     lastsumm1 = list(project.jobs.iter_last())
     assert len(lastsumm1) == 1
     assert lastsumm1[0].get('key') == job1.key
@@ -259,9 +259,9 @@ def test_project_jobs_iter_last(project):
     assert lastsumm1[0].get('ts') > 0
 
     # next iter_last should return last spider's job
-    job2 = project.jobs.schedule(TEST_SPIDER_NAME,
-                                 spider_args={'subid': 1},
-                                 meta={'state': 'finished'})
+    job2 = project.jobs.run(TEST_SPIDER_NAME,
+                            job_args={'subid': 1},
+                            meta={'state': 'finished'})
     lastsumm2 = list(project.jobs.iter_last())
     assert len(lastsumm2) == 1
     assert lastsumm2[0].get('key') == job2.key

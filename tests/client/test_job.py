@@ -12,7 +12,7 @@ from .conftest import TEST_SPIDER_NAME
 
 
 def test_job_base(client, spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     assert isinstance(job, Job)
     assert job.project_id == TEST_PROJECT_ID
     assert job.key.startswith(spider.key)
@@ -25,10 +25,10 @@ def test_job_base(client, spider):
 
 
 def test_job_update_tags(spider):
-    job1 = spider.jobs.schedule(job_args={'subid': 'tags-1'},
-                                add_tag=['tag1'])
-    job2 = spider.jobs.schedule(job_args={'subid': 'tags-2'},
-                                add_tag=['tag2'])
+    job1 = spider.jobs.run(job_args={'subid': 'tags-1'},
+                           add_tag=['tag1'])
+    job2 = spider.jobs.run(job_args={'subid': 'tags-2'},
+                           add_tag=['tag2'])
     job1.update_tags(add=['tagA1', 'tagA2'])
     assert job1.metadata.get('tags') == ['tag1', 'tagA1', 'tagA2']
 
@@ -43,7 +43,7 @@ def test_job_update_tags(spider):
 
 
 def test_job_start(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     assert job.metadata.get('state') == 'pending'
     job.start()
     assert job.metadata.get('state') == 'running'
@@ -54,7 +54,7 @@ def test_job_start(spider):
 
 
 def test_job_start_extras(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     extras = {
         'string': 'foo',
         'integer': 1,
@@ -76,7 +76,7 @@ def test_job_start_extras(spider):
 
 
 def test_job_update(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     assert job.metadata.get('state') == 'pending'
     job.update(state='running', foo='bar')
 
@@ -86,14 +86,14 @@ def test_job_update(spider):
 
 
 def test_job_cancel_pending(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     assert job.metadata.get('state') == 'pending'
     job.cancel()
     assert job.metadata.get('state') == 'finished'
 
 
 def test_job_cancel_running(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     job.start()
     assert job.metadata.get('state') == 'running'
     job.cancel()
@@ -102,14 +102,14 @@ def test_job_cancel_running(spider):
 
 
 def test_job_finish(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     assert job.metadata.get('state') == 'pending'
     job.finish()
     assert job.metadata.get('state') == 'finished'
 
 
 def test_job_finish_with_metadata(spider):
-    job = spider.jobs.schedule(meta={'meta1': 'val1', 'meta2': 'val3'})
+    job = spider.jobs.run(meta={'meta1': 'val1', 'meta2': 'val3'})
     assert job.metadata.get('state') == 'pending'
     job.finish(meta2='val2', meta3='val3')
     assert job.metadata.get('state') == 'finished'
@@ -119,7 +119,7 @@ def test_job_finish_with_metadata(spider):
 
 
 def test_job_delete(spider):
-    job = spider.jobs.schedule(meta={'state': 'finished'})
+    job = spider.jobs.run(meta={'state': 'finished'})
     assert job.metadata.get('state') == 'finished'
     job.delete()
     assert job.metadata.get('state') == 'deleted'
@@ -127,7 +127,7 @@ def test_job_delete(spider):
 
 def test_job_delete_with_metadata(spider):
     meta = {'state': 'finished', 'meta1': 'val1', 'meta2': 'val3'}
-    job = spider.jobs.schedule(meta=meta)
+    job = spider.jobs.run(meta=meta)
     assert job.metadata.get('state') == 'finished'
     job.delete(meta2='val2', meta3='val3')
     assert job.metadata.get('state') == 'deleted'
@@ -137,7 +137,7 @@ def test_job_delete_with_metadata(spider):
 
 
 def test_metadata_update(spider):
-    job = spider.jobs.schedule(meta={'meta1': 'data1'})
+    job = spider.jobs.run(meta={'meta1': 'data1'})
     assert job.metadata.get('meta1') == 'data1'
     job.metadata.update({'meta1': 'data2', 'meta2': 'data3'})
     assert job.metadata.get('meta1') == 'data2'
@@ -145,7 +145,7 @@ def test_metadata_update(spider):
 
 
 def test_metadata_set(spider):
-    job = spider.jobs.schedule(meta={'meta1': 'data1'})
+    job = spider.jobs.run(meta={'meta1': 'data1'})
     assert job.metadata.get('meta1') == 'data1'
     job.metadata.set('meta1', 'data2')
     job.metadata.set('meta2', 123)
@@ -154,14 +154,14 @@ def test_metadata_set(spider):
 
 
 def test_metadata_delete(spider):
-    job = spider.jobs.schedule(meta={'meta1': 'data1', 'meta2': 'data2'})
+    job = spider.jobs.run(meta={'meta1': 'data1', 'meta2': 'data2'})
     job.metadata.delete('meta1')
     assert job.metadata.get('meta1') is None
     assert job.metadata.get('meta2') == 'data2'
 
 
 def test_metadata_iter_list(spider):
-    job = spider.jobs.schedule(meta={'meta1': 'data1', 'meta2': 'data2'})
+    job = spider.jobs.run(meta={'meta1': 'data1', 'meta2': 'data2'})
     meta_iter = job.metadata.iter()
     assert isinstance(meta_iter, Iterator)
     meta_list = job.metadata.list()

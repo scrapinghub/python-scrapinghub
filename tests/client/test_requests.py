@@ -19,7 +19,7 @@ def _add_test_requests(job):
 
 
 def test_requests_iter(spider):
-    job = spider.jobs.schedule(meta={'state': 'running'})
+    job = spider.jobs.run(meta={'state': 'running'})
     _add_test_requests(job)
     job.requests.close()
     rr = job.requests.iter()
@@ -42,7 +42,7 @@ def test_requests_iter(spider):
 
 
 def test_requests_iter_raw_json(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     _add_test_requests(job)
     job.requests.close()
 

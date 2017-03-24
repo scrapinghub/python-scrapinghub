@@ -29,7 +29,7 @@ def _add_test_logs(job):
 
 
 def test_logs_base(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     assert list(job.logs.iter()) == []
     assert job.logs.batch_write_start() == 0
     _add_test_logs(job)
@@ -45,7 +45,7 @@ def test_logs_base(spider):
 
 
 def test_logs_iter(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     _add_test_logs(job)
 
     logs1 = job.logs.iter()
@@ -67,7 +67,7 @@ def test_logs_iter(spider):
 
 
 def test_logs_list(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     _add_test_logs(job)
 
     logs1 = job.logs.list()
@@ -90,7 +90,7 @@ def test_logs_list(spider):
 
 
 def test_logs_list_filter(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     _add_test_logs(job)
 
     logs1 = job.logs.list(filter='["message", "contains", ["simple"]]')
@@ -106,7 +106,7 @@ def test_logs_list_filter(spider):
 
 
 def test_logs_iter_raw_json(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     _add_test_logs(job)
 
     logs0 = job.logs.iter_raw_json(offset=2)
@@ -124,7 +124,7 @@ def test_logs_iter_raw_json(spider):
 
 
 def test_logs_iter_raw_msgpack(spider):
-    job = spider.jobs.schedule()
+    job = spider.jobs.run()
     _add_test_logs(job)
 
     logs1 = job.logs.iter_raw_msgpack(offset=2)
