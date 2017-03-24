@@ -16,7 +16,7 @@ help:
 .PHONY: help Makefile
 
 apidocs:
-	# deprecated packages are not included to apidocs 
+	# deprecated packages are not included to apidocs
 	@$(SPHINXAPIDOCS) -o docs/modules scrapinghub scrapinghub/legacy.py scrapinghub/hubstorage
 
 # Catch-all target: route all unknown targets to Sphinx using the new
