@@ -6,6 +6,10 @@ TODO add short description & deprecation message here!
 
 The library can also be used for interaction with spiders, jobs and scraped data through ``storage.scrapinghub.com`` endpoints.
 
+
+Overview
+--------
+
 First, use your API key for authorization::
 
     >>> from scrapinghub import HubstorageClient
@@ -14,7 +18,7 @@ First, use your API key for authorization::
     1446222762611
 
 Project
--------
+^^^^^^^
 
 To get project settings or jobs summary::
 
@@ -29,7 +33,7 @@ To get project settings or jobs summary::
      u'running': 0}
 
 Spider
-------
+^^^^^^
 
 To get spider id correlated with its name::
 
@@ -45,7 +49,7 @@ To get job summary per spider::
     >>> summary = project.spiders.lastjobsummary(spiderid='1')
 
 Job
----
+^^^
 
 Job can be **retrieved** directly by id (project_id/spider_id/job_id)::
 
@@ -86,7 +90,7 @@ To **delete** job::
     u'deleted'
 
 Job details
------------
+^^^^^^^^^^^
 
 Job details can be found in jobs metadata and it's scrapystats::
 
@@ -112,7 +116,7 @@ Anything can be stored in metadata, here is example how to add tags::
     >>> job.update_metadata({'tags': 'obsolete'})
 
 Jobs
-----
+^^^^
 
 To iterate through all jobs metadata per project (descending order)::
 
@@ -158,7 +162,7 @@ There are 4 possible job states, which can be used as values for filtering by st
 
 
 Items
------
+^^^^^
 
 To iterate through items::
 
@@ -167,7 +171,7 @@ To iterate through items::
     # do something, item is just a dict
 
 Logs
-----
+^^^^
 
 To iterate through 10 first logs for example::
 
@@ -176,7 +180,7 @@ To iterate through 10 first logs for example::
     # do something, log is a dict with log level, message and time keys
 
 Collections
------------
+^^^^^^^^^^^
 
 Let's store hash and timestamp pair for foo spider. Usual workflow with `Collections`_ would be::
 
@@ -198,7 +202,7 @@ Let's store hash and timestamp pair for foo spider. Usual workflow with `Collect
     0
 
 Frontier
---------
+^^^^^^^^
 
 Typical workflow with `Frontier`_::
 

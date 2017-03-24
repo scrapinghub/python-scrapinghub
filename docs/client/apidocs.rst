@@ -1,5 +1,5 @@
-scrapinghub.client package
-==========================
+Code-based documentation
+========================
 
 Module contents
 ---------------
@@ -13,96 +13,96 @@ Module contents
 Submodules
 ----------
 
-scrapinghub.client.activity module
-----------------------------------
+activity
+--------
 
 .. automodule:: scrapinghub.client.activity
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.collections module
--------------------------------------
+collections
+-----------
 
 .. automodule:: scrapinghub.client.collections
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.exceptions module
-------------------------------------
+exceptions
+----------
 
 .. automodule:: scrapinghub.client.exceptions
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.frontiers module
------------------------------------
+frontiers
+---------
 
 .. automodule:: scrapinghub.client.frontiers
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.items module
--------------------------------
+items
+-----
 
 .. automodule:: scrapinghub.client.items
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.jobs module
-------------------------------
+jobs
+----
 
 .. automodule:: scrapinghub.client.jobs
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.logs module
-------------------------------
+logs
+----
 
 .. automodule:: scrapinghub.client.logs
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.projects module
-----------------------------------
+projects
+--------
 
 .. automodule:: scrapinghub.client.projects
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.requests module
-----------------------------------
+requests
+--------
 
 .. automodule:: scrapinghub.client.requests
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.samples module
----------------------------------
+samples
+-------
 
 .. automodule:: scrapinghub.client.samples
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.spiders module
----------------------------------
+spiders
+-------
 
 .. automodule:: scrapinghub.client.spiders
     :members:
     :undoc-members:
     :show-inheritance:
 
-scrapinghub.client.utils module
--------------------------------
+utils
+-----
 
 .. automodule:: scrapinghub.client.utils
     :members:

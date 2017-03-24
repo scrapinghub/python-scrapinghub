@@ -172,10 +172,9 @@ class Collection(object):
         :param \*\*params: (optional) additional query params for the request.
         :return: a list of items where each item is represented with a dict.
         :rtype: list of dicts
-
+        """
         # FIXME there should be similar docstrings for iter/iter_raw_json
         # but as we proxy them as-is, it's not in place, should be improved
-        """
         update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
                       startts=startts, endts=endts,
                       requests_params=requests_params)

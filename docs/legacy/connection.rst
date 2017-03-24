@@ -3,6 +3,8 @@ scrapinghub.legacy.Connection
 
 TODO add short description & deprecation message here!
 
+Overview
+--------
 
 First, you connect to Scrapinghub::
 

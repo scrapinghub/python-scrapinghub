@@ -1,5 +1,5 @@
-ScrapinghubClient overview
-==========================
+Overview
+========
 
 The ``scrapinghub.ScrapinghubClient`` is a new Python client for communicating
 with the `Scrapinghub API`_. It takes best from ``scrapinghub.Connection`` and
