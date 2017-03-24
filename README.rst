@@ -26,8 +26,8 @@ response time and improved bandwidth usage::
 Documentation
 -------------
 
-Documentation is available [online](https://python-scrapinghub.readthedocs.io/) via Read the Docs,
-or in the ``docs`` directory.
+Documentation is `available online`_ via Read the Docs or in the ``docs`` directory.
 
 
 .. _Scrapinghub API: http://doc.scrapinghub.com/api.html
+.. _available online: https://python-scrapinghub.readthedocs.io/
