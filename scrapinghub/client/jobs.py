@@ -385,7 +385,7 @@ class Job(object):
 
     Usage::
 
-        >>> job = project.job('123/1/2')
+        >>> job = project.jobs.get('123/1/2')
         >>> job.key
         '123/1/2'
         >>> job.metadata.get('state')

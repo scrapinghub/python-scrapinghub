@@ -35,12 +35,13 @@ Work with your projects::
 
 Run new jobs from the client::
 
+    >>> project = client.get_project(123)
     >>> project.jobs.run('spider1', job_args={'arg1':'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
 
-Access job data::
+Access your jobs data::
 
-    >>> job = project.job(u'123/1/2')
+    >>> job = client.get_job('123/1/2')
     >>> for item in job.items():
     ...     print(item)
     {
