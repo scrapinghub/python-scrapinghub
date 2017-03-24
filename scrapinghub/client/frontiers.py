@@ -88,7 +88,7 @@ class Frontiers(_Proxy):
         """Get a frontier by name.
 
         :param name: a frontier name string.
-        :return: class:`Frontier` instance.
+        :return: :class:`Frontier` instance.
         :rtype: Frontier
         """
         return Frontier(self._client, self, name)
@@ -154,7 +154,7 @@ class Frontier(object):
     def get(self, slot):
         """Get a slot by name.
 
-        :return: class:`FrontierSlot` instance.
+        :return: :class:`FrontierSlot` instance.
         :rtype: FrontierSlot
         """
         return FrontierSlot(self._client, self, slot)
@@ -249,7 +249,7 @@ class FrontierSlot(object):
     def f(self):
         """Shortcut to have quick access to slot fingerprints.
 
-        :return: class:`FrontierSlotFingerprints` instance.
+        :return: :class:`FrontierSlotFingerprints` instance.
         :rtype: FrontierSlotFingerprints
         """
         return self.fingerprints
@@ -258,7 +258,7 @@ class FrontierSlot(object):
     def q(self):
         """Shortcut to have quick access to a slot queue.
 
-        :return: class:`FrontierSlotQueue` instance.
+        :return: :class:`FrontierSlotQueue` instance.
         :rtype: FrontierSlotQueue
         """
         return self.queue
