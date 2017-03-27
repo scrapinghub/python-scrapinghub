@@ -58,7 +58,7 @@ class Jobs(object):
         :param \*\*params: (optional) other filter params.
 
         :return: jobs count.
-        :rtype: int
+        :rtype: :class:`int`
 
         Usage::
 
@@ -97,7 +97,7 @@ class Jobs(object):
 
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.
-        :rtype: types.GeneratorType[dict]
+        :rtype: :class:`types.GeneratorType[dict]`
 
         Usage:
 
@@ -164,7 +164,7 @@ class Jobs(object):
         :param \*\*params: (optional) other filter params.
 
         :return: list of dictionaries of jobs summary for a given filter params
-        :rtype: List[dict]
+        :rtype: :class:`list[dict]`
 
         Please note that list() method can use a lot of memory and for a large
         amount of jobs it's recommended to iterate through it via iter()
@@ -195,7 +195,7 @@ class Jobs(object):
         :param \*\*params: (optional) additional keyword args.
 
         :return: a job key string pointing to the new job.
-        :rtype: str
+        :rtype: :class:`str`
 
         Usage::
 
@@ -236,7 +236,7 @@ class Jobs(object):
         the spider (if :attr:`Spider.jobs` was used).
 
         :return: :class:`Job` object.
-        :rtype: scrapinghub.client.jobs.Job
+        :rtype: :class:`Job`
 
         Usage::
 
@@ -260,7 +260,7 @@ class Jobs(object):
         :param \*\*params: (optional) additional keyword args.
         :return: a list of dictionaries of jobs summary
             for a given filter params grouped by job state.
-        :rtype: List[dict]
+        :rtype: :class:`list[dict]`
 
         Usage::
 
@@ -288,7 +288,7 @@ class Jobs(object):
         :param \*\*params: (optional) additional keyword args.
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.
-        :rtype: types.GeneratorType[dict]
+        :rtype: :class:`types.GeneratorType[dict]`
 
         Usage:
 
@@ -341,7 +341,7 @@ class Jobs(object):
         have to specify ``spider`` param when using :attr:`Project.jobs`).
 
         :return: amount of jobs that were updated.
-        :rtype: int
+        :rtype: :class:`int`
 
         Usage:
 
@@ -436,7 +436,7 @@ class Job(object):
 
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
-        :rtype: str
+        :rtype: :class:`str`
 
         Usage::
 
@@ -450,7 +450,7 @@ class Job(object):
 
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
-        :rtype: str
+        :rtype: :class:`str`
 
         Usage::
 
@@ -464,7 +464,7 @@ class Job(object):
 
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
-        :rtype: str
+        :rtype: :class:`str`
 
         Usage::
 
@@ -479,7 +479,7 @@ class Job(object):
         :param state: a new job state.
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
-        :rtype: str
+        :rtype: :class:`str`
 
         Usage::
 

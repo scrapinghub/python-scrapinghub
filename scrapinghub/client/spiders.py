@@ -33,7 +33,7 @@ class Spiders(object):
 
         :param spider: a string spider name.
         :return: :class:`Spider` object.
-        :rtype: scrapinghub.client.spiders.Spider
+        :rtype: :class:`scrapinghub.client.spiders.Spider`
 
         Usage::
 
@@ -52,7 +52,7 @@ class Spiders(object):
         """Get a list of spiders for a project.
 
         :return: a list of dictionaries with spiders metadata.
-        :rtype: List[dict]
+        :rtype: :class:`list[dict]`
 
         Usage::
 
@@ -68,7 +68,7 @@ class Spiders(object):
 
         :return: an iterator over spiders list where each spider is represented
             as a dict containing its metadata.
-        :rtype: collection.Iterable[dict]
+        :rtype: :class:`collection.Iterable[dict]`
 
         Provided for the sake of API consistency.
         """
@@ -122,7 +122,7 @@ class Spider(object):
         """List spider tags.
 
         :return: a list of spider tags.
-        :rtype: List[str]
+        :rtype: :class:`list[str]`
         """
         path = 'v2/projects/{}/spiders/{}'.format(self.project_id, self._id)
         url = urljoin(self._client._connection.url, path)

@@ -32,7 +32,7 @@ class Projects(object):
 
         :param project_id: integer or string numeric project id.
         :return: :class:`Project` object.
-        :rtype: scrapinghub.client.projects.Project
+        :rtype: :class:`scrapinghub.client.projects.Project`
 
         Usage::
 
@@ -46,7 +46,7 @@ class Projects(object):
         """Get list of projects available to current user.
 
         :return: a list of project ids.
-        :rtype: List[int]
+        :rtype: :class:`list[int]`
 
         Usage::
 
@@ -61,7 +61,7 @@ class Projects(object):
         Provided for the sake of API consistency.
 
         :return: an iterator over project ids list.
-        :rtype: collections.Iterable[int]
+        :rtype: :class:`collections.Iterable[int]`
         """
         return iter(self.list())
 
@@ -72,7 +72,7 @@ class Projects(object):
         :return: a list of dictionaries: each dictionary represents a project
             summary (amount of pending/running/finished jobs and a flag if it
             has a capacity to run new jobs).
-        :rtype: List[dict]
+        :rtype: :class:`list[dict]`
 
         Usage::
 

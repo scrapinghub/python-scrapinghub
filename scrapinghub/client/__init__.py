@@ -58,7 +58,7 @@ class ScrapinghubClient(object):
 
         :param project_id: integer or string numeric project id.
         :return: :class:`Project` object.
-        :rtype: scrapinghub.client.projects.Project
+        :rtype: :class:`scrapinghub.client.projects.Project`
 
         Usage::
 
@@ -74,7 +74,7 @@ class ScrapinghubClient(object):
         :param job_key: job key string in format 'project_id/spider_id/job_id',
             where all the components are integers.
         :return: :class:`Job` object.
-        :rtype: scrapinghub.client.jobs.Job
+        :rtype: :class:`scrapinghub.client.jobs.Job`
 
         Usage::
 

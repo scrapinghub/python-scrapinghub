@@ -22,7 +22,7 @@ class _HSFrontier(_Frontier):
         callback to write newcount data per slot.
 
         :return: a batchuploader writer instance.
-        :rtype: scrapinghub.hubstorage.batchuploader._BatchWriter
+        :rtype: :class:`scrapinghub.hubstorage.batchuploader._BatchWriter`
         """
         key = (frontier, slot)
         writer = self._writers.get(key)
@@ -89,7 +89,7 @@ class Frontiers(_Proxy):
 
         :param name: a frontier name string.
         :return: :class:`Frontier` instance.
-        :rtype: Frontier
+        :rtype: :class:`Frontier`
         """
         return Frontier(self._client, self, name)
 
@@ -97,7 +97,7 @@ class Frontiers(_Proxy):
         """Iterate through frontiers.
 
         :return: an iterator over frontiers names.
-        :rtype: collections.Iterable[str]
+        :rtype: :class:`collections.Iterable[str]`
         """
         return iter(self.list())
 
@@ -105,7 +105,7 @@ class Frontiers(_Proxy):
         """List frontiers names.
 
         :return: a list of frontiers names.
-        :rtype: List[str]
+        :rtype: :class:`list[str]`
         """
         return next(self._origin.apiget('list'))
 
@@ -155,7 +155,7 @@ class Frontier(object):
         """Get a slot by name.
 
         :return: :class:`FrontierSlot` instance.
-        :rtype: FrontierSlot
+        :rtype: :class:`FrontierSlot`
         """
         return FrontierSlot(self._client, self, slot)
 
@@ -163,7 +163,7 @@ class Frontier(object):
         """Iterate through slots.
 
         :return: an iterator over frontier slots names.
-        :rtype: collections.Iterate[str]
+        :rtype: :class:`collections.Iterate[str]`
         """
         return iter(self.list())
 
@@ -171,7 +171,7 @@ class Frontier(object):
         """List all slots.
 
         :return: a list of frontier slots names.
-        :rtype: List[str]
+        :rtype: :class:`list[str]`
         """
         return next(self._frontiers._origin.apiget((self.key, 'list')))
 
@@ -250,7 +250,7 @@ class FrontierSlot(object):
         """Shortcut to have quick access to slot fingerprints.
 
         :return: :class:`FrontierSlotFingerprints` instance.
-        :rtype: FrontierSlotFingerprints
+        :rtype: :class:`FrontierSlotFingerprints`
         """
         return self.fingerprints
 
@@ -259,7 +259,7 @@ class FrontierSlot(object):
         """Shortcut to have quick access to a slot queue.
 
         :return: :class:`FrontierSlotQueue` instance.
-        :rtype: FrontierSlotQueue
+        :rtype: :class:`FrontierSlotQueue`
         """
         return self.queue
 
@@ -303,7 +303,7 @@ class FrontierSlotFingerprints(object):
 
         :param \*\*params: (optional) additional query params for the request.
         :return: an iterator over fingerprints.
-        :rtype: collections.Iterable[str]
+        :rtype: :class:`collections.Iterable[str]`
         """
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'f')
@@ -315,7 +315,7 @@ class FrontierSlotFingerprints(object):
 
         :param \*\*params: (optional) additional query params for the request.
         :return: a list of fingerprints.
-        :rtype: List[str]
+        :rtype: :class:`list[str]`
         """
         return list(self.iter(**params))
 
@@ -339,7 +339,7 @@ class FrontierSlotQueue(object):
         :param \*\*params: (optional) additional query params for the request.
         :return: an iterator over request batches in the queue where each
             batch is represented with a dict with ('id', 'requests') field.
-        :rtype: collections.Iterable[dict]
+        :rtype: :class:`collections.Iterable[dict]`
         """
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'q')
@@ -353,7 +353,7 @@ class FrontierSlotQueue(object):
         :param \*\*params: (optional) additional query params for the request.
         :return: a list of request batches in the queue where each batch
             is represented with a dict with ('id', 'requests') field.
-        :rtype: List[dict]
+        :rtype: :class:`list[dict]`
         """
         return list(self.iter(mincount=mincount, **params))
 

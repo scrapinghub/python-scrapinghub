@@ -30,7 +30,7 @@ class Collections(_Proxy):
         :param type_: a collection type string.
         :param name: a collection name string.
         :return: :class:`Collection` object.
-        :rtype: Collection
+        :rtype: :class:`Collection`
         """
         self._origin._validate_collection(type_, name)
         return Collection(self._client, self, type_, name)
@@ -40,7 +40,7 @@ class Collections(_Proxy):
 
         :param name: a collection name string.
         :return: :class:`Collection` object.
-        :rtype: Collection
+        :rtype: :class:`Collection`
         """
         return self.get('s', name)
 
@@ -51,7 +51,7 @@ class Collections(_Proxy):
 
         :param name: a collection name string.
         :return: :class:`Collection` object.
-        :rtype: Collection
+        :rtype: :class:`Collection`
         """
         return self.get('cs', name)
 
@@ -62,7 +62,7 @@ class Collections(_Proxy):
 
         :param name: a collection name string.
         :return: :class:`Collection` object.
-        :rtype: Collection
+        :rtype: :class:`Collection`
         """
         return self.get('vs', name)
 
@@ -73,7 +73,7 @@ class Collections(_Proxy):
 
         :param name: a collection name string.
         :return: :class:`Collection` object.
-        :rtype: Collection
+        :rtype: :class:`Collection`
         """
         return self.get('vcs', name)
 
@@ -82,7 +82,7 @@ class Collections(_Proxy):
 
         :return: an iterator over collections list where each collection is
             represented by a dictionary with ('name','type') fields.
-        :rtype: collections.Iterable[dict]
+        :rtype: :class:`collections.Iterable[dict]`
         """
         return self._origin.apiget('list')
 
@@ -91,7 +91,7 @@ class Collections(_Proxy):
 
         :return: a list of collections where each collection is
             represented by a dictionary with ('name','type') fields.
-        :rtype: List[dict]
+        :rtype: :class:`list[dict]`
         """
         return list(self.iter())
 
@@ -171,7 +171,7 @@ class Collection(object):
         :param requests_params: (optional) a dict with optional requests params.
         :param \*\*params: (optional) additional query params for the request.
         :return: a list of items where each item is represented with a dict.
-        :rtype: List[dict]
+        :rtype: :class:`list[dict]`
         """
         # FIXME there should be similar docstrings for iter/iter_raw_json
         # but as we proxy them as-is, it's not in place, should be improved
@@ -186,7 +186,7 @@ class Collection(object):
         :param key: string item key.
         :param \*\*params: (optional) additional query params for the request.
         :return: an item dictionary if exists.
-        :rtype: dict
+        :rtype: :class:`dict`
         """
         if key is None:
             raise ValueError("key cannot be None")
@@ -228,7 +228,7 @@ class Collection(object):
         :param requests_params: (optional) a dict with optional requests params.
         :param \*\*params: (optional) additional query params for the request.
         :return: an iterator over items list packed with msgpack.
-        :rtype: collections.Iterable[bytes]
+        :rtype: :class:`collections.Iterable[bytes]`
         """
         update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
                       startts=startts, endts=endts,

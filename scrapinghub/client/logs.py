@@ -60,7 +60,7 @@ class Logs(_Proxy):
 
         :param params: an original dictionary with params.
         :return: a modified dictionary with params.
-        :rtype: dict
+        :rtype: :class:`dict`
         """
         params = super(Logs, self)._modify_iter_params(params)
         offset = params.pop('offset', None)

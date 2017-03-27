@@ -125,7 +125,7 @@ class _Proxy(object):
 
         :param params: a dictionary with input parameters.
         :return: an updated dictionary with parameters.
-        :rtype: dict
+        :rtype: :class:`dict`
         """
         return format_iter_filters(params)
 
@@ -185,7 +185,7 @@ class _MappingProxy(_Proxy):
         """Iterate through key/value pairs.
 
         :return: an iterator over key/value pairs.
-        :rtype: collections.Iterable
+        :rtype: :class:`collections.Iterable`
         """
         return six.iteritems(next(self._origin.apiget()))
 

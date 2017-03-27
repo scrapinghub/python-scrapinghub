@@ -50,7 +50,7 @@ class Items(_Proxy):
         """Modify iter filter to convert offset to start parameter.
 
         :return: a dict with updated set of params.
-        :rtype: dict
+        :rtype: :class:`dict`
         """
         params = super(Items, self)._modify_iter_params(params)
         offset = params.pop('offset', None)
