@@ -1,10 +1,9 @@
-scrapinghub.hubstorage.HubstorageClient
-=======================================
+scrapinghub.HubstorageClient
+============================
 
-TODO add short description & deprecation message here!
+The library can be used for interaction with spiders, jobs and scraped data through ``storage.scrapinghub.com`` endpoints.
 
-
-The library can also be used for interaction with spiders, jobs and scraped data through ``storage.scrapinghub.com`` endpoints.
+[WARNING] It is deprecated, please use `scrapinghub.ScrapinghubClient`_ instead.
 
 
 Overview
@@ -246,3 +245,5 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. _scrapinghub.ScrapinghubClient: ../client/overview.html 

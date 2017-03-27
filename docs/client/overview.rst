@@ -44,7 +44,7 @@ And select a particular project to work with::
     >>> project.key
     '123'
 
-The above is a shortcut for ``client.projects.get(123)``.
+.. tip:: The above is a shortcut for ``client.projects.get(123)``.
 
 Project
 -------
@@ -60,12 +60,14 @@ For example, to schedule a spider run (it returns a job object)::
 
 Project instance also has the following fields:
 
-- activity - access to project activity records
-- collections - work with project collections (see ``Collections`` section)
-- frontiers - using project frontier (see ``Frontiers`` section)
-- settings - interface to project settings
-- spiders - access to spiders collection (see ``Spiders`` section)
+- **activity** - access to :ref:`project activity <project-activity>` records
+- **collections** - work with :ref:`project collections <project-collections>`
+- **frontiers** - using :ref:`project frontiers <project-frontiers>`
+- **settings** - interface to :ref:`project settings <project-settings>`
+- **spiders** - access to :ref:`spiders collection <project-spiders>`
 
+
+.. _project-settings:
 
 Settings
 --------
@@ -89,6 +91,7 @@ Or update a few project settings at once::
     >>> project.settings.update({'default_job_units': 1,
     ...                          'job_runtime_limit': 20})
 
+.. _project-spiders:
 
 Spiders
 -------
@@ -111,6 +114,8 @@ To select a particular spider to work with::
     >>> spider.name
     spider2
 
+.. _spider:
+
 Spider
 ------
 
@@ -122,6 +127,8 @@ To schedule a spider run::
     <scrapinghub.client.Job at 0x106ee12e8>>
 
 Note that you don't need to specify spider name explicitly.
+
+.. _jobs:
 
 Jobs
 ----
@@ -299,6 +306,8 @@ To delete a job::
 
     >>> job.delete()
 
+.. _job-metadata:
+
 Metadata
 ^^^^^^^^
 
@@ -324,6 +333,8 @@ Anything can be stored in metadata, here is example how to add tags::
 
     >>> job.metadata.set('tags', ['obsolete'])
 
+.. _job-items:
+
 Items
 ^^^^^
 
@@ -331,6 +342,8 @@ To retrieve all scraped items from a job::
 
     >>> for item in job.items.iter():
     ...     # do something with item (it's just a dict)
+
+.. _job-logs:
 
 Logs
 ^^^^
@@ -345,6 +358,8 @@ To retrieve all log entries from a job::
       'message': '[scrapy.core.engine] Closing spider (finished)',
       'time': 1482233733976},
     }
+
+.. _job-requests:
 
 Requests
 ^^^^^^^^
@@ -364,6 +379,8 @@ To retrieve all requests from a job::
       'url': 'https://example.com'
     }]
 
+.. _job-samples:
+
 Samples
 ^^^^^^^
 
@@ -374,6 +391,7 @@ To retrieve all samples for a job::
     >>> sample
     [1482233732452, 0, 0, 0, 0, 0]
 
+.. _project-activity:
 
 Activity
 --------
@@ -401,6 +419,8 @@ Or post multiple events at once::
     >>> project.activity.add(events)
 
 
+.. _project-collections:
+
 Collections
 -----------
 
@@ -426,6 +446,8 @@ Usual workflow with `Collections`_ would be::
     0
 
 Collections are available on project level only.
+
+.. _project-frontiers:
 
 Frontiers
 ---------
@@ -526,6 +548,8 @@ Close batch writers of all frontiers of a project::
 
 Frontiers are available on project level only.
 
+.. _job-tags:
+
 Tags
 ----
 
@@ -552,7 +576,7 @@ Exceptions
 scrapinghub.exceptions.ScrapinghubAPIError
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Base exception class.
+Base exception class for all other exceptions listed below.
 
 
 scrapinghub.exceptions.BadRequest

@@ -1,7 +1,9 @@
-scrapinghub.legacy.Connection
-=============================
+scrapinghub.Connection
+======================
 
-TODO add short description & deprecation message here!
+The module is the very first Python library for communicating with the Scrapinghub API.
+
+[WARNING] It is deprecated, please use `scrapinghub.ScrapinghubClient`_ instead.
 
 Overview
 --------
@@ -106,3 +108,6 @@ Module contents
     :members:
     :undoc-members:
     :show-inheritance:
+
+
+.. _scrapinghub.ScrapinghubClient: ../client/overview.html

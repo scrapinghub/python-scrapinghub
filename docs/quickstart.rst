@@ -14,7 +14,7 @@ The quick way::
 
     pip install scrapinghub
 
-You can also install the library with MessagePack support, it provides better
+You can also install the library with `MessagePack`_ support, it provides better
 response time and improved bandwidth usage::
 
     pip install scrapinghub[msgpack]
@@ -50,13 +50,13 @@ Access your jobs data::
         'size': 35000,
     }
 
-Many more feature are awaiting for you.
+Many more features `are awaiting`_ for you.
 
 
 Tests
 -----
 
-The package is covered with integration tests based on `VCR.py library`_: there
+The package is covered with integration tests based on `VCR.py`_ library: there
 are recorded cassettes files in ``tests/*/cassettes`` used instead of HTTP
 requests to real services, it helps to simplify and speed up development.
 
@@ -80,4 +80,6 @@ If you want to update/recreate all the cassettes from scratch, please use::
 Note that internally the above command erases the whole folder with cassettes.
 
 
-.. _VCR.py library: https://pypi.python.org/pypi/vcrpy
+.. _MessagePack: https://en.wikipedia.org/wiki/MessagePack
+.. _are awaiting: client/overview.html
+.. _VCR.py: https://pypi.python.org/pypi/vcrpy
