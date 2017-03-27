@@ -105,7 +105,7 @@ class Frontiers(_Proxy):
         """List frontiers names.
 
         :return: a list of frontiers names.
-        :rtype: list of strings
+        :rtype: List[str]
         """
         return next(self._origin.apiget('list'))
 

@@ -1,5 +1,5 @@
-Code-based documentation
-========================
+API Reference
+=============
 
 Module contents
 ---------------
