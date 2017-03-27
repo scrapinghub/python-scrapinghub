@@ -164,7 +164,7 @@ class Jobs(object):
         :param \*\*params: (optional) other filter params.
 
         :return: list of dictionaries of jobs summary for a given filter params
-        :rtype: list of dicts
+        :rtype: List[dict]
 
         Please note that list() method can use a lot of memory and for a large
         amount of jobs it's recommended to iterate through it via iter()
@@ -260,7 +260,7 @@ class Jobs(object):
         :param \*\*params: (optional) additional keyword args.
         :return: a list of dictionaries of jobs summary
             for a given filter params grouped by job state.
-        :rtype: list of dicts
+        :rtype: List[dict]
 
         Usage::
 

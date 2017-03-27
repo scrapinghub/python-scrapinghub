@@ -46,7 +46,7 @@ class Projects(object):
         """Get list of projects available to current user.
 
         :return: a list of project ids.
-        :rtype: list of integers
+        :rtype: List[int]
 
         Usage::
 
@@ -72,7 +72,7 @@ class Projects(object):
         :return: a list of dictionaries: each dictionary represents a project
             summary (amount of pending/running/finished jobs and a flag if it
             has a capacity to run new jobs).
-        :rtype: list of dicts
+        :rtype: List[dict]
 
         Usage::
 

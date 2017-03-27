@@ -171,7 +171,7 @@ class Frontier(object):
         """List all slots.
 
         :return: a list of frontier slots names.
-        :rtype: list of strings
+        :rtype: List[str]
         """
         return next(self._frontiers._origin.apiget((self.key, 'list')))
 
@@ -315,7 +315,7 @@ class FrontierSlotFingerprints(object):
 
         :param \*\*params: (optional) additional query params for the request.
         :return: a list of fingerprints.
-        :rtype: list of strings
+        :rtype: List[str]
         """
         return list(self.iter(**params))
 
@@ -353,7 +353,7 @@ class FrontierSlotQueue(object):
         :param \*\*params: (optional) additional query params for the request.
         :return: a list of request batches in the queue where each batch
             is represented with a dict with ('id', 'requests') field.
-        :rtype: list of dicts
+        :rtype: List[dict]
         """
         return list(self.iter(mincount=mincount, **params))
 

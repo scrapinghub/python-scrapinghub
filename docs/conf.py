@@ -18,9 +18,16 @@
 #
 import os
 import sys
+from datetime import datetime
+
+
 sys.path.insert(0, os.path.abspath('..'))
 
+
 from scrapinghub import __version__  # noqa
+
+
+YEAR = datetime.now().year
 VERSION = __version__.rsplit('.', 2)[0]
 
 # -- General configuration ------------------------------------------------
@@ -48,8 +55,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'scrapinghub'
-copyright = u'2017, Pablo Hoffman, Daniel Graña'
-author = u'Pablo Hoffman, Daniel Graña'
+copyright = u'2010-{}, Scrapinghub'.format(YEAR)
+author = u'Scrapinghub'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
