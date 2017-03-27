@@ -1,5 +1,9 @@
-Scrapinghub command line client
-===============================
+====================================
+Client interface for Scrapinghub API
+====================================
+
+.. image:: https://secure.travis-ci.org/scrapinghub/python-scrapinghub.png?branch=master
+   :target: http://travis-ci.org/scrapinghub/python-scrapinghub
 
 The ``scrapinghub`` is a Python library for communicating with the `Scrapinghub API`_.
 
