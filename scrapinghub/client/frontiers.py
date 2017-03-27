@@ -111,6 +111,11 @@ class Frontiers(_Proxy):
 
     @property
     def newcount(self):
+        """Amount of new entries added to all frontiers.
+
+        :return: amount of new entries
+        :rtype: :class:`int`
+        """
         return sum(self._origin.newcount.values())
 
 
@@ -184,6 +189,11 @@ class Frontier(object):
 
     @property
     def newcount(self):
+        """Amount of new entries added to frontier.
+
+        :return: amount of new entries
+        :rtype: :class:`int`
+        """
         newcount_values = self._frontiers._origin.newcount
         return sum(v for (frontier, _), v in newcount_values.items()
                    if frontier == self.key)
@@ -278,6 +288,11 @@ class FrontierSlot(object):
 
     @property
     def newcount(self):
+        """Amount of new entries added to slot.
+
+        :return: amount of new entries
+        :rtype: :class:`int`
+        """
         newcount_values = self._frontier._frontiers._origin.newcount
         return newcount_values.get((self._frontier.key, self.key), 0)
 
