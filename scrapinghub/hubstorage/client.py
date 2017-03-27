@@ -16,7 +16,7 @@ __all__ = ["HubstorageClient"]
 
 logger = logging.getLogger('HubstorageClient')
 
-_HTTP_ERROR_CODES_TO_RETRY = (408, 429, 503, 504)
+_HTTP_ERROR_CODES_TO_RETRY = (408, 429, 502, 503, 504)
 
 
 def _hc_retry_on_exception(err):

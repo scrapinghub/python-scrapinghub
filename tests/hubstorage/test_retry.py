@@ -4,8 +4,9 @@ Test Retry Policy
 import json
 import re
 
-from mock import patch
+import pytest
 import responses
+from mock import patch
 from requests import HTTPError, ConnectionError
 from scrapinghub import HubstorageClient
 from six.moves.http_client import BadStatusLine
@@ -133,8 +134,9 @@ def test_retrier_does_not_catch_unwanted_exception(hsspiderid):
     assert attempts_count[0] == 1
 
 
+@pytest.mark.parametrize('err_code', [408, 429, 502, 503, 504])
 @responses.activate
-def test_retrier_catches_badstatusline_and_429(hsspiderid):
+def test_retrier_catches_badstatusline_and_selected_http_errors(hsspiderid, err_code):
     # Prepare
     client = hsclient_with_retries()
     job_metadata = {
@@ -152,7 +154,7 @@ def test_retrier_catches_badstatusline_and_429(hsspiderid):
         if attempts_count[0] <= 2:
             raise ConnectionError("Connection aborted.", BadStatusLine("''"))
         if attempts_count[0] == 3:
-            return (429, {}, u'')
+            return (err_code, {}, u'')
         else:
             resp_body = dict(job_metadata)
             return (200, {}, json.dumps(resp_body))
