@@ -36,6 +36,12 @@ class JobKey(object):
 
 
 def parse_project_id(project_id):
+    """Simple check for project id.
+
+    :param project_id: a numeric project id, int or string.
+    :return: a unified project id.
+    :rtype: :class:`str`
+    """
     try:
         int(project_id)
     except ValueError:
@@ -44,6 +50,12 @@ def parse_project_id(project_id):
 
 
 def parse_job_key(job_key):
+    """Inner helper to parse job key.
+
+    :param job_key: a job key (str or tuple of 3 ints).
+    :return: parsed job key.
+    :rtype: :class:`JobKey`
+    """
     if isinstance(job_key, tuple):
         parts = job_key
     elif isinstance(job_key, six.string_types):
@@ -239,6 +251,7 @@ def format_iter_filters(params):
 
 
 def update_kwargs(kwargs, **params):
+    """Update kwargs dict with non-empty params with json-encoded values."""
     kwargs.update({k: json.dumps(v) if isinstance(v, dict) else v
                    for k, v in params.items() if v is not None})
 

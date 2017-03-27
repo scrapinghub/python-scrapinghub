@@ -57,6 +57,7 @@ class ServerError(ScrapinghubAPIError):
 
 
 def wrap_http_errors(method):
+    """Internal helper to handle exceptions gracefully."""
     @wraps(method)
     def wrapped(*args, **kwargs):
         try:
@@ -93,6 +94,7 @@ def wrap_http_errors(method):
 
 
 def wrap_value_too_large(method):
+    """Internal wrapper for ValueTooLarge exception."""
     @wraps(method)
     def wrapped(*args, **kwargs):
         try:

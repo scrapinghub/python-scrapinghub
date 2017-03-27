@@ -41,6 +41,7 @@ class _HSFrontier(_Frontier):
         return writer
 
     def _writer_callback(self, key, response):
+        """Writer callback function when new batch is added."""
         self.newcount[key] += response.json()["newcount"]
 
 
@@ -305,6 +306,10 @@ class FrontierSlotFingerprints(object):
         self._slot = slot
 
     def add(self, fps):
+        """Add new fingerprints to slot.
+
+        :param fps: a list of string fingerprints to add.
+        """
         origin = self._frontier._frontiers._origin
         writer = origin._get_writer(self._frontier.key, self.key)
         fps = list(fps) if not isinstance(fps, list) else fps

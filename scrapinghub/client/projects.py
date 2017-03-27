@@ -174,5 +174,10 @@ class Settings(_MappingProxy):
         >>> project.settings.delete('job_runtime_limit')
     """
     def set(self, key, value):
+        """Update project setting value by key.
+
+        :param key: a string setting key.
+        :param value: new setting value.
+        """
         # FIXME drop the method when post-by-key is implemented on server side
         self.update({key: value})
