@@ -573,46 +573,13 @@ Modifying tags is available on spider/job levels.
 Exceptions
 ----------
 
-scrapinghub.exceptions.ScrapinghubAPIError
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Base exception class for all other exceptions listed below.
-
-
-scrapinghub.exceptions.BadRequest
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Usually raised in case of 400 response from API.
-
-
-scrapinghub.exceptions.Unauthorized
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Not enough access to some resources.
-
-
-scrapinghub.exceptions.NotFound
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Entity doesn't exist (e.g. spider or project).
-
-
-scrapinghub.exceptions.ValueTooLarge
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Value cannot be writtent because it exceeds size limits.
-
-
-scrapinghub.exceptions.DuplicateJobError
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Job for given spider with given arguments is already scheduled or running.
-
-
-scrapinghub.exceptions.ServerError
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Indicates some server error: something unexpected has happened.
+.. autoexception:: scrapinghub.ScrapinghubAPIError
+.. autoexception:: scrapinghub.BadRequest
+.. autoexception:: scrapinghub.Unauthorized
+.. autoexception:: scrapinghub.NotFound
+.. autoexception:: scrapinghub.ValueTooLarge
+.. autoexception:: scrapinghub.DuplicateJobError
+.. autoexception:: scrapinghub.ServerError
 
 
 .. _Scrapinghub API: http://doc.scrapinghub.com/api.html

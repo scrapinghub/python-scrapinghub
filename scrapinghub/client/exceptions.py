@@ -24,6 +24,7 @@ def _get_http_error_msg(exc):
 
 
 class ScrapinghubAPIError(Exception):
+    """Base exception class."""
 
     def __init__(self, message=None, http_error=None):
         self.http_error = http_error
@@ -33,27 +34,27 @@ class ScrapinghubAPIError(Exception):
 
 
 class BadRequest(ScrapinghubAPIError):
-    pass
+    """Usually raised in case of 400 response from API."""
 
 
 class Unauthorized(ScrapinghubAPIError):
-    pass
+    """Request lacks valid authentication credentials for the target resource."""
 
 
 class NotFound(ScrapinghubAPIError):
-    pass
+    """Entity doesn't exist (e.g. spider or project)."""
 
 
 class ValueTooLarge(ScrapinghubAPIError):
-    pass
+    """Value cannot be writtent because it exceeds size limits."""
 
 
 class DuplicateJobError(ScrapinghubAPIError):
-    pass
+    """Job for given spider with given arguments is already scheduled or running."""
 
 
 class ServerError(ScrapinghubAPIError):
-    pass
+    """Indicates some server error: something unexpected has happened."""
 
 
 def wrap_http_errors(method):
