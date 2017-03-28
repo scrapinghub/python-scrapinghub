@@ -20,6 +20,10 @@ import os
 import sys
 from datetime import datetime
 
+from docutils import nodes
+from sphinx.util.docfields import TypedField
+from sphinx import addnodes
+
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -176,3 +180,43 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # otherwise, readthedocs.org uses their theme by default, no need to specify it
+
+# disable cross-reference for ivar
+# patch taken from http://stackoverflow.com/a/41184353/1932023
+def patched_make_field(self, types, domain, items):
+    # type: (List, unicode, Tuple) -> nodes.field
+    def handle_item(fieldarg, content):
+        par = nodes.paragraph()
+        par += addnodes.literal_strong('', fieldarg)  # Patch: this line added
+        # par.extend(self.make_xrefs(self.rolename, domain, fieldarg,
+        #                           addnodes.literal_strong))
+        if fieldarg in types:
+            par += nodes.Text(' (')
+            # NOTE: using .pop() here to prevent a single type node to be
+            # inserted twice into the doctree, which leads to
+            # inconsistencies later when references are resolved
+            fieldtype = types.pop(fieldarg)
+            if len(fieldtype) == 1 and isinstance(fieldtype[0], nodes.Text):
+                typename = u''.join(n.astext() for n in fieldtype)
+                par.extend(self.make_xrefs(self.typerolename, domain, typename,
+                                           addnodes.literal_emphasis))
+            else:
+                par += fieldtype
+            par += nodes.Text(')')
+        par += nodes.Text(' -- ')
+        par += content
+        return par
+
+    fieldname = nodes.field_name('', self.label)
+    if len(items) == 1 and self.can_collapse:
+        fieldarg, content = items[0]
+        bodynode = handle_item(fieldarg, content)
+    else:
+        bodynode = self.list_type()
+        for fieldarg, content in items:
+            bodynode += nodes.list_item('', handle_item(fieldarg, content))
+    fieldbody = nodes.field_body('', bodynode)
+    return nodes.field('', fieldname, fieldbody)
+
+
+TypedField.make_field = patched_make_field
