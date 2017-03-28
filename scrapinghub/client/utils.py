@@ -145,9 +145,9 @@ class _Proxy(object):
     def list(self, *args, **kwargs):
         """Convenient shortcut to list iter results.
 
-        Please note that ``list()`` method can use a lot of memory and for a
+        Please note that :meth:`list` method can use a lot of memory and for a
         large amount of elements it's recommended to iterate through it via
-        ``iter()`` method (all params and available filters are same for both
+        :meth:`iter` method (all params and available filters are same for both
         methods).
         """
         return list(self.iter(*args, **kwargs))

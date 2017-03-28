@@ -160,10 +160,10 @@ class Collection(object):
              endts=None, requests_params=None, **params):
         """Convenient shortcut to list iter results.
 
-        Please note that ``list()`` method can use a lot of memory and for a
-        large amount of elements it's recommended to iterate through it via
-        ``iter()`` method (all params and available filters are same for both
-        methods).
+        Please note that :meth:`list` method can use a lot of memory and for a
+        large amount of logs it's recommended to iterate through it
+        via :meth:`iter` method (all params and available filters are same for
+        both methods).
 
         :param key: a string key or a list of keys to filter with.
         :param prefix: a string prefix to filter items.

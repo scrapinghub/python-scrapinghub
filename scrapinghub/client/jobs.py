@@ -167,8 +167,8 @@ class Jobs(object):
         :return: list of dictionaries of jobs summary for a given filter params.
         :rtype: :class:`list[dict]`
 
-        Please note that list() method can use a lot of memory and for a large
-        amount of jobs it's recommended to iterate through it via iter()
+        Please note that :meth:`list` can use a lot of memory and for a large
+        amount of logs it's recommended to iterate through it via :meth:`iter`
         method (all params and available filters are same for both methods).
         """
         # FIXME we double-check the params here, is there a better way?

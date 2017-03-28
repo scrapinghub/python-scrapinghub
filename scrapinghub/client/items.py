@@ -10,9 +10,10 @@ class Items(_Proxy):
     e to get a :class:`Items` instance.
     See :attr:`~scrapinghub.client.jobs.Job.items` attribute.
 
-    Please note that ``list()`` method can use a lot of memory and for a large
-    amount of items it's recommended to iterate through it via ``iter()`` method
-    (all params and available filters are same for both methods).
+    Please note that :meth:`list` method can use a lot of memory and for
+    a large amount of logs it's recommended to iterate through it via
+    :meth:`iter` method (all params and available filters are same for
+    both methods).
 
     Usage:
 

@@ -11,8 +11,8 @@ class Activity(_Proxy):
     instance to get a :class:`~scrapinghub.client.activity.Activity` instance.
     See :attr:`~scrapinghub.client.projects.Project.activity` attribute.
 
-    Please note that ``list()`` method can use a lot of memory and for a large
-    amount of activities it's recommended to iterate through it via ``iter()``
+    Please note that :meth:`list` method can use a lot of memory and for a large
+    amount of activities it's recommended to iterate through it via :meth:`iter`
     method (all params and available filters are same for both methods).
 
     Usage:

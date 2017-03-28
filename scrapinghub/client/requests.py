@@ -10,9 +10,10 @@ class Requests(_Proxy):
     to get a :class:`Requests` instance.
     See :attr:`~scrapinghub.client.jobs.Job.requests` attribute.
 
-    Please note that ``list()`` method can use a lot of memory and for a large
-    amount of requests it's recommended to iterate through it via ``iter()``
-    method (all params and available filters are same for both methods).
+    Please note that :meth:`list` method can use a lot of memory and for
+    a large amount of logs it's recommended to iterate through it via
+    :meth:`iter` method (all params and available filters are same for
+    both methods).
 
     Usage:
 
