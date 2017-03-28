@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
-from .proxy import _Proxy
+from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 
 
-class Requests(_Proxy):
+class Requests(_ItemsResourceProxy, _DownloadableProxyMixin):
     """Representation of collection of job requests.
 
     Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance
@@ -41,6 +41,6 @@ class Requests(_Proxy):
             'url': 'https://example.com'
         }]
     """
-    def __init__(self, *args, **kwargs):
-        super(Requests, self).__init__(*args, **kwargs)
-        self._proxy_methods(['add'])
+    def add(self, url, status, method, rs, parent, duration, ts, fp=None):
+        return self._origin.add(
+            url, status, method, rs, parent, duration, ts, fp=None)

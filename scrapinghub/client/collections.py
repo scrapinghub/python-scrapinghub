@@ -5,11 +5,11 @@ from six import string_types
 
 from ..hubstorage.collectionsrt import Collection as _Collection
 
-from .proxy import _Proxy, proxy_methods, wrap_kwargs, format_iter_filters
+from .proxy import _Proxy, _DownloadableProxyMixin, format_iter_filters
 from .utils import update_kwargs
 
 
-class Collections(_Proxy):
+class Collections(_Proxy, _DownloadableProxyMixin):
     """Access to project collections.
 
     Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
@@ -144,42 +144,6 @@ class Collection(object):
     def __init__(self, client, collections, type_, name):
         self._client = client
         self._origin = _Collection(type_, name, collections._origin)
-        proxy_methods(self._origin, self, [
-            'create_writer', 'count',
-            ('iter', 'iter_values'),
-            ('iter_raw_json', 'iter_json'),
-        ])
-        # simplified version of _Proxy._wrap_iter_methods logic
-        # to provide better support for filter param in iter methods
-        for method in ['iter', 'iter_raw_json']:
-            wrapped = wrap_kwargs(getattr(self, method), format_iter_filters)
-            setattr(self, method, wrapped)
-
-    def list(self, key=None, prefix=None, prefixcount=None, startts=None,
-             endts=None, requests_params=None, **params):
-        """Convenient shortcut to list iter results.
-
-        Please note that :meth:`list` method can use a lot of memory and for a
-        large amount of logs it's recommended to iterate through it
-        via :meth:`iter` method (all params and available filters are same for
-        both methods).
-
-        :param key: a string key or a list of keys to filter with.
-        :param prefix: a string prefix to filter items.
-        :param prefixcount: maximum number of values to return per prefix.
-        :param startts: UNIX timestamp at which to begin results.
-        :param endts: UNIX timestamp at which to end results.
-        :param requests_params: (optional) a dict with optional requests params.
-        :param \*\*params: (optional) additional query params for the request.
-        :return: a list of items where each item is represented with a dict.
-        :rtype: :class:`list[dict]`
-        """
-        # FIXME there should be similar docstrings for iter/iter_raw_json
-        # but as we proxy them as-is, it's not in place, should be improved
-        update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
-                      startts=startts, endts=endts,
-                      requests_params=requests_params)
-        return list(self.iter(requests_params=None, **params))
 
     def get(self, key, **params):
         """Get item from collection by key.
@@ -215,6 +179,28 @@ class Collection(object):
                              "object providing string keys")
         self._origin.delete(keys)
 
+    def count(self, *args, **kwargs):
+        return self._origin._collections.count(
+            self._origin.coltype, self._origin.colname, *args, **kwargs)
+
+    def iter(self, key=None, prefix=None, prefixcount=None, startts=None,
+             endts=None, requests_params=None, **params):
+        update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
+                      startts=startts, endts=endts,
+                      requests_params=requests_params)
+        params = format_iter_filters(params)
+        return self._origin._collections.iter_values(
+            self._origin.coltype, self._origin.colname, **params)
+
+    def iter_raw_json(self, key=None, prefix=None, prefixcount=None,
+                      startts=None, endts=None, requests_params=None, **params):
+        update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
+                      startts=startts, endts=endts,
+                      requests_params=requests_params)
+        params = format_iter_filters(params)
+        return self._origin._collections.iter_json(
+            self._origin.coltype, self._origin.colname, **params)
+
     def iter_raw_msgpack(self, key=None, prefix=None, prefixcount=None,
                          startts=None, endts=None, requests_params=None,
                          **params):
@@ -234,5 +220,33 @@ class Collection(object):
         update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
                       startts=startts, endts=endts,
                       requests_params=requests_params)
+        params = format_iter_filters(params)
         return self._origin._collections.iter_msgpack(
             self._origin.coltype, self._origin.colname, **params)
+
+    def list(self, key=None, prefix=None, prefixcount=None, startts=None,
+             endts=None, requests_params=None, **params):
+        """Convenient shortcut to list iter results.
+
+        Please note that :meth:`list` method can use a lot of memory and for a
+        large amount of logs it's recommended to iterate through it
+        via :meth:`iter` method (all params and available filters are same for
+        both methods).
+
+        :param key: a string key or a list of keys to filter with.
+        :param prefix: a string prefix to filter items.
+        :param prefixcount: maximum number of values to return per prefix.
+        :param startts: UNIX timestamp at which to begin results.
+        :param endts: UNIX timestamp at which to end results.
+        :param requests_params: (optional) a dict with optional requests params.
+        :param \*\*params: (optional) additional query params for the request.
+        :return: a list of items where each item is represented with a dict.
+        :rtype: :class:`list[dict]`
+        """
+        update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
+                      startts=startts, endts=endts)
+        return list(self.iter(requests_params=requests_params, **params))
+
+    def create_writer(self, **kwargs):
+        return self._origin._collections.create_writer(
+            self._origin.coltype, self._origin.colname, **kwargs)

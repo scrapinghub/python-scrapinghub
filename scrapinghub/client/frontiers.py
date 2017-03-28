@@ -85,7 +85,6 @@ class Frontiers(_Proxy):
     """
     def __init__(self, *args, **kwargs):
         super(Frontiers, self).__init__(*args, **kwargs)
-        self._proxy_methods(['close', 'flush'])
 
     def get(self, name):
         """Get a frontier by name.
@@ -120,6 +119,12 @@ class Frontiers(_Proxy):
         :rtype: :class:`int`
         """
         return sum(self._origin.newcount.values())
+
+    def flush(self):
+        self._origin.flush()
+
+    def close(self):
+        self._origin.close()
 
 
 class Frontier(object):
