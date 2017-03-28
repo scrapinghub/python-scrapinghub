@@ -33,7 +33,8 @@ class ScrapinghubClient(object):
     :param \*\*kwargs: (optional) Additional arguments for
         :class:`scrapinghub.hubstorage.HubstorageClient` constructor.
 
-    :ivar projects: projects collection, :class:`Projects` instance.
+    :ivar projects: projects collection,
+        :class:`scrapinghub.client.projects.Projects` instance.
 
     Usage::
 
@@ -52,12 +53,13 @@ class ScrapinghubClient(object):
         self._hsclient = HubstorageClient(auth=(login, password), **kwargs)
 
     def get_project(self, project_id):
-        """Get :class:`Project` instance with a given project id.
+        """Get :class:`scrapinghub.client.projects.Project` instance with
+        a given project id.
 
         The method is a shortcut for client.projects.get().
 
         :param project_id: integer or string numeric project id.
-        :return: :class:`Project` object.
+        :return: a project instance.
         :rtype: :class:`scrapinghub.client.projects.Project`
 
         Usage::
@@ -73,7 +75,7 @@ class ScrapinghubClient(object):
 
         :param job_key: job key string in format 'project_id/spider_id/job_id',
             where all the components are integers.
-        :return: :class:`Job` object.
+        :return: a job instance.
         :rtype: :class:`scrapinghub.client.jobs.Job`
 
         Usage::

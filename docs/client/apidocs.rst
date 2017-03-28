@@ -1,110 +1,107 @@
 API Reference
 =============
 
-Module contents
----------------
+Client object
+-------------
 
 .. automodule:: scrapinghub.client
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
 
-Submodules
-----------
-
-activity
+Activity
 --------
 
 .. automodule:: scrapinghub.client.activity
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-collections
+Collections
 -----------
 
 .. automodule:: scrapinghub.client.collections
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-exceptions
+Exceptions
 ----------
 
 .. automodule:: scrapinghub.client.exceptions
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-frontiers
+Frontiers
 ---------
 
 .. automodule:: scrapinghub.client.frontiers
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-items
+Items
 -----
 
 .. automodule:: scrapinghub.client.items
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-jobs
+Jobs
 ----
 
 .. automodule:: scrapinghub.client.jobs
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-logs
+Logs
 ----
 
 .. automodule:: scrapinghub.client.logs
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-projects
+Projects
 --------
 
 .. automodule:: scrapinghub.client.projects
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-requests
+Requests
 --------
 
 .. automodule:: scrapinghub.client.requests
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-samples
+Samples
 -------
 
 .. automodule:: scrapinghub.client.samples
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-spiders
+Spiders
 -------
 
 .. automodule:: scrapinghub.client.spiders
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:
 
-utils
+Utils
 -----
 
 .. automodule:: scrapinghub.client.utils
     :members:
     :undoc-members:
-    :show-inheritance:
+    :inherited-members:

@@ -51,7 +51,7 @@ Project
 
 Project instance has ``jobs`` field to work with the project jobs.
 
-Jobs instance is described well in ``Jobs`` section below.
+Jobs instance is described well in :ref:`Jobs <jobs>` section below.
 
 For example, to schedule a spider run (it returns a job object)::
 

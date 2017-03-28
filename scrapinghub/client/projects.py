@@ -15,7 +15,7 @@ from .utils import _MappingProxy, parse_project_id
 class Projects(object):
     """Collection of projects available to current user.
 
-    Not a public constructor: use :class:`Scrapinghub` client instance to get
+    Not a public constructor: use :class:`ScrapinghubClient` client instance to get
     a :class:`Projects` instance. See :attr:`Scrapinghub.projects` attribute.
 
     Usage::
@@ -98,7 +98,7 @@ class Project(object):
 
     Not a public constructor: use :class:`ScrapinghubClient` instance or
     :class:`Projects` instance to get a :class:`Project` instance. See
-    :meth:`Scrapinghub.get_project` or :meth:`Projects.get` methods.
+    :meth:`ScrapinghubClient.get_project` or :meth:`Projects.get` methods.
 
     :ivar key: string project id.
     :ivar activity: :class:`Activity` resource object.
