@@ -3,7 +3,8 @@ from __future__ import absolute_import
 import six
 import json
 
-from .exceptions import wrap_value_too_large
+from ..hubstorage import ValueTooLarge as _ValueTooLarge
+from .exceptions import ValueTooLarge
 
 
 class _Proxy(object):
@@ -53,9 +54,11 @@ class _ItemsResourceProxy(_Proxy):
     def get(self, _key, **params):
         return self._origin.get(_key, **params)
 
-    @wrap_value_too_large
     def write(self, item):
-        return self._origin.write(item)
+        try:
+            return self._origin.write(item)
+        except _ValueTooLarge as exc:
+            raise ValueTooLarge(str(exc))
 
     def iter(self, _key=None, **params):
         params = self._modify_iter_params(params)

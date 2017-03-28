@@ -1,9 +1,8 @@
 from scrapinghub import Connection as _Connection
 from scrapinghub import HubstorageClient as _HubstorageClient
 
+from .exceptions import _wrap_http_errors
 from .projects import Projects
-from .exceptions import wrap_http_errors
-
 from .utils import parse_auth
 from .utils import parse_project_id, parse_job_key
 
@@ -13,14 +12,14 @@ __all__ = ['ScrapinghubClient']
 
 class Connection(_Connection):
 
-    @wrap_http_errors
+    @_wrap_http_errors
     def _request(self, *args, **kwargs):
         return super(Connection, self)._request(*args, **kwargs)
 
 
 class HubstorageClient(_HubstorageClient):
 
-    @wrap_http_errors
+    @_wrap_http_errors
     def request(self, *args, **kwargs):
         return super(HubstorageClient, self).request(*args, **kwargs)
 
