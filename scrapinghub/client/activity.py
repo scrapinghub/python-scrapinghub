@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from .proxy import _Proxy, format_iter_filters
+from .proxy import _Proxy
 from .utils import parse_job_key
 
 
@@ -48,7 +48,7 @@ class Activity(_Proxy):
         super(Activity, self).__init__(*args, **kwargs)
 
     def iter(self, **params):
-        params = format_iter_filters(params)
+        params = self._modify_iter_params(params)
         return self._origin.list(**params)
 
     def add(self, values, **kwargs):

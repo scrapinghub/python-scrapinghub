@@ -5,7 +5,7 @@ from six import string_types
 
 from ..hubstorage.collectionsrt import Collection as _Collection
 
-from .proxy import _Proxy, _DownloadableProxyMixin, format_iter_filters
+from .proxy import _Proxy, _DownloadableProxyMixin
 from .utils import update_kwargs
 
 
@@ -143,6 +143,7 @@ class Collection(object):
 
     def __init__(self, client, collections, type_, name):
         self._client = client
+        self._collections = collections
         self._origin = _Collection(type_, name, collections._origin)
 
     def get(self, key, **params):
@@ -188,7 +189,7 @@ class Collection(object):
         update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
                       startts=startts, endts=endts,
                       requests_params=requests_params)
-        params = format_iter_filters(params)
+        params = self._collections._modify_iter_params(params)
         return self._origin._collections.iter_values(
             self._origin.coltype, self._origin.colname, **params)
 
@@ -197,7 +198,7 @@ class Collection(object):
         update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
                       startts=startts, endts=endts,
                       requests_params=requests_params)
-        params = format_iter_filters(params)
+        params = self._collections._modify_iter_params(params)
         return self._origin._collections.iter_json(
             self._origin.coltype, self._origin.colname, **params)
 
@@ -220,7 +221,7 @@ class Collection(object):
         update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
                       startts=startts, endts=endts,
                       requests_params=requests_params)
-        params = format_iter_filters(params)
+        params = self._collections._modify_iter_params(params)
         return self._origin._collections.iter_msgpack(
             self._origin.coltype, self._origin.colname, **params)
 

@@ -45,7 +45,7 @@ class _Proxy(object):
         :return: an updated dictionary with parameters.
         :rtype: :class:`dict`
         """
-        return format_iter_filters(params)
+        return _format_iter_filters(params)
 
 
 class _ItemsResourceProxy(_Proxy):
@@ -137,7 +137,7 @@ class _MappingProxy(_Proxy):
         return six.iteritems(next(self._origin.apiget()))
 
 
-def format_iter_filters(params):
+def _format_iter_filters(params):
     """Format iter() filter param on-the-fly.
 
     Support passing multiple filters at once as a list with tuples.
