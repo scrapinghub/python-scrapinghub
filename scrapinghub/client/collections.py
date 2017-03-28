@@ -5,9 +5,8 @@ from six import string_types
 
 from ..hubstorage.collectionsrt import Collection as _Collection
 
-from .utils import (
-    _Proxy, format_iter_filters, proxy_methods, wrap_kwargs, update_kwargs,
-)
+from .proxy import _Proxy, proxy_methods, wrap_kwargs, format_iter_filters
+from .utils import update_kwargs
 
 
 class Collections(_Proxy):

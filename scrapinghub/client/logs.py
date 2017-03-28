@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import json
 
-from .utils import _Proxy
+from .proxy import _Proxy
 from .utils import LogLevel
 
 

@@ -11,9 +11,8 @@ from .logs import Logs
 from .requests import Requests
 from .samples import Samples
 from .exceptions import NotFound, BadRequest, DuplicateJobError
-from .utils import (
-    _MappingProxy, get_tags_for_update, parse_job_key, update_kwargs,
-)
+from .proxy import _MappingProxy
+from .utils import get_tags_for_update, parse_job_key, update_kwargs
 
 
 class Jobs(object):
