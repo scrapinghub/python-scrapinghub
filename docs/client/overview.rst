@@ -1,9 +1,11 @@
 Overview
 ========
 
-The ``scrapinghub.ScrapinghubClient`` is a new Python client for communicating
-with the `Scrapinghub API`_. It takes best from ``scrapinghub.Connection`` and
-``scrapinghub.HubstorageClient`` and combines it under single interface.
+The :class:`~scrapinghub.client.ScrapinghubClient` is a new Python client for
+communicating with the `Scrapinghub API`_.
+It takes best from :class:`~scrapinghub.legacy.Connection` and
+:class:`~scrapinghub.hubstorage.HubstorageClient`, and combines it under single
+interface.
 
 First, you instantiate new client::
 
@@ -12,7 +14,8 @@ First, you instantiate new client::
     >>> client
     <scrapinghub.client.ScrapinghubClient at 0x1047af2e8>
 
-Client instance has ``projects`` field for access to client projects.
+Client instance has :attr:`~scrapinghub.client.ScrapinghubClient.projects` field
+for access to client projects.
 
 Projects
 --------
@@ -46,31 +49,28 @@ And select a particular project to work with::
 
 .. tip:: The above is a shortcut for ``client.projects.get(123)``.
 
+
 Project
 -------
 
-Project instance has ``jobs`` field to work with the project jobs.
+:class:`~scrapinghub.client.projects.Project` instance has
+:attr:`~scrapinghub.client.projects.Project.jobs` field to work with
+the project jobs.
 
-Jobs instance is described well in :ref:`Jobs <jobs>` section below.
+:class:`~scrapinghub.client.jobs.Jobs` instance is described well in
+:ref:`Jobs <jobs>` section below.
 
-For example, to schedule a spider run (it returns a job object)::
+For example, to schedule a spider run (it returns a
+:class:`~scrapinghub.client.jobs.Job` object)::
 
     >>> project.jobs.run('spider1', job_args={'arg1': 'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
 
-Project instance also has the following fields:
-
-- **activity** - access to :ref:`project activity <project-activity>` records
-- **collections** - work with :ref:`project collections <project-collections>`
-- **frontiers** - using :ref:`project frontiers <project-frontiers>`
-- **settings** - interface to :ref:`project settings <project-settings>`
-- **spiders** - access to :ref:`spiders collection <project-spiders>`
-
-
-.. _project-settings:
 
 Settings
 --------
+
+You can work with project settings via :class:`~scrapinghub.client.projects.Settings`.
 
 To get a list of the project settings::
 
@@ -91,10 +91,11 @@ Or update a few project settings at once::
     >>> project.settings.update({'default_job_units': 1,
     ...                          'job_runtime_limit': 20})
 
-.. _project-spiders:
 
 Spiders
 -------
+
+Spiders collection is accessible via :class:`~scrapinghub.client.spiders.Spiders`.
 
 To get the list of spiders of the project::
 
@@ -119,7 +120,8 @@ To select a particular spider to work with::
 Spider
 ------
 
-Like project instance, spider instance has ``jobs`` field to work with the spider's jobs.
+Like project instance, :class:`~scrapinghub.client.spiders.Spider` instance has
+``jobs`` field to work with the spider's jobs.
 
 To schedule a spider run::
 
@@ -133,7 +135,8 @@ Note that you don't need to specify spider name explicitly.
 Jobs
 ----
 
-Jobs collection is available on project/spider level.
+:class:`~scrapinghub.client.jobs.Jobs` collection is available on project/spider
+level.
 
 get
 ^^^
@@ -290,7 +293,8 @@ Note that there can be a lot of spiders, so the method above returns an iterator
 Job
 ---
 
-Job instance provides access to a job data with the following fields:
+:class:`~scrapinghub.client.jobs.Job` instance provides access to a job data
+with the following fields:
 
 - metadata
 - items
@@ -311,7 +315,8 @@ To delete a job::
 Metadata
 ^^^^^^^^
 
-Job details can be found in jobs metadata and it's scrapystats::
+:class:`~scrapinghub.client.jobs.JobMeta` details can be found in jobs metadata
+and it's scrapystats::
 
     >>> job.metadata.get('version')
     '5123a86-master'
@@ -338,7 +343,8 @@ Anything can be stored in metadata, here is example how to add tags::
 Items
 ^^^^^
 
-To retrieve all scraped items from a job::
+To retrieve all scraped items from a job use
+:class:`~scrapinghub.client.items.Items`::
 
     >>> for item in job.items.iter():
     ...     # do something with item (it's just a dict)
@@ -348,7 +354,7 @@ To retrieve all scraped items from a job::
 Logs
 ^^^^
 
-To retrieve all log entries from a job::
+To retrieve all log entries from a job use :class:`~scrapinghub.client.logs.Logs`::
 
     >>> for logitem in job.logs.iter():
     ...     # logitem is a dict with level, message, time
@@ -364,7 +370,7 @@ To retrieve all log entries from a job::
 Requests
 ^^^^^^^^
 
-To retrieve all requests from a job::
+To retrieve all requests from a job there's :class:`~scrapinghub.client.requests.Requests`::
 
     >>> for reqitem in job.requests.iter():
     ...     # reqitem is a dict
@@ -384,17 +390,20 @@ To retrieve all requests from a job::
 Samples
 ^^^^^^^
 
-To retrieve all samples for a job::
+:class:`~scrapinghub.client.samples.Samples` is useful to retrieve all samples
+for a job::
 
     >>> for sample in job.samples.iter():
     ...     # sample is a list with a timestamp and data
     >>> sample
     [1482233732452, 0, 0, 0, 0, 0]
 
-.. _project-activity:
 
 Activity
 --------
+
+:class:`~scrapinghub.client.activity.Activity` provides a convenient interface
+to project activity events.
 
 To retrieve all activity events from a project::
 
@@ -419,14 +428,13 @@ Or post multiple events at once::
     >>> project.activity.add(events)
 
 
-.. _project-collections:
 
 Collections
 -----------
 
 As an example, let's store hash and timestamp pair for foo spider.
 
-Usual workflow with `Collections`_ would be::
+Usual workflow with :class:`~scrapinghub.client.collections.Collections` would be::
 
     >>> collections = project.collections
     >>> foo_store = collections.get_store('foo_store')
@@ -447,12 +455,11 @@ Usual workflow with `Collections`_ would be::
 
 Collections are available on project level only.
 
-.. _project-frontiers:
 
 Frontiers
 ---------
 
-Typical workflow with `Frontier`_::
+Typical workflow with :class:`~scrapinghub.client.frontiers.Frontiers`::
 
     >>> frontiers = project.frontiers
 
@@ -466,7 +473,7 @@ List all frontiers::
     >>> frontiers.list()
     ['test', 'test1', 'test2']
 
-Get a frontier by name::
+Get a :class:`~scrapinghub.client.frontiers.Frontier` instance by name::
 
     >>> frontier = frontiers.get('test')
     >>> frontier
@@ -482,7 +489,7 @@ List all slots::
     >>> frontier.list()
     ['example.com', 'example.com2']
 
-Get a frontier slot by name::
+Get a :class:`~scrapinghub.client.frontiers.FrontierSlot` by name::
 
     >>> slot = frontier.get('example.com')
     >>> slot
@@ -507,7 +514,9 @@ Add a fingerprint only to the slot::
     >>> slot.fingerprints.add(['fp1', 'fp2'])
     >>> slot.flush()
 
-There are convenient shortcuts: ``f`` for ``fingerprints`` and ``q`` for ``queue``.
+There are convenient shortcuts: ``f`` for ``fingerprints`` to access
+:class:`~scrapinghub.client.frontiers.FrontierSlotFingerprints` and ``q`` for
+``queue`` to access :class:`~scrapinghub.client.frontiers.FrontierSlotQueue`.
 
 Add requests with additional parameters::
 
@@ -583,7 +592,6 @@ Exceptions
 
 
 .. _Scrapinghub API: http://doc.scrapinghub.com/api.html
-.. _Collections: http://doc.scrapinghub.com/api/collections.html
 .. _Frontier: http://doc.scrapinghub.com/api/frontier.html
 .. _count endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-count
 .. _list endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-list
