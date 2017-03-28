@@ -55,36 +55,70 @@ class _ItemsResourceProxy(_Proxy):
         return self._origin.get(_key, **params)
 
     def write(self, item):
+        """Write new element to collection."""
         try:
             return self._origin.write(item)
         except _ValueTooLarge as exc:
             raise ValueTooLarge(str(exc))
 
     def iter(self, _key=None, **params):
+        """Iterate over elements in collection.
+
+        :return: a generator object over a list of element dictionaries.
+        :rtype: :class:`types.GeneratorType[dict]`
+        """
+        # TODO describe allowable params
         params = self._modify_iter_params(params)
         return self._origin.list(_key, **params)
 
     def flush(self):
+        """Flush data from writer threads."""
         self._origin.flush()
 
     def stats(self):
+        """Get resource stats.
+
+        :return: a dictionary with stats data.
+        :rtype: :class:`dict`
+        """
         return self._origin.stats()
 
     def close(self, block=True):
+        """Close writers one-by-one."""
         self._origin.close(block)
 
 
 class _DownloadableProxyMixin(object):
 
     def iter(self, _path=None, requests_params=None, **apiparams):
+        """A general method to iterate through elements.
+
+        :return: an iterator over elements list.
+        :rtype: :class:`collections.Iterable`
+        """
+        # TODO describe allowable params
         apiparams = self._modify_iter_params(apiparams)
         return self._origin.iter_values(_path, requests_params, **apiparams)
 
     def iter_raw_json(self, _path=None, requests_params=None, **apiparams):
+        """A method to iterate through raw json-packed elements.
+        Can be convenient if data is needed in raw json format.
+
+        :return: an iterator over elements list packed with json.
+        :rtype: :class:`collections.Iterable[str]`
+        """
+        # TODO describe allowable params
         apiparams = self._modify_iter_params(apiparams)
         return self._origin.iter_json(_path, requests_params, **apiparams)
 
     def iter_raw_msgpack(self, _path=None, requests_params=None, **apiparams):
+        """A method to iterate through raw msgpack-ed elements.
+        Can be convenient if data is needed in same msgpack format.
+
+        :return: an iterator over elements list packed with msgpack.
+        :rtype: :class:`collections.Iterable[bytes]`
+        """
+        # TODO describe allowable params
         apiparams = self._modify_iter_params(apiparams)
         return self._origin.iter_msgpack(_path, requests_params, **apiparams)
 
