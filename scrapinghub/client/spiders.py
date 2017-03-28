@@ -2,9 +2,8 @@ from __future__ import absolute_import
 
 from requests.compat import urljoin
 
+from .exceptions import NotFound, _wrap_http_errors
 from .jobs import Jobs
-from .exceptions import NotFound
-from .exceptions import wrap_http_errors
 from .utils import get_tags_for_update
 
 
@@ -104,7 +103,7 @@ class Spider(object):
         self.jobs = Jobs(client, project_id, self)
         self._client = client
 
-    @wrap_http_errors
+    @_wrap_http_errors
     def update_tags(self, add=None, remove=None):
         """Update tags for the spider.
 
@@ -118,7 +117,7 @@ class Spider(object):
         response = self._client._connection._session.patch(url, json=params)
         response.raise_for_status()
 
-    @wrap_http_errors
+    @_wrap_http_errors
     def list_tags(self):
         """List spider tags.
 
