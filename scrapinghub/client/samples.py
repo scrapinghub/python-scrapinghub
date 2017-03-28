@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 
-from .proxy import _Proxy
+from .proxy import _ItemsResourceProxy
 
 
-class Samples(_Proxy):
+class Samples(_ItemsResourceProxy):
     """Representation of collection of job samples.
 
     Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance

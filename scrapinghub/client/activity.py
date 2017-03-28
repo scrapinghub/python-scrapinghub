@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from .proxy import _Proxy
+from .proxy import _Proxy, format_iter_filters
 from .utils import parse_job_key
 
 
@@ -46,8 +46,10 @@ class Activity(_Proxy):
     """
     def __init__(self, *args, **kwargs):
         super(Activity, self).__init__(*args, **kwargs)
-        self._proxy_methods([('iter', 'list')])
-        self._wrap_iter_methods(['iter'])
+
+    def iter(self, **params):
+        params = format_iter_filters(params)
+        return self._origin.list(**params)
 
     def add(self, values, **kwargs):
         """Add new event to the project activity.

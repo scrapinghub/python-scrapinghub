@@ -3,10 +3,6 @@ from __future__ import absolute_import
 import six
 import json
 
-from ..hubstorage.resourcetype import DownloadableResource
-from ..hubstorage.resourcetype import ItemsResourceType
-from ..hubstorage.collectionsrt import Collections
-
 from .exceptions import wrap_value_too_large
 
 
@@ -30,44 +26,6 @@ class _Proxy(object):
         self._client = client
         self._origin = cls(client._hsclient, key)
 
-        if issubclass(cls, ItemsResourceType):
-            self._proxy_methods(['get', 'write', 'flush', 'close',
-                                 'stats', ('iter', 'list')])
-            # redefine write method to wrap hubstorage.ValueTooLarge error
-            origin_method = getattr(self, 'write')
-            setattr(self, 'write', wrap_value_too_large(origin_method))
-
-        # DType iter_values() has more priority than IType list()
-        # plus Collections interface doesn't need the iter methods
-        if issubclass(cls, DownloadableResource) and cls is not Collections:
-            methods = [('iter', 'iter_values'),
-                       ('iter_raw_msgpack', 'iter_msgpack'),
-                       ('iter_raw_json', 'iter_json')]
-            self._proxy_methods(methods)
-            self._wrap_iter_methods([method[0] for method in methods])
-
-    def _proxy_methods(self, methods):
-        """A little helper for cleaner interface."""
-        proxy_methods(self._origin, self, methods)
-
-    def _wrap_iter_methods(self, methods):
-        """Modify kwargs for all passed self.iter* methods."""
-        for method in methods:
-            wrapped = wrap_kwargs(getattr(self, method),
-                                  self._modify_iter_params)
-            setattr(self, method, wrapped)
-
-    def _modify_iter_params(self, params):
-        """A helper to modify iter() params on-the-fly.
-
-        The method is internal and should be redefined in subclasses.
-
-        :param params: a dictionary with input parameters.
-        :return: an updated dictionary with parameters.
-        :rtype: :class:`dict`
-        """
-        return format_iter_filters(params)
-
     def list(self, *args, **kwargs):
         """Convenient shortcut to list iter results.
 
@@ -77,6 +35,55 @@ class _Proxy(object):
         methods).
         """
         return list(self.iter(*args, **kwargs))
+
+    def _modify_iter_params(self, params):
+        """A helper to modify iter*() params on-the-fly.
+
+        The method is internal and should be redefined in subclasses.
+
+        :param params: a dictionary with input parameters.
+        :return: an updated dictionary with parameters.
+        :rtype: :class:`dict`
+        """
+        return format_iter_filters(params)
+
+
+class _ItemsResourceProxy(_Proxy):
+
+    def get(self, _key, **params):
+        return self._origin.get(_key, **params)
+
+    @wrap_value_too_large
+    def write(self, item):
+        return self._origin.write(item)
+
+    def iter(self, _key=None, **params):
+        params = self._modify_iter_params(params)
+        return self._origin.list(_key, **params)
+
+    def flush(self):
+        self._origin.flush()
+
+    def stats(self):
+        return self._origin.stats()
+
+    def close(self, block=True):
+        self._origin.close(block)
+
+
+class _DownloadableProxyMixin(object):
+
+    def iter(self, _path=None, requests_params=None, **apiparams):
+        apiparams = self._modify_iter_params(apiparams)
+        return self._origin.iter_values(_path, requests_params, **apiparams)
+
+    def iter_raw_json(self, _path=None, requests_params=None, **apiparams):
+        apiparams = self._modify_iter_params(apiparams)
+        return self._origin.iter_json(_path, requests_params, **apiparams)
+
+    def iter_raw_msgpack(self, _path=None, requests_params=None, **apiparams):
+        apiparams = self._modify_iter_params(apiparams)
+        return self._origin.iter_msgpack(_path, requests_params, **apiparams)
 
 
 class _MappingProxy(_Proxy):
@@ -130,25 +137,6 @@ class _MappingProxy(_Proxy):
         return six.iteritems(next(self._origin.apiget()))
 
 
-def proxy_methods(origin, successor, methods):
-    """A helper to proxy methods from origin to successor.
-
-    Accepts a list with strings and tuples:
-
-    - each string defines:
-        a successor method name to proxy 1:1 with origin method
-    - each tuple should consist of 2 strings:
-        a successor method name and an origin method name
-    """
-    for method in methods:
-        if isinstance(method, tuple):
-            successor_name, origin_name = method
-        else:
-            successor_name, origin_name = method, method
-        if not hasattr(successor, successor_name):
-            setattr(successor, successor_name, getattr(origin, origin_name))
-
-
 def format_iter_filters(params):
     """Format iter() filter param on-the-fly.
 
@@ -168,11 +156,3 @@ def format_iter_filters(params):
         if filter_data:
             params['filter'] = filter_data
     return params
-
-
-def wrap_kwargs(fn, kwargs_fn):
-    """Tiny wrapper to prepare modified version of function kwargs"""
-    def wrapped(*args, **kwargs):
-        kwargs = kwargs_fn(kwargs)
-        return fn(*args, **kwargs)
-    return wrapped
