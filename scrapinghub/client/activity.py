@@ -44,10 +44,13 @@ class Activity(_Proxy):
         >>> project.activity.add(events)
 
     """
-    def __init__(self, *args, **kwargs):
-        super(Activity, self).__init__(*args, **kwargs)
-
     def iter(self, **params):
+        """Iterate over activity events.
+
+        :return: a generator object over a list of activity event dicts.
+        :rtype: :class:`types.GeneratorType[dict]`
+        """
+        # TODO describe allowable params
         params = self._modify_iter_params(params)
         return self._origin.list(**params)
 

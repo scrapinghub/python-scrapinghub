@@ -181,11 +181,29 @@ class Collection(object):
         self._origin.delete(keys)
 
     def count(self, *args, **kwargs):
+        """Count collection items with a given filters.
+
+        :return: amount of elements in collection.
+        :rtype: :class:`int`
+        """
+        # TODO describe allowable params
         return self._origin._collections.count(
             self._origin.coltype, self._origin.colname, *args, **kwargs)
 
     def iter(self, key=None, prefix=None, prefixcount=None, startts=None,
              endts=None, requests_params=None, **params):
+        """A method to iterate through collection items.
+
+        :param key: a string key or a list of keys to filter with.
+        :param prefix: a string prefix to filter items.
+        :param prefixcount: maximum number of values to return per prefix.
+        :param startts: UNIX timestamp at which to begin results.
+        :param endts: UNIX timestamp at which to end results.
+        :param requests_params: (optional) a dict with optional requests params.
+        :param \*\*params: (optional) additional query params for the request.
+        :return: an iterator over items list.
+        :rtype: :class:`collections.Iterable[dict]`
+        """
         update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
                       startts=startts, endts=endts,
                       requests_params=requests_params)
@@ -195,6 +213,19 @@ class Collection(object):
 
     def iter_raw_json(self, key=None, prefix=None, prefixcount=None,
                       startts=None, endts=None, requests_params=None, **params):
+        """A method to iterate through json pack-ed items.
+        Can be convenient if data is needed in the json format.
+
+        :param key: a string key or a list of keys to filter with.
+        :param prefix: a string prefix to filter items.
+        :param prefixcount: maximum number of values to return per prefix.
+        :param startts: UNIX timestamp at which to begin results.
+        :param endts: UNIX timestamp at which to end results.
+        :param requests_params: (optional) a dict with optional requests params.
+        :param \*\*params: (optional) additional query params for the request.
+        :return: an iterator over items list packed with json.
+        :rtype: :class:`collections.Iterable[str]`
+        """
         update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
                       startts=startts, endts=endts,
                       requests_params=requests_params)
@@ -248,6 +279,18 @@ class Collection(object):
                       startts=startts, endts=endts)
         return list(self.iter(requests_params=requests_params, **params))
 
-    def create_writer(self, **kwargs):
+    def create_writer(self, start=0, auth=None, size=1000, interval=15,
+                      qsize=None, content_encoding='identity',
+                      maxitemsize=1024 ** 2, callback=None):
+        """Create a new writer for a collection.
+
+        :return: a new writer object.
+        :rtype: :class:`~scrapinghub.hubstorage.batchuploader._BatchWriter`
+        """
+        # TODO describe allowable params
+        kwargs = {}
+        update_kwargs(start=start, auth=auth, size=size, interval=interval,
+                      qsize=qsize, content_encoding=content_encoding,
+                      maxitemsize=maxitemsize, callback=callback)
         return self._origin._collections.create_writer(
             self._origin.coltype, self._origin.colname, **kwargs)

@@ -121,9 +121,11 @@ class Frontiers(_Proxy):
         return sum(self._origin.newcount.values())
 
     def flush(self):
+        """Flush data in all frontiers writer threads."""
         self._origin.flush()
 
     def close(self):
+        """Close frontier writer threads one-by-one."""
         self._origin.close()
 
 

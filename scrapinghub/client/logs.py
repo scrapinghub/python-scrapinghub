@@ -50,22 +50,34 @@ class Logs(_ItemsResourceProxy, _DownloadableProxyMixin):
         }]
     """
     def log(self, message, level=logging.INFO, ts=None, **other):
+        """Base method to write a log entry.
+
+        :param message: a string message.
+        :param level: (optional) logging level, default to INFO.
+        :param ts: (optional) unix timestamp in milliseconds.
+        :param \*\*other: other optional kwargs.
+        """
         self._origin.log(message, level=level, ts=ts, **other)
 
     def debug(self, message, **other):
+        """Log a message with DEBUG level."""
         self._origin.debug(message, **other)
 
     def info(self, message, **other):
+        """Log a message with INFO level."""
         self._origin.info(message, **other)
 
     def warn(self, message, **other):
+        """Log a message with WARN level."""
         self._origin.warn(message, **other)
     warning = warn
 
     def error(self, message, **other):
+        """Log a message with ERROR level."""
         self._origin.error(message, **other)
 
     def batch_write_start(self):
+        """Override to set a start parameter when commencing writing."""
         return self._origin.batch_write_start()
 
     def _modify_iter_params(self, params):

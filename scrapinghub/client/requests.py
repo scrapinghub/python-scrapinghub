@@ -42,5 +42,16 @@ class Requests(_ItemsResourceProxy, _DownloadableProxyMixin):
         }]
     """
     def add(self, url, status, method, rs, parent, duration, ts, fp=None):
+        """ Add a new requests.
+
+        :param url: string url for the request.
+        :param status: HTTP status of the request.
+        :param method: stringified request method.
+        :param rs: response body length.
+        :param parent: parent request id or ``None``.
+        :param duration: request duration in milliseconds.
+        :param ts: unix timestamp in milliseconds.
+        :param fp: (optional) string fingerprint for the request.
+        """
         return self._origin.add(
             url, status, method, rs, parent, duration, ts, fp=None)
