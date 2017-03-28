@@ -5,7 +5,7 @@ from codecs import encode
 import mock
 
 from scrapinghub.client.utils import parse_auth
-from scrapinghub.client.utils import format_iter_filters
+from scrapinghub.client.proxy import format_iter_filters
 
 
 def test_format_iter_filters():

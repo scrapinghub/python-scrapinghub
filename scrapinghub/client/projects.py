@@ -8,8 +8,9 @@ from .activity import Activity
 from .collections import Collections
 from .frontiers import _HSFrontier, Frontiers
 from .jobs import Jobs
+from .proxy import _MappingProxy
 from .spiders import Spiders
-from .utils import _MappingProxy, parse_project_id
+from .utils import parse_project_id
 
 
 class Projects(object):

@@ -7,7 +7,8 @@ from six import string_types
 from ..hubstorage.frontier import Frontier as _Frontier
 from ..hubstorage.utils import urlpathjoin
 
-from .utils import _Proxy, update_kwargs
+from .proxy import _Proxy
+from .utils import update_kwargs
 
 
 class _HSFrontier(_Frontier):
