@@ -163,7 +163,7 @@ class Jobs(object):
             field name or a list of field names to return.
         :param \*\*params: (optional) other filter params.
 
-        :return: list of dictionaries of jobs summary for a given filter params
+        :return: list of dictionaries of jobs summary for a given filter params.
         :rtype: :class:`list[dict]`
 
         Please note that list() method can use a lot of memory and for a large
