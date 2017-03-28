@@ -15,8 +15,9 @@ from .utils import _MappingProxy, parse_project_id
 class Projects(object):
     """Collection of projects available to current user.
 
-    Not a public constructor: use :class:`ScrapinghubClient` client instance to get
-    a :class:`Projects` instance. See :attr:`Scrapinghub.projects` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.ScrapinghubClient`
+    client instance to get a :class:`Projects` instance.
+    See :attr:`scrapinghub.client.Scrapinghub.projects` attribute.
 
     Usage::
 
@@ -31,8 +32,8 @@ class Projects(object):
         """Get project for a given project id.
 
         :param project_id: integer or string numeric project id.
-        :return: :class:`Project` object.
-        :rtype: :class:`scrapinghub.client.projects.Project`
+        :return: a project object.
+        :rtype: :class:`Project`
 
         Usage::
 
@@ -96,17 +97,18 @@ class Projects(object):
 class Project(object):
     """Class representing a project object and its resources.
 
-    Not a public constructor: use :class:`ScrapinghubClient` instance or
-    :class:`Projects` instance to get a :class:`Project` instance. See
-    :meth:`ScrapinghubClient.get_project` or :meth:`Projects.get` methods.
+    Not a public constructor: use :class:`~scrapinghub.client.ScrapinghubClient`
+    instance or :class:`Projects` instance to get a :class:`Project` instance.
+    See :meth:`scrapinghub.client.ScrapinghubClient.get_project` or
+    :meth:`Projects.get` methods.
 
     :ivar key: string project id.
-    :ivar activity: :class:`Activity` resource object.
-    :ivar collections: :class:`Collections` resource object.
-    :ivar frontiers: :class:`Frontiers` resource object.
-    :ivar jobs: :class:`Jobs` resource object.
-    :ivar settings: :class:`Settings` resource object.
-    :ivar spiders: :class:`Spiders` resource object.
+    :ivar activity: :class:`~scrapinghub.client.activity.Activity` resource object.
+    :ivar collections: :class:`~scrapinghub.client.collections.Collections` resource object.
+    :ivar frontiers: :class:`~scrapinghub.client.frontiers.Frontiers` resource object.
+    :ivar jobs: :class:`~scrapinghub.client.jobs.Jobs` resource object.
+    :ivar settings: :class:`~scrapinghub.client.settings.Settings` resource object.
+    :ivar spiders: :class:`~scrapinghub.client.spiders.Spiders` resource object.
 
     Usage::
 

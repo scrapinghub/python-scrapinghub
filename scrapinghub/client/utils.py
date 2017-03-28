@@ -90,12 +90,13 @@ class _Proxy(object):
     The internal proxy class is useful to link class attributes from its
     origin depending on the origin base class as a part of init logic:
 
-    - :class:`ItemsResourceType` provides items-based attributes to access
-        items in an arbitrary collection with get/write/flush/close/stats/
-        iter methods.
+    - :class:`~scrapinghub.hubstorage.resourcetype.ItemsResourceType` provides
+        items-based attributes to access items in an arbitrary collection with
+        get/write/flush/close/stats/iter methods.
 
-    - :class:`DownloadableResource` provides download-based attributes to
-        iter through collection with or without msgpack support.
+    - :class:`~scrapinghub.hubstorage.resourcetype.DownloadableResource` provides
+        download-based attributes to iter through collection with or without
+        msgpack support.
     """
 
     def __init__(self, cls, client, key):
@@ -144,9 +145,10 @@ class _Proxy(object):
     def list(self, *args, **kwargs):
         """Convenient shortcut to list iter results.
 
-        Please note that list() method can use a lot of memory and for a large
-        amount of elements it's recommended to iterate through it via iter()
-        method (all params and available filters are same for both methods).
+        Please note that ``list()`` method can use a lot of memory and for a
+        large amount of elements it's recommended to iterate through it via
+        ``iter()`` method (all params and available filters are same for both
+        methods).
         """
         return list(self.iter(*args, **kwargs))
 

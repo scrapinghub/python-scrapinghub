@@ -6,11 +6,12 @@ from .utils import _Proxy
 class Requests(_Proxy):
     """Representation of collection of job requests.
 
-    Not a public constructor: use :class:`Job` instance to get a
-    :class:`Requests` instance. See :attr:`Job.requests` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance
+    to get a :class:`Requests` instance.
+    See :attr:`~scrapinghub.client.jobs.Job.requests` attribute.
 
-    Please note that list() method can use a lot of memory and for a large
-    amount of requests it's recommended to iterate through it via iter()
+    Please note that ``list()`` method can use a lot of memory and for a large
+    amount of requests it's recommended to iterate through it via ``iter()``
     method (all params and available filters are same for both methods).
 
     Usage:

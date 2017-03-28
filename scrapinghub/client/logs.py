@@ -8,11 +8,12 @@ from .utils import LogLevel
 class Logs(_Proxy):
     """Representation of collection of job logs.
 
-    Not a public constructor: use :class:`Job` instance to get a :class:`Logs`
-    instance. See :attr:`Job.logs` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance
+    to get a :class:`Logs` instance. See :attr:`~scrapinghub.client.jobs.Job.logs`
+    attribute.
 
-    Please note that list() method can use a lot of memory and for a large
-    amount of logs it's recommended to iterate through it via iter() method
+    Please note that ``list()`` method can use a lot of memory and for a large
+    amount of logs it's recommended to iterate through it via ``iter()`` method
     (all params and available filters are same for both methods).
 
     Usage:

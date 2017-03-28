@@ -11,8 +11,9 @@ from .utils import get_tags_for_update
 class Spiders(object):
     """Class to work with a collection of project spiders.
 
-    Not a public constructor: use :class:`Project` instance to get
-    a :class:`Spiders` instance. See :attr:`Project.spiders` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
+    instance to get a :class:`Spiders` instance.
+    See :attr:`~scrapinghub.client.projects.Project.spiders` attribute.
 
     :ivar project_id: string project id.
 
@@ -32,7 +33,7 @@ class Spiders(object):
         The method gets/sets spider id (and checks if spider exists).
 
         :param spider: a string spider name.
-        :return: :class:`Spider` object.
+        :return: a spider object.
         :rtype: :class:`scrapinghub.client.spiders.Spider`
 
         Usage::
@@ -84,7 +85,7 @@ class Spider(object):
     :ivar project_id: a string project id.
     :ivar key: a string key in format 'project_id/spider_id'.
     :ivar name: a spider name string.
-    :ivar jobs: a collection of jobs, :class:`Jobs` object.
+    :ivar jobs: a collection of jobs, :class:`~scrapinghub.client.jobs.Jobs` object.
 
     Usage::
 

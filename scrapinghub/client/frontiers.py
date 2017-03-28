@@ -22,7 +22,7 @@ class _HSFrontier(_Frontier):
         callback to write newcount data per slot.
 
         :return: a batchuploader writer instance.
-        :rtype: :class:`scrapinghub.hubstorage.batchuploader._BatchWriter`
+        :rtype: :class:`~scrapinghub.hubstorage.batchuploader._BatchWriter`
         """
         key = (frontier, slot)
         writer = self._writers.get(key)
@@ -48,8 +48,9 @@ class _HSFrontier(_Frontier):
 class Frontiers(_Proxy):
     """Frontiers collection for a project.
 
-    Not a public constructor: use :class:`Project` instance to get a
-    :class:`Frontiers` instance. See :attr:`Project.frontiers` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
+    instance to get a :class:`Frontiers` instance.
+    See :attr:`~scrapinghub.client.Project.frontiers` attribute.
 
     Usage:
 
@@ -89,7 +90,7 @@ class Frontiers(_Proxy):
         """Get a frontier by name.
 
         :param name: a frontier name string.
-        :return: :class:`Frontier` instance.
+        :return: a frontier instance.
         :rtype: :class:`Frontier`
         """
         return Frontier(self._client, self, name)
@@ -160,7 +161,7 @@ class Frontier(object):
     def get(self, slot):
         """Get a slot by name.
 
-        :return: :class:`FrontierSlot` instance.
+        :return: a frontier slot instance.
         :rtype: :class:`FrontierSlot`
         """
         return FrontierSlot(self._client, self, slot)
@@ -260,7 +261,7 @@ class FrontierSlot(object):
     def f(self):
         """Shortcut to have quick access to slot fingerprints.
 
-        :return: :class:`FrontierSlotFingerprints` instance.
+        :return: fingerprints collection for the slot.
         :rtype: :class:`FrontierSlotFingerprints`
         """
         return self.fingerprints
@@ -269,7 +270,7 @@ class FrontierSlot(object):
     def q(self):
         """Shortcut to have quick access to a slot queue.
 
-        :return: :class:`FrontierSlotQueue` instance.
+        :return: queue instance for the slot.
         :rtype: :class:`FrontierSlotQueue`
         """
         return self.queue

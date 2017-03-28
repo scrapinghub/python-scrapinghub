@@ -9,7 +9,6 @@ Client object
     :undoc-members:
     :inherited-members:
 
-
 Activity
 --------
 
@@ -32,7 +31,6 @@ Exceptions
 .. automodule:: scrapinghub.client.exceptions
     :members:
     :undoc-members:
-    :inherited-members:
 
 Frontiers
 ---------
@@ -94,14 +92,6 @@ Spiders
 -------
 
 .. automodule:: scrapinghub.client.spiders
-    :members:
-    :undoc-members:
-    :inherited-members:
-
-Utils
------
-
-.. automodule:: scrapinghub.client.utils
     :members:
     :undoc-members:
     :inherited-members:

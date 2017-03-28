@@ -19,9 +19,10 @@ from .utils import (
 class Jobs(object):
     """Class representing a collection of jobs for a project/spider.
 
-    Not a public constructor: use :class:`Project` instance or :class:`Spider`
-    instance to get a :class:`Jobs` instance. See :attr:`Project.jobs` and
-    :attr:`Spider.jobs` attributes.
+    Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
+    instance or :class:`~scrapinghub.client.spiders.Spider` instance to get
+    a :class:`Jobs` instance. See :attr:`scrapinghub.client.projects.Project.jobs`
+    and :attr:`scrapinghub.client.spiders.Spider.jobs` attributes.
 
     :ivar project_id: a string project id.
     :ivar spider: :class:`Spider` object if defined.
@@ -235,7 +236,7 @@ class Jobs(object):
         :class:`Jobs` instance, and job_key's spider component should match
         the spider (if :attr:`Spider.jobs` was used).
 
-        :return: :class:`Job` object.
+        :return: a job object.
         :rtype: :class:`Job`
 
         Usage::
@@ -255,8 +256,8 @@ class Jobs(object):
         """Get jobs summary (optionally by state).
 
         :param state: (optional) a string state to filter jobs.
-        :param spider: (optional) a spider name
-            (not needed if instantiated with :class:`Spider`).
+        :param spider: (optional) a spider name (not needed if instantiated
+            with :class:`~scrapinghub.client.spiders.Spider`).
         :param \*\*params: (optional) additional keyword args.
         :return: a list of dictionaries of jobs summary
             for a given filter params grouped by job state.
@@ -283,8 +284,8 @@ class Jobs(object):
         :param start: (optional)
         :param start_after: (optional)
         :param count: (optional)
-        :param spider: (optional) a spider name
-            (not needed if instantiated with :class:`Spider`).
+        :param spider: (optional) a spider name (not needed if instantiated
+            with :class:`~scrapinghub.client.spiders.Spider`).
         :param \*\*params: (optional) additional keyword args.
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.
@@ -371,17 +372,18 @@ class Jobs(object):
 class Job(object):
     """Class representing a job object.
 
-    Not a public constructor: use :class:`ScrapinghubClient` instance or
-    :class:`Jobs` instance to get a :class:`Job` instance. See
-    :meth:`ScrapinghubClient.get_job` and :meth:`Jobs.get` methods.
+    Not a public constructor: use :class:`~scrapinghub.client.ScrapinghubClient`
+    instance or :class:`Jobs` instance to get a :class:`Job` instance. See
+    :meth:`scrapinghub.client.ScrapinghubClient.get_job` and :meth:`Jobs.get`
+    methods.
 
     :ivar project_id: integer project id.
     :ivar key: a job key.
-    :ivar items: :class:`Items` resource object.
-    :ivar logs: :class:`Logs` resource object.
-    :ivar requests: :class:`Requests` resource object.
-    :ivar samples: :class:`Samples` resource object.
-    :ivar metadata: :class:`Metadata` resource.
+    :ivar items: :class:`~scrapinghub.client.items.Items` resource object.
+    :ivar logs: :class:`~scrapinghub.client.logs.Logs` resource object.
+    :ivar requests: :class:`~scrapinghub.client.requests.Requests` resource object.
+    :ivar samples: :class:`~scrapinghub.client.samples.Samples` resource object.
+    :ivar metadata: :class:`JobMeta` resource object.
 
     Usage::
 
@@ -508,7 +510,7 @@ class JobMeta(_MappingProxy):
     """Class representing job metadata.
 
     Not a public constructor: use :class:`Job` instance to get a
-    :class:`Jobmeta` instance. See :attr:`Job.metadata` attribute.
+    :class:`JobMeta` instance. See :attr:`Job.metadata` attribute.
 
     Usage:
 

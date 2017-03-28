@@ -13,8 +13,9 @@ from .utils import (
 class Collections(_Proxy):
     """Access to project collections.
 
-    Not a public constructor: use :class:`Project` instance to get a
-    :class:`Collections` instance. See :attr:`Project.collections` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
+    instance to get a :class:`Collections` instance.
+    See :attr:`~scrapinghub.client.projects.Project.collections` attribute.
 
     Usage::
 
@@ -29,7 +30,7 @@ class Collections(_Proxy):
 
         :param type_: a collection type string.
         :param name: a collection name string.
-        :return: :class:`Collection` object.
+        :return: a collection object.
         :rtype: :class:`Collection`
         """
         self._origin._validate_collection(type_, name)
@@ -39,7 +40,7 @@ class Collections(_Proxy):
         """Method to get a store collection by name.
 
         :param name: a collection name string.
-        :return: :class:`Collection` object.
+        :return: a collection object.
         :rtype: :class:`Collection`
         """
         return self.get('s', name)
@@ -50,7 +51,7 @@ class Collections(_Proxy):
         The collection type means that items expire after a month.
 
         :param name: a collection name string.
-        :return: :class:`Collection` object.
+        :return: a collection object.
         :rtype: :class:`Collection`
         """
         return self.get('cs', name)
@@ -61,7 +62,7 @@ class Collections(_Proxy):
         The collection type retains up to 3 copies of each item.
 
         :param name: a collection name string.
-        :return: :class:`Collection` object.
+        :return: a collection object.
         :rtype: :class:`Collection`
         """
         return self.get('vs', name)
@@ -72,7 +73,7 @@ class Collections(_Proxy):
         Multiple copies are retained, and each one expires after a month.
 
         :param name: a collection name string.
-        :return: :class:`Collection` object.
+        :return: a collection object.
         :rtype: :class:`Collection`
         """
         return self.get('vcs', name)
@@ -159,9 +160,10 @@ class Collection(object):
              endts=None, requests_params=None, **params):
         """Convenient shortcut to list iter results.
 
-        Please note that list() method can use a lot of memory and for a large
-        amount of elements it's recommended to iterate through it via iter()
-        method (all params and available filters are same for both methods).
+        Please note that ``list()`` method can use a lot of memory and for a
+        large amount of elements it's recommended to iterate through it via
+        ``iter()`` method (all params and available filters are same for both
+        methods).
 
         :param key: a string key or a list of keys to filter with.
         :param prefix: a string prefix to filter items.
@@ -197,7 +199,7 @@ class Collection(object):
 
         :param value: a dict representing a collection item.
 
-        The method returns None (original method returns an empty generator).
+        The method returns ``None`` (original method returns an empty generator).
         """
         self._origin.set(value)
 
@@ -206,7 +208,7 @@ class Collection(object):
 
         :param keys: a single key or a list of keys.
 
-        The method returns None (original method returns an empty generator).
+        The method returns ``None`` (original method returns an empty generator).
         """
         if (not isinstance(keys, string_types) and
                 not isinstance(keys, collections.Iterable)):

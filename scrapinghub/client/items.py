@@ -6,11 +6,12 @@ from .utils import _Proxy
 class Items(_Proxy):
     """Representation of collection of job items.
 
-    Not a public constructor: use :class:`Job` instance to get a :class:`Items`
-    instance. See :attr:`Job.items` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instanc
+    e to get a :class:`Items` instance.
+    See :attr:`~scrapinghub.client.jobs.Job.items` attribute.
 
-    Please note that list() method can use a lot of memory and for a large
-    amount of items it's recommended to iterate through it via iter() method
+    Please note that ``list()`` method can use a lot of memory and for a large
+    amount of items it's recommended to iterate through it via ``iter()`` method
     (all params and available filters are same for both methods).
 
     Usage:

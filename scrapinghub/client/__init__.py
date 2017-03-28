@@ -31,10 +31,10 @@ class ScrapinghubClient(object):
     :param auth: Scrapinghub APIKEY or other SH auth credentials.
     :param dash_endpoint: (optional) Scrapinghub Dash panel url.
     :param \*\*kwargs: (optional) Additional arguments for
-        :class:`scrapinghub.hubstorage.HubstorageClient` constructor.
+        :class:`~scrapinghub.hubstorage.HubstorageClient` constructor.
 
     :ivar projects: projects collection,
-        :class:`scrapinghub.client.projects.Projects` instance.
+        :class:`~scrapinghub.client.projects.Projects` instance.
 
     Usage::
 
@@ -60,7 +60,7 @@ class ScrapinghubClient(object):
 
         :param project_id: integer or string numeric project id.
         :return: a project instance.
-        :rtype: :class:`scrapinghub.client.projects.Project`
+        :rtype: :class:`~scrapinghub.client.projects.Project`
 
         Usage::
 
@@ -76,7 +76,7 @@ class ScrapinghubClient(object):
         :param job_key: job key string in format 'project_id/spider_id/job_id',
             where all the components are integers.
         :return: a job instance.
-        :rtype: :class:`scrapinghub.client.jobs.Job`
+        :rtype: :class:`~scrapinghub.client.jobs.Job`
 
         Usage::
 
