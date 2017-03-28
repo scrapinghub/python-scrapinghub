@@ -4,6 +4,7 @@ import six
 import json
 
 from ..hubstorage import ValueTooLarge as _ValueTooLarge
+from .utils import update_kwargs
 from .exceptions import ValueTooLarge
 
 
@@ -61,13 +62,14 @@ class _ItemsResourceProxy(_Proxy):
         except _ValueTooLarge as exc:
             raise ValueTooLarge(str(exc))
 
-    def iter(self, _key=None, **params):
+    def iter(self, _key=None, count=None, **params):
         """Iterate over elements in collection.
 
+        :param count: limit amount of elements.
         :return: a generator object over a list of element dictionaries.
         :rtype: :class:`types.GeneratorType[dict]`
         """
-        # TODO describe allowable params
+        update_kwargs(params or {}, count=count)
         params = self._modify_iter_params(params)
         return self._origin.list(_key, **params)
 
@@ -90,35 +92,40 @@ class _ItemsResourceProxy(_Proxy):
 
 class _DownloadableProxyMixin(object):
 
-    def iter(self, _path=None, requests_params=None, **apiparams):
+    def iter(self, _path=None, count=None, requests_params=None, **apiparams):
         """A general method to iterate through elements.
 
+        :param count: limit amount of elements.
         :return: an iterator over elements list.
         :rtype: :class:`collections.Iterable`
         """
-        # TODO describe allowable params
+        update_kwargs(apiparams, count=count)
         apiparams = self._modify_iter_params(apiparams)
         return self._origin.iter_values(_path, requests_params, **apiparams)
 
-    def iter_raw_json(self, _path=None, requests_params=None, **apiparams):
+    def iter_raw_json(self, _path=None, count=None, requests_params=None,
+                      **apiparams):
         """A method to iterate through raw json-packed elements.
         Can be convenient if data is needed in raw json format.
 
+        :param count: limit amount of elements.
         :return: an iterator over elements list packed with json.
         :rtype: :class:`collections.Iterable[str]`
         """
-        # TODO describe allowable params
+        update_kwargs(apiparams, count=count)
         apiparams = self._modify_iter_params(apiparams)
         return self._origin.iter_json(_path, requests_params, **apiparams)
 
-    def iter_raw_msgpack(self, _path=None, requests_params=None, **apiparams):
+    def iter_raw_msgpack(self, _path=None, count=None, requests_params=None,
+                         **apiparams):
         """A method to iterate through raw msgpack-ed elements.
         Can be convenient if data is needed in same msgpack format.
 
+        :param count: limit amount of elements.
         :return: an iterator over elements list packed with msgpack.
         :rtype: :class:`collections.Iterable[bytes]`
         """
-        # TODO describe allowable params
+        update_kwargs(apiparams, count=count)
         apiparams = self._modify_iter_params(apiparams)
         return self._origin.iter_msgpack(_path, requests_params, **apiparams)
 

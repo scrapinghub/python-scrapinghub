@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from .proxy import _Proxy
-from .utils import parse_job_key
+from .utils import parse_job_key, update_kwargs
 
 
 class Activity(_Proxy):
@@ -44,13 +44,14 @@ class Activity(_Proxy):
         >>> project.activity.add(events)
 
     """
-    def iter(self, **params):
+    def iter(self, count=None, **params):
         """Iterate over activity events.
 
+        :param count: limit amount of elements.
         :return: a generator object over a list of activity event dicts.
         :rtype: :class:`types.GeneratorType[dict]`
         """
-        # TODO describe allowable params
+        update_kwargs(params, count=count)
         params = self._modify_iter_params(params)
         return self._origin.list(**params)
 

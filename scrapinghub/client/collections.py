@@ -284,12 +284,22 @@ class Collection(object):
                       maxitemsize=1024 ** 2, callback=None):
         """Create a new writer for a collection.
 
+        :param start: (optional) initial offset for writer thread.
+        :param auth: (optional) set auth credentials for the request.
+        :param size: (optional) set initial queue size.
+        :param interval: (optional) set interval for writer thread.
+        :param qsize: (optional) setup max queue size for the writer.
+        :param content_encoding: (optional) set different Content-Encoding header.
+        :param maxitemsize: (optional) max item size in bytes.
+        :param callback: (optional) some callback function.
         :return: a new writer object.
         :rtype: :class:`~scrapinghub.hubstorage.batchuploader._BatchWriter`
+
+        If provided - calllback shouldn't try to inject more items in the queue,
+        otherwise it can lead to deadlocks.
         """
-        # TODO describe allowable params
         kwargs = {}
-        update_kwargs(start=start, auth=auth, size=size, interval=interval,
+        update_kwargs(kwargs, start=start, auth=auth, size=size, interval=interval,
                       qsize=qsize, content_encoding=content_encoding,
                       maxitemsize=maxitemsize, callback=callback)
         return self._origin._collections.create_writer(
