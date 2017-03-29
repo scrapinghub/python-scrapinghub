@@ -6,7 +6,7 @@ from .conftest import TEST_TS
 def _add_test_requests(job):
     r1 = job.requests.add(
         url='http://test.com/', status=200, method='GET',
-        rs=1337, duration=5, parent=None, ts=TEST_TS)
+        rs=1337, duration=5, ts=TEST_TS)
     job.requests.add(
         url='http://test.com/2', status=400, method='POST',
         rs=0, duration=1, parent=r1, ts=TEST_TS + 1)
