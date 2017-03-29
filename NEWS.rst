@@ -1,6 +1,15 @@
 python-scrapinghub release notes
 ================================
 
+2.0.0 (2016-03-29)
+------------------
+
+Major release with a lot of new features.
+
+- new powerfull ScrapinghubClient takes best from Connection and HubstorageClient,
+  and combines it under single interface
+- documentation is available on `Read The Docs (2.0.0)`_
+
 1.9.0 (2016-11-02)
 ------------------
 
@@ -116,3 +125,4 @@ First release of python-scrapinghub.
 
 
 .. _python-hubstorage: https://github.com/scrapinghub/python-hubstorage
+.. _Read The Docs (2.0.0): http://python-scrapinghub.readthedocs.io/en/2.0.0/
