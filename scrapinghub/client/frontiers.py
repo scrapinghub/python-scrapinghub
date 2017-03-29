@@ -174,7 +174,7 @@ class Frontier(object):
         """Iterate through slots.
 
         :return: an iterator over frontier slots names.
-        :rtype: :class:`collections.Iterate[str]`
+        :rtype: :class:`collections.Iterable[str]`
         """
         return iter(self.list())
 
