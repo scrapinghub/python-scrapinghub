@@ -16,3 +16,4 @@ The ``scrapinghub`` is a Python library for communicating with the `Scrapinghub 
    client/overview
    client/apidocs
    legacy/clients
+   changes
