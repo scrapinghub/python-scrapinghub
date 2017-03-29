@@ -130,7 +130,7 @@ If it used, then it's up to the user to list all the required fields, so only fe
     >>> metadata = next(project.jobq.list())
     >>> metadata.get('spider', 'missing')
     u'foo'
-    >>> jobs_metadata = project.jobq.list(jobmeta=['scheduled_by', ])
+    >>> jobs_metadata = project.jobq.list(jobmeta=['scheduled_by'])
     >>> metadata = next(jobs_metadata)
     >>> metadata.get('scheduled_by', 'missing')
     u'John'
@@ -150,7 +150,7 @@ List of tags has ``OR`` power, so in the case above jobs with 'new' or 'verified
 
 To get certain number of last finished jobs per some spider::
 
-    >>> jobs_metadata = project.jobq.list(spider='foo', state='finished' count=3)
+    >>> jobs_metadata = project.jobq.list(spider='foo', state='finished', count=3)
 
 There are 4 possible job states, which can be used as values for filtering by state:
 
@@ -167,7 +167,7 @@ To iterate through items::
 
     >>> items = job.items.iter_values()
     >>> for item in items:
-    # do something, item is just a dict
+    ...     # do something, item is just a dict
 
 Logs
 ^^^^
@@ -176,7 +176,7 @@ To iterate through 10 first logs for example::
 
     >>> logs = job.logs.iter_values(count=10)
     >>> for log in logs:
-    # do something, log is a dict with log level, message and time keys
+    ...     # do something, log is a dict with log level, message and time keys
 
 Collections
 ^^^^^^^^^^^
@@ -246,4 +246,4 @@ Module contents
     :undoc-members:
     :show-inheritance:
 
-.. _scrapinghub.ScrapinghubClient: ../client/overview.html 
+.. _scrapinghub.ScrapinghubClient: ../client/overview.html

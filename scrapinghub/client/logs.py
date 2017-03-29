@@ -1,11 +1,13 @@
 from __future__ import absolute_import
-import json
 
-from .utils import _Proxy
+import json
+import logging
+
+from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 from .utils import LogLevel
 
 
-class Logs(_Proxy):
+class Logs(_ItemsResourceProxy, _DownloadableProxyMixin):
     """Representation of collection of job logs.
 
     Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance
@@ -26,7 +28,7 @@ class Logs(_Proxy):
     - iterate through first 100 log entries and print them::
 
         >>> for log in job.logs.iter(count=100):
-        >>> ... print(log)
+        ...     print(log)
 
     - retrieve a single log entry from a job::
 
@@ -47,11 +49,36 @@ class Logs(_Proxy):
             'time': 1486375511188,
         }]
     """
+    def log(self, message, level=logging.INFO, ts=None, **other):
+        """Base method to write a log entry.
 
-    def __init__(self, *args, **kwargs):
-        super(Logs, self).__init__(*args, **kwargs)
-        self._proxy_methods(['log', 'debug', 'info', 'warning', 'warn',
-                             'error', 'batch_write_start'])
+        :param message: a string message.
+        :param level: (optional) logging level, default to INFO.
+        :param ts: (optional) UNIX timestamp in milliseconds.
+        :param \*\*other: other optional kwargs.
+        """
+        self._origin.log(message, level=level, ts=ts, **other)
+
+    def debug(self, message, **other):
+        """Log a message with DEBUG level."""
+        self._origin.debug(message, **other)
+
+    def info(self, message, **other):
+        """Log a message with INFO level."""
+        self._origin.info(message, **other)
+
+    def warn(self, message, **other):
+        """Log a message with WARN level."""
+        self._origin.warn(message, **other)
+    warning = warn
+
+    def error(self, message, **other):
+        """Log a message with ERROR level."""
+        self._origin.error(message, **other)
+
+    def batch_write_start(self):
+        """Override to set a start parameter when commencing writing."""
+        return self._origin.batch_write_start()
 
     def _modify_iter_params(self, params):
         """Modify iter() filters on-the-fly.

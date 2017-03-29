@@ -5,12 +5,11 @@ from six import string_types
 
 from ..hubstorage.collectionsrt import Collection as _Collection
 
-from .utils import (
-    _Proxy, format_iter_filters, proxy_methods, wrap_kwargs, update_kwargs,
-)
+from .proxy import _Proxy, _DownloadableProxyMixin
+from .utils import update_kwargs
 
 
-class Collections(_Proxy):
+class Collections(_Proxy, _DownloadableProxyMixin):
     """Access to project collections.
 
     Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
@@ -28,7 +27,7 @@ class Collections(_Proxy):
     def get(self, type_, name):
         """Base method to get a collection with a given type and name.
 
-        :param type_: a collection type string.
+        :param `type_`: a collection type string.
         :param name: a collection name string.
         :return: a collection object.
         :rtype: :class:`Collection`
@@ -109,7 +108,7 @@ class Collection(object):
     - add a new item to collection::
 
         >>> foo_store.set({'_key': '002d050ee3ff6192dcbecc4e4b4457d7',
-                           'value': '1447221694537'})
+        ...                'value': '1447221694537'})
 
     - count items in collection::
 
@@ -129,7 +128,7 @@ class Collection(object):
     - iterate iterate over _key & value pair::
 
         >>> for elem in foo_store.iter(count=1)):
-        >>> ... print(elem)
+        ...     print(elem)
         [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'}]
 
     - filter by multiple keys, only values for keys that exist will be returned::
@@ -144,43 +143,8 @@ class Collection(object):
 
     def __init__(self, client, collections, type_, name):
         self._client = client
+        self._collections = collections
         self._origin = _Collection(type_, name, collections._origin)
-        proxy_methods(self._origin, self, [
-            'create_writer', 'count',
-            ('iter', 'iter_values'),
-            ('iter_raw_json', 'iter_json'),
-        ])
-        # simplified version of _Proxy._wrap_iter_methods logic
-        # to provide better support for filter param in iter methods
-        for method in ['iter', 'iter_raw_json']:
-            wrapped = wrap_kwargs(getattr(self, method), format_iter_filters)
-            setattr(self, method, wrapped)
-
-    def list(self, key=None, prefix=None, prefixcount=None, startts=None,
-             endts=None, requests_params=None, **params):
-        """Convenient shortcut to list iter results.
-
-        Please note that :meth:`list` method can use a lot of memory and for a
-        large amount of logs it's recommended to iterate through it
-        via :meth:`iter` method (all params and available filters are same for
-        both methods).
-
-        :param key: a string key or a list of keys to filter with.
-        :param prefix: a string prefix to filter items.
-        :param prefixcount: maximum number of values to return per prefix.
-        :param startts: UNIX timestamp at which to begin results.
-        :param endts: UNIX timestamp at which to end results.
-        :param requests_params: (optional) a dict with optional requests params.
-        :param \*\*params: (optional) additional query params for the request.
-        :return: a list of items where each item is represented with a dict.
-        :rtype: :class:`list[dict]`
-        """
-        # FIXME there should be similar docstrings for iter/iter_raw_json
-        # but as we proxy them as-is, it's not in place, should be improved
-        update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
-                      startts=startts, endts=endts,
-                      requests_params=requests_params)
-        return list(self.iter(requests_params=None, **params))
 
     def get(self, key, **params):
         """Get item from collection by key.
@@ -216,11 +180,19 @@ class Collection(object):
                              "object providing string keys")
         self._origin.delete(keys)
 
-    def iter_raw_msgpack(self, key=None, prefix=None, prefixcount=None,
-                         startts=None, endts=None, requests_params=None,
-                         **params):
-        """A method to iterate through raw msgpack-ed items.
-        Can be convenient if data is needed in same msgpack format.
+    def count(self, *args, **kwargs):
+        """Count collection items with a given filters.
+
+        :return: amount of elements in collection.
+        :rtype: :class:`int`
+        """
+        # TODO describe allowable params
+        return self._origin._collections.count(
+            self._origin.coltype, self._origin.colname, *args, **kwargs)
+
+    def iter(self, key=None, prefix=None, prefixcount=None, startts=None,
+             endts=None, requests_params=None, **params):
+        """A method to iterate through collection items.
 
         :param key: a string key or a list of keys to filter with.
         :param prefix: a string prefix to filter items.
@@ -229,11 +201,61 @@ class Collection(object):
         :param endts: UNIX timestamp at which to end results.
         :param requests_params: (optional) a dict with optional requests params.
         :param \*\*params: (optional) additional query params for the request.
-        :return: an iterator over items list packed with msgpack.
-        :rtype: :class:`collections.Iterable[bytes]`
+        :return: an iterator over items list.
+        :rtype: :class:`collections.Iterable[dict]`
         """
         update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
                       startts=startts, endts=endts,
                       requests_params=requests_params)
-        return self._origin._collections.iter_msgpack(
+        params = self._collections._modify_iter_params(params)
+        return self._origin._collections.iter_values(
             self._origin.coltype, self._origin.colname, **params)
+
+    def list(self, key=None, prefix=None, prefixcount=None, startts=None,
+             endts=None, requests_params=None, **params):
+        """Convenient shortcut to list iter results.
+
+        Please note that :meth:`list` method can use a lot of memory and for a
+        large amount of logs it's recommended to iterate through it
+        via :meth:`iter` method (all params and available filters are same for
+        both methods).
+
+        :param key: a string key or a list of keys to filter with.
+        :param prefix: a string prefix to filter items.
+        :param prefixcount: maximum number of values to return per prefix.
+        :param startts: UNIX timestamp at which to begin results.
+        :param endts: UNIX timestamp at which to end results.
+        :param requests_params: (optional) a dict with optional requests params.
+        :param \*\*params: (optional) additional query params for the request.
+        :return: a list of items where each item is represented with a dict.
+        :rtype: :class:`list[dict]`
+        """
+        update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
+                      startts=startts, endts=endts)
+        return list(self.iter(requests_params=requests_params, **params))
+
+    def create_writer(self, start=0, auth=None, size=1000, interval=15,
+                      qsize=None, content_encoding='identity',
+                      maxitemsize=1024 ** 2, callback=None):
+        """Create a new writer for a collection.
+
+        :param start: (optional) initial offset for writer thread.
+        :param auth: (optional) set auth credentials for the request.
+        :param size: (optional) set initial queue size.
+        :param interval: (optional) set interval for writer thread.
+        :param qsize: (optional) setup max queue size for the writer.
+        :param content_encoding: (optional) set different Content-Encoding header.
+        :param maxitemsize: (optional) max item size in bytes.
+        :param callback: (optional) some callback function.
+        :return: a new writer object.
+        :rtype: :class:`scrapinghub.hubstorage.batchuploader._BatchWriter`
+
+        If provided - calllback shouldn't try to inject more items in the queue,
+        otherwise it can lead to deadlocks.
+        """
+        kwargs = {}
+        update_kwargs(kwargs, start=start, auth=auth, size=size, interval=interval,
+                      qsize=qsize, content_encoding=content_encoding,
+                      maxitemsize=maxitemsize, callback=callback)
+        return self._origin._collections.create_writer(
+            self._origin.coltype, self._origin.colname, **kwargs)

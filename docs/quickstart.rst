@@ -36,7 +36,7 @@ Work with your projects::
 Run new jobs from the client::
 
     >>> project = client.get_project(123)
-    >>> project.jobs.run('spider1', job_args={'arg1':'val1'})
+    >>> project.jobs.run('spider1', job_args={'arg1': 'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
 
 Access your jobs data::
@@ -69,7 +69,7 @@ By default, tests use VCR.py ``once`` mode to:
 It means that if you add new integration tests and run all tests as usual,
 only new cassettes will be created, all existing cassettes will stay unmodified.
 
-To ignore existing cassettes and use real service, please provide a flag::
+To ignore existing cassettes and use real services, please provide a flag::
 
     py.test --ignore-cassettes
 

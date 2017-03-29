@@ -1,5 +1,3 @@
-import json
-
 import pytest
 
 from .conftest import TEST_TS
@@ -37,20 +35,5 @@ def test_requests_iter(spider):
         'time': TEST_TS + 2, 'method': 'PUT', 'fp': '1234',
         'parent': 0, 'duration': 1,
     }
-    with pytest.raises(StopIteration):
-        next(rr)
-
-
-def test_requests_iter_raw_json(spider):
-    job = spider.jobs.run()
-    _add_test_requests(job)
-    job.requests.close()
-
-    rr = job.requests.iter_raw_json()
-    raw_req = next(rr)
-    req = json.loads(raw_req)
-    assert req.get('url') == 'http://test.com/'
-    assert req.get('status') == 200
-    next(rr), next(rr)
     with pytest.raises(StopIteration):
         next(rr)

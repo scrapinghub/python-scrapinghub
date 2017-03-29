@@ -5,7 +5,6 @@ from functools import wraps
 from requests import HTTPError
 
 from ..legacy import APIError
-from ..hubstorage import ValueTooLarge as _ValueTooLarge
 
 
 def _get_http_error_msg(exc):
@@ -57,7 +56,7 @@ class ServerError(ScrapinghubAPIError):
     """Indicates some server error: something unexpected has happened."""
 
 
-def wrap_http_errors(method):
+def _wrap_http_errors(method):
     """Internal helper to handle exceptions gracefully."""
     @wraps(method)
     def wrapped(*args, **kwargs):
@@ -91,15 +90,4 @@ def wrap_http_errors(method):
             elif exc._type == APIError.ERR_SERVER_ERROR:
                 raise ServerError(http_error=exc)
             raise ScrapinghubAPIError(msg)
-    return wrapped
-
-
-def wrap_value_too_large(method):
-    """Internal wrapper for ValueTooLarge exception."""
-    @wraps(method)
-    def wrapped(*args, **kwargs):
-        try:
-            return method(*args, **kwargs)
-        except _ValueTooLarge as exc:
-            raise ValueTooLarge(str(exc))
     return wrapped

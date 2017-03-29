@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
-from .utils import _Proxy
-from .utils import parse_job_key
+from .proxy import _Proxy
+from .utils import parse_job_key, update_kwargs
 
 
 class Activity(_Proxy):
@@ -31,23 +31,29 @@ class Activity(_Proxy):
     - post a new event::
 
         >>> event = {'event': 'job:completed',
-                     'job': '123/2/4',
-                     'user': 'jobrunner'}
+        ...          'job': '123/2/4',
+        ...          'user': 'jobrunner'}
         >>> project.activity.add(event)
 
     - post multiple events at once::
 
         >>> events = [
-            {'event': 'job:completed', 'job': '123/2/5', 'user': 'jobrunner'},
-            {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
-        ]
+        ...    {'event': 'job:completed', 'job': '123/2/5', 'user': 'jobrunner'},
+        ...    {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
+        ... ]
         >>> project.activity.add(events)
 
     """
-    def __init__(self, *args, **kwargs):
-        super(Activity, self).__init__(*args, **kwargs)
-        self._proxy_methods([('iter', 'list')])
-        self._wrap_iter_methods(['iter'])
+    def iter(self, count=None, **params):
+        """Iterate over activity events.
+
+        :param count: limit amount of elements.
+        :return: a generator object over a list of activity event dicts.
+        :rtype: :class:`types.GeneratorType[dict]`
+        """
+        update_kwargs(params, count=count)
+        params = self._modify_iter_params(params)
+        return self._origin.list(**params)
 
     def add(self, values, **kwargs):
         """Add new event to the project activity.

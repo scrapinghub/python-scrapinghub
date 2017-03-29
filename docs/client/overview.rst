@@ -20,7 +20,8 @@ for access to client projects.
 Projects
 --------
 
-You can list the projects available to your account::
+You can list the :class:`~scrapinghub.client.projects.Projects` available to your
+account::
 
     >>> client.projects.list()
     [123, 456]
@@ -65,31 +66,6 @@ For example, to schedule a spider run (it returns a
 
     >>> project.jobs.run('spider1', job_args={'arg1': 'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
-
-
-Settings
---------
-
-You can work with project settings via :class:`~scrapinghub.client.projects.Settings`.
-
-To get a list of the project settings::
-
-    >>> project.settings.list()
-    [(u'default_job_units', 2), (u'job_runtime_limit', 24)]]
-
-To get a project setting value by name::
-
-    >>> project.settings.get('job_runtime_limit')
-    24
-
-To update a project setting value by name::
-
-    >>> project.settings.set('job_runtime_limit', 20)
-
-Or update a few project settings at once::
-
-    >>> project.settings.update({'default_job_units': 1,
-    ...                          'job_runtime_limit': 20})
 
 
 Spiders
@@ -160,17 +136,17 @@ Use ``run`` method to run a new job for project/spider::
 
 Scheduling logic supports different options, like
 
-- job_args to provide arguments for the job
-- units to specify amount of units to run the job
-- job_settings to pass additional settings for the job
-- priority to set higher/lower priority of the job
-- add_tag to create a job with a set of initial tags
-- meta to pass additional custom metadata
+- **job_args** to provide arguments for the job
+- **units** to specify amount of units to run the job
+- **job_settings** to pass additional settings for the job
+- **priority** to set higher/lower priority of the job
+- **add_tag** to create a job with a set of initial tags
+- **meta** to pass additional custom metadata
 
 For example, to run a new job for a given spider with custom params::
 
-    >>> job = spider.jobs.run(units=2, job_settings={'SETTING': 'VALUE'},
-        priority=1, add_tag=['tagA','tagB'], meta={'custom-data': 'val1'})
+    >>> job = spider.jobs.run(units=2, job_settings={'SETTING': 'VALUE'}, priority=1,
+    ...                       add_tag=['tagA','tagB'], meta={'custom-data': 'val1'})
 
 Note that if you run a job on project level, spider name is required::
 
@@ -216,7 +192,7 @@ ones::
     >>> job_summary = next(project.jobs.iter())
     >>> job_summary.get('spider', 'missing')
     'foo'
-    >>> jobs_summary = project.jobs.iter(jobmeta=['scheduled_by', ])
+    >>> jobs_summary = project.jobs.iter(jobmeta=['scheduled_by'])
     >>> job_summary = next(jobs_summary)
     >>> job_summary.get('scheduled_by', 'missing')
     'John'
@@ -235,8 +211,9 @@ To get jobs filtered by tags::
 
     >>> jobs_summary = project.jobs.iter(has_tag=['new', 'verified'], lacks_tag='obsolete')
 
-List of tags has ``OR`` power, so in the case above jobs with 'new' or
-'verified' tag are expected.
+List of tags in **has_tag** has ``OR`` power, so in the case above jobs with
+``new`` or ``verified`` tag are expected (while list of tags in **lacks_tag**
+has ``AND`` power).
 
 To get certain number of last finished jobs per some spider::
 
@@ -250,10 +227,10 @@ for filtering by state:
 - finished
 - deleted
 
-Dict entries returned by ``iter`` method contain some additional meta,
-but can be easily converted to ``Job`` instances with::
+Dictionary entries returned by ``iter`` method contain some additional meta,
+but can be easily converted to :class:`~scrapinghub.client.jobs.Job` instances with::
 
-    >>> [Job(x['key']) for x in jobs]
+    >>> [Job(client, x['key']) for x in jobs]
     [
       <scrapinghub.client.Job at 0x106e2cc18>,
       <scrapinghub.client.Job at 0x106e260b8>,
@@ -290,6 +267,25 @@ It's also possible to get last jobs summary (for each spider)::
 
 Note that there can be a lot of spiders, so the method above returns an iterator.
 
+
+update_tags
+^^^^^^^^^^^
+
+Tags is a convenient way to mark specific jobs (for better search, postprocessing etc).
+
+
+To mark all spider jobs with tag ``consumed``::
+
+    >>> spider.jobs.update_tags(add=['consumed'])
+
+To remove existing tag ``existing`` for all spider jobs::
+
+    >>> spider.jobs.update_tags(remove=['existing'])
+
+Modifying tags is available on :class:`~scrapinghub.client.spiders.Spider`/
+:class:`~scrapinghub.client.jobs.Job` levels.
+
+
 Job
 ---
 
@@ -309,6 +305,10 @@ Request to cancel a job::
 To delete a job::
 
     >>> job.delete()
+
+To mark a job with tag ``consumed``::
+
+    >>> job.update_tags(add=['consumed'])
 
 .. _job-metadata:
 
@@ -422,11 +422,10 @@ To post a new activity event::
 Or post multiple events at once::
 
     >>> events = [
-        {'event': 'job:completed', 'job': '123/2/5', 'user': 'john'},
-        {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
-    ]
+    ...     {'event': 'job:completed', 'job': '123/2/5', 'user': 'john'},
+    ...     {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
+    ... ]
     >>> project.activity.add(events)
-
 
 
 Collections
@@ -559,24 +558,30 @@ Frontiers are available on project level only.
 
 .. _job-tags:
 
-Tags
-----
 
-Tags is a convenient way to mark specific jobs (for better search, postprocessing etc).
+Settings
+--------
 
-To mark a job with tag ``consumed``::
+You can work with project settings via :class:`~scrapinghub.client.projects.Settings`.
 
-    >>> job.update_tags(add=['consumed'])
+To get a list of the project settings::
 
-To mark all spider jobs with tag ``consumed``::
+    >>> project.settings.list()
+    [(u'default_job_units', 2), (u'job_runtime_limit', 24)]]
 
-    >>> spider.jobs.update_tags(add=['consumed'])
+To get a project setting value by name::
 
-To remove existing tag ``existing`` for all spider jobs::
+    >>> project.settings.get('job_runtime_limit')
+    24
 
-    >>> spider.jobs.update_tags(remove=['existing'])
+To update a project setting value by name::
 
-Modifying tags is available on spider/job levels.
+    >>> project.settings.set('job_runtime_limit', 20)
+
+Or update a few project settings at once::
+
+    >>> project.settings.update({'default_job_units': 1,
+    ...                          'job_runtime_limit': 20})
 
 
 Exceptions

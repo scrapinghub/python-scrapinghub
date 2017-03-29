@@ -1,9 +1,8 @@
 from scrapinghub import Connection as _Connection
 from scrapinghub import HubstorageClient as _HubstorageClient
 
+from .exceptions import _wrap_http_errors
 from .projects import Projects
-from .exceptions import wrap_http_errors
-
 from .utils import parse_auth
 from .utils import parse_project_id, parse_job_key
 
@@ -13,14 +12,14 @@ __all__ = ['ScrapinghubClient']
 
 class Connection(_Connection):
 
-    @wrap_http_errors
+    @_wrap_http_errors
     def _request(self, *args, **kwargs):
         return super(Connection, self)._request(*args, **kwargs)
 
 
 class HubstorageClient(_HubstorageClient):
 
-    @wrap_http_errors
+    @_wrap_http_errors
     def request(self, *args, **kwargs):
         return super(HubstorageClient, self).request(*args, **kwargs)
 
@@ -71,9 +70,9 @@ class ScrapinghubClient(object):
         return self.projects.get(parse_project_id(project_id))
 
     def get_job(self, job_key):
-        """Get Job with a given job key.
+        """Get :class:`~scrapinghub.client.jobs.Job` with a given job key.
 
-        :param job_key: job key string in format 'project_id/spider_id/job_id',
+        :param job_key: job key string in format ``project_id/spider_id/job_id``,
             where all the components are integers.
         :return: a job instance.
         :rtype: :class:`~scrapinghub.client.jobs.Job`

@@ -7,7 +7,8 @@ from six import string_types
 from ..hubstorage.frontier import Frontier as _Frontier
 from ..hubstorage.utils import urlpathjoin
 
-from .utils import _Proxy, update_kwargs
+from .proxy import _Proxy
+from .utils import update_kwargs
 
 
 class _HSFrontier(_Frontier):
@@ -84,7 +85,6 @@ class Frontiers(_Proxy):
     """
     def __init__(self, *args, **kwargs):
         super(Frontiers, self).__init__(*args, **kwargs)
-        self._proxy_methods(['close', 'flush'])
 
     def get(self, name):
         """Get a frontier by name.
@@ -113,12 +113,16 @@ class Frontiers(_Proxy):
 
     @property
     def newcount(self):
-        """Amount of new entries added to all frontiers.
-
-        :return: amount of new entries.
-        :rtype: :class:`int`
-        """
+        """Integer amount of new entries added to all frontiers."""
         return sum(self._origin.newcount.values())
+
+    def flush(self):
+        """Flush data in all frontiers writer threads."""
+        self._origin.flush()
+
+    def close(self):
+        """Close frontier writer threads one-by-one."""
+        self._origin.close()
 
 
 class Frontier(object):
@@ -170,7 +174,7 @@ class Frontier(object):
         """Iterate through slots.
 
         :return: an iterator over frontier slots names.
-        :rtype: :class:`collections.Iterate[str]`
+        :rtype: :class:`collections.Iterable[str]`
         """
         return iter(self.list())
 
@@ -191,11 +195,7 @@ class Frontier(object):
 
     @property
     def newcount(self):
-        """Amount of new entries added to frontier.
-
-        :return: amount of new entries.
-        :rtype: :class:`int`
-        """
+        """Integer amount of new entries added to frontier."""
         newcount_values = self._frontiers._origin.newcount
         return sum(v for (frontier, _), v in newcount_values.items()
                    if frontier == self.key)
@@ -290,16 +290,13 @@ class FrontierSlot(object):
 
     @property
     def newcount(self):
-        """Amount of new entries added to slot.
-
-        :return: amount of new entries.
-        :rtype: :class:`int`
-        """
+        """Integer amount of new entries added to slot."""
         newcount_values = self._frontier._frontiers._origin.newcount
         return newcount_values.get((self._frontier.key, self.key), 0)
 
 
 class FrontierSlotFingerprints(object):
+    """Representation of request fingerprints collection stored in slot."""
 
     def __init__(self, slot):
         self.key = slot.key
@@ -342,6 +339,7 @@ class FrontierSlotFingerprints(object):
 
 
 class FrontierSlotQueue(object):
+    """Representation of request batches queue stored in slot."""
 
     def __init__(self, slot):
         self.key = slot.key
