@@ -27,7 +27,7 @@ class Collections(_Proxy, _DownloadableProxyMixin):
     def get(self, type_, name):
         """Base method to get a collection with a given type and name.
 
-        :param type_: a collection type string.
+        :param `type_`: a collection type string.
         :param name: a collection name string.
         :return: a collection object.
         :rtype: :class:`Collection`
@@ -248,7 +248,7 @@ class Collection(object):
         :param maxitemsize: (optional) max item size in bytes.
         :param callback: (optional) some callback function.
         :return: a new writer object.
-        :rtype: :class:`~scrapinghub.hubstorage.batchuploader._BatchWriter`
+        :rtype: :class:`scrapinghub.hubstorage.batchuploader._BatchWriter`
 
         If provided - calllback shouldn't try to inject more items in the queue,
         otherwise it can lead to deadlocks.

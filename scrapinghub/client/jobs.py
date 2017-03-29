@@ -24,7 +24,7 @@ class Jobs(object):
     and :attr:`scrapinghub.client.spiders.Spider.jobs` attributes.
 
     :ivar project_id: a string project id.
-    :ivar spider: :class:`Spider` object if defined.
+    :ivar spider: :class:`~scrapinghub.client.spiders.Spider` object if defined.
 
     Usage::
 
@@ -112,16 +112,16 @@ class Jobs(object):
             >>> [job['key'] for job in jobs_summary]
             ['123/1/3', '123/1/2', '123/1/1']
 
-        - job summary fieldset is less detailed than job.metadata but contains
-            few new fields as well. Additional fields can be requested using
-            ``meta`` parameter. If it's used, then it's up to the user to list
-            all the required fields, so only few default fields would be added
-            except requested ones::
+        - job summary fieldset is less detailed than :class:`JobMeta` but
+          contains a few new fields as well. Additional fields can be requested
+          using ``meta`` parameter. If it's used, then it's up to the user to
+          list all the required fields, so only few default fields would be
+          added except requested ones::
 
             >>> jobs_summary = project.jobs.iter(meta=['scheduled_by', ])
 
         - by default :meth:`Jobs.iter` returns maximum last 1000 results.
-            Pagination is available using start parameter::
+          Pagination is available using start parameter::
 
             >>> jobs_summary = spider.jobs.iter(start=1000)
 
@@ -227,13 +227,14 @@ class Jobs(object):
         return Job(self._client, response['jobid'])
 
     def get(self, job_key):
-        """Get a Job with a given job_key.
+        """Get a :class:`Job` with a given job_key.
 
         :param job_key: a string job key.
 
         job_key's project component should match the project used to get
         :class:`Jobs` instance, and job_key's spider component should match
-        the spider (if :attr:`Spider.jobs` was used).
+        the spider (if :class:`~scrapinghub.client.spiders.Spider` was used
+        to get :class:`Jobs` instance).
 
         :return: a job object.
         :rtype: :class:`Job`
@@ -509,7 +510,7 @@ class JobMeta(_MappingProxy):
     """Class representing job metadata.
 
     Not a public constructor: use :class:`Job` instance to get a
-    :class:`JobMeta` instance. See :attr:`Job.metadata` attribute.
+    :class:`JobMeta` instance. See :attr:`~Job.metadata` attribute.
 
     Usage:
 

@@ -70,9 +70,9 @@ class ScrapinghubClient(object):
         return self.projects.get(parse_project_id(project_id))
 
     def get_job(self, job_key):
-        """Get Job with a given job key.
+        """Get :class:`~scrapinghub.client.jobs.Job` with a given job key.
 
-        :param job_key: job key string in format 'project_id/spider_id/job_id',
+        :param job_key: job key string in format ``project_id/spider_id/job_id``,
             where all the components are integers.
         :return: a job instance.
         :rtype: :class:`~scrapinghub.client.jobs.Job`

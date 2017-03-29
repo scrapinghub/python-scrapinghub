@@ -6,9 +6,9 @@ from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 class Items(_ItemsResourceProxy, _DownloadableProxyMixin):
     """Representation of collection of job items.
 
-    Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instanc
-    e to get a :class:`Items` instance.
-    See :attr:`~scrapinghub.client.jobs.Job.items` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.jobs.Job`
+    instance to get a :class:`Items` instance. See
+    :attr:`~scrapinghub.client.jobs.Job.items` attribute.
 
     Please note that :meth:`list` method can use a lot of memory and for
     a large amount of logs it's recommended to iterate through it via

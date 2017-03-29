@@ -50,7 +50,7 @@ class Requests(_ItemsResourceProxy, _DownloadableProxyMixin):
         :param rs: response body length.
         :param parent: parent request id or ``None``.
         :param duration: request duration in milliseconds.
-        :param ts: unix timestamp in milliseconds.
+        :param ts: UNIX timestamp in milliseconds.
         :param fp: (optional) string fingerprint for the request.
         """
         return self._origin.add(
