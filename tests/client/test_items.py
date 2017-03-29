@@ -1,9 +1,5 @@
-import json
-
 import pytest
 from six.moves import range
-
-from scrapinghub.hubstorage.serialization import mpdecode
 
 
 def _add_test_items(job):
@@ -28,18 +24,6 @@ def test_items_iter(spider):
     assert next(o) == {'id': 2, 'data': 'data2'}
     with pytest.raises(StopIteration):
         next(o)
-
-    o = job.items.iter_raw_json(offset=2)
-    item = json.loads(next(o))
-    assert item['id'] == 2
-    assert item['data'] == 'data2'
-    with pytest.raises(StopIteration):
-        next(o)
-
-    msgpacked_o = job.items.iter_raw_msgpack(offset=2)
-    o = mpdecode(msgpacked_o)
-    assert item['id'] == 2
-    assert item['data'] == 'data2'
 
 
 def test_items_list(spider):

@@ -211,51 +211,6 @@ class Collection(object):
         return self._origin._collections.iter_values(
             self._origin.coltype, self._origin.colname, **params)
 
-    def iter_raw_json(self, key=None, prefix=None, prefixcount=None,
-                      startts=None, endts=None, requests_params=None, **params):
-        """A method to iterate through json pack-ed items.
-        Can be convenient if data is needed in the json format.
-
-        :param key: a string key or a list of keys to filter with.
-        :param prefix: a string prefix to filter items.
-        :param prefixcount: maximum number of values to return per prefix.
-        :param startts: UNIX timestamp at which to begin results.
-        :param endts: UNIX timestamp at which to end results.
-        :param requests_params: (optional) a dict with optional requests params.
-        :param \*\*params: (optional) additional query params for the request.
-        :return: an iterator over items list packed with json.
-        :rtype: :class:`collections.Iterable[str]`
-        """
-        update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
-                      startts=startts, endts=endts,
-                      requests_params=requests_params)
-        params = self._collections._modify_iter_params(params)
-        return self._origin._collections.iter_json(
-            self._origin.coltype, self._origin.colname, **params)
-
-    def iter_raw_msgpack(self, key=None, prefix=None, prefixcount=None,
-                         startts=None, endts=None, requests_params=None,
-                         **params):
-        """A method to iterate through raw msgpack-ed items.
-        Can be convenient if data is needed in same msgpack format.
-
-        :param key: a string key or a list of keys to filter with.
-        :param prefix: a string prefix to filter items.
-        :param prefixcount: maximum number of values to return per prefix.
-        :param startts: UNIX timestamp at which to begin results.
-        :param endts: UNIX timestamp at which to end results.
-        :param requests_params: (optional) a dict with optional requests params.
-        :param \*\*params: (optional) additional query params for the request.
-        :return: an iterator over items list packed with msgpack.
-        :rtype: :class:`collections.Iterable[bytes]`
-        """
-        update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
-                      startts=startts, endts=endts,
-                      requests_params=requests_params)
-        params = self._collections._modify_iter_params(params)
-        return self._origin._collections.iter_msgpack(
-            self._origin.coltype, self._origin.colname, **params)
-
     def list(self, key=None, prefix=None, prefixcount=None, startts=None,
              endts=None, requests_params=None, **params):
         """Convenient shortcut to list iter results.

@@ -112,32 +112,6 @@ class _DownloadableProxyMixin(object):
         apiparams = self._modify_iter_params(apiparams)
         return self._origin.iter_values(_path, requests_params, **apiparams)
 
-    def iter_raw_json(self, _path=None, count=None, requests_params=None,
-                      **apiparams):
-        """A method to iterate through raw json-packed elements.
-        Can be convenient if data is needed in raw json format.
-
-        :param count: limit amount of elements.
-        :return: an iterator over elements list packed with json.
-        :rtype: :class:`collections.Iterable[str]`
-        """
-        update_kwargs(apiparams, count=count)
-        apiparams = self._modify_iter_params(apiparams)
-        return self._origin.iter_json(_path, requests_params, **apiparams)
-
-    def iter_raw_msgpack(self, _path=None, count=None, requests_params=None,
-                         **apiparams):
-        """A method to iterate through raw msgpack-ed elements.
-        Can be convenient if data is needed in same msgpack format.
-
-        :param count: limit amount of elements.
-        :return: an iterator over elements list packed with msgpack.
-        :rtype: :class:`collections.Iterable[bytes]`
-        """
-        update_kwargs(apiparams, count=count)
-        apiparams = self._modify_iter_params(apiparams)
-        return self._origin.iter_msgpack(_path, requests_params, **apiparams)
-
 
 class _MappingProxy(_Proxy):
     """A helper class to support basic get/set interface for dict-like
