@@ -52,8 +52,14 @@ class _Proxy(object):
 
 class _ItemsResourceProxy(_Proxy):
 
-    def get(self, _key, **params):
-        return self._origin.get(_key, **params)
+    def get(self, key, **params):
+        """Get element from collection.
+
+        :param key: element key.
+        :return: a dictionary with element data.
+        :rtype: :class:`dict`
+        """
+        return self._origin.get(key, **params)
 
     def write(self, item):
         """Write new element to collection."""
