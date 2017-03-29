@@ -33,5 +33,5 @@ Documentation
 Documentation is `available online`_ via Read the Docs or in the ``docs`` directory.
 
 
-.. _Scrapinghub API: http://doc.scrapinghub.com/api.html
+.. _Scrapinghub API: https://doc.scrapinghub.com/scrapy-cloud.html#scrapycloud
 .. _available online: https://python-scrapinghub.readthedocs.io/
