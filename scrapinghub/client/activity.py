@@ -31,16 +31,16 @@ class Activity(_Proxy):
     - post a new event::
 
         >>> event = {'event': 'job:completed',
-                     'job': '123/2/4',
-                     'user': 'jobrunner'}
+        ...          'job': '123/2/4',
+        ...          'user': 'jobrunner'}
         >>> project.activity.add(event)
 
     - post multiple events at once::
 
         >>> events = [
-            {'event': 'job:completed', 'job': '123/2/5', 'user': 'jobrunner'},
-            {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
-        ]
+        ...    {'event': 'job:completed', 'job': '123/2/5', 'user': 'jobrunner'},
+        ...    {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
+        ... ]
         >>> project.activity.add(events)
 
     """

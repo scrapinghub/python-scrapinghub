@@ -145,8 +145,8 @@ Scheduling logic supports different options, like
 
 For example, to run a new job for a given spider with custom params::
 
-    >>> job = spider.jobs.run(units=2, job_settings={'SETTING': 'VALUE'},
-        priority=1, add_tag=['tagA','tagB'], meta={'custom-data': 'val1'})
+    >>> job = spider.jobs.run(units=2, job_settings={'SETTING': 'VALUE'}, priority=1,
+    ...                       add_tag=['tagA','tagB'], meta={'custom-data': 'val1'})
 
 Note that if you run a job on project level, spider name is required::
 
@@ -192,7 +192,7 @@ ones::
     >>> job_summary = next(project.jobs.iter())
     >>> job_summary.get('spider', 'missing')
     'foo'
-    >>> jobs_summary = project.jobs.iter(jobmeta=['scheduled_by', ])
+    >>> jobs_summary = project.jobs.iter(jobmeta=['scheduled_by'])
     >>> job_summary = next(jobs_summary)
     >>> job_summary.get('scheduled_by', 'missing')
     'John'
@@ -227,10 +227,10 @@ for filtering by state:
 - finished
 - deleted
 
-Dict entries returned by ``iter`` method contain some additional meta,
+Dictionary entries returned by ``iter`` method contain some additional meta,
 but can be easily converted to :class:`~scrapinghub.client.jobs.Job` instances with::
 
-    >>> [Job(x['key']) for x in jobs]
+    >>> [Job(client, x['key']) for x in jobs]
     [
       <scrapinghub.client.Job at 0x106e2cc18>,
       <scrapinghub.client.Job at 0x106e260b8>,
@@ -422,9 +422,9 @@ To post a new activity event::
 Or post multiple events at once::
 
     >>> events = [
-        {'event': 'job:completed', 'job': '123/2/5', 'user': 'john'},
-        {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
-    ]
+    ...     {'event': 'job:completed', 'job': '123/2/5', 'user': 'john'},
+    ...     {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
+    ... ]
     >>> project.activity.add(events)
 
 

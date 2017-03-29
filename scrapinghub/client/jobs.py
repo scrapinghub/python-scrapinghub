@@ -540,7 +540,7 @@ class JobMeta(_MappingProxy):
 
     - update multiple meta fields at once
 
-        >>> job.metadata.update({'my-meta1': 'test1', 'my-meta2': 'test2})
+        >>> job.metadata.update({'my-meta1': 'test1', 'my-meta2': 'test2'})
 
     - delete meta field by name::
 

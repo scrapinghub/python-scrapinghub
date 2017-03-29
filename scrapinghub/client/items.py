@@ -25,7 +25,7 @@ class Items(_ItemsResourceProxy, _DownloadableProxyMixin):
     - iterate through first 100 items and print them::
 
         >>> for log in job.logs.iter(count=100):
-        >>> ... print(log)
+        ...     print(log)
 
     - retrieve items with timestamp greater or equal to given timestamp
       (item here is an arbitrary dictionary depending on your code)::

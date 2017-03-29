@@ -36,7 +36,7 @@ Work with your projects::
 Run new jobs from the client::
 
     >>> project = client.get_project(123)
-    >>> project.jobs.run('spider1', job_args={'arg1':'val1'})
+    >>> project.jobs.run('spider1', job_args={'arg1': 'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
 
 Access your jobs data::

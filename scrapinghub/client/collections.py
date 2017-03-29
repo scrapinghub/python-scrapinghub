@@ -108,7 +108,7 @@ class Collection(object):
     - add a new item to collection::
 
         >>> foo_store.set({'_key': '002d050ee3ff6192dcbecc4e4b4457d7',
-                           'value': '1447221694537'})
+        ...                'value': '1447221694537'})
 
     - count items in collection::
 
@@ -128,7 +128,7 @@ class Collection(object):
     - iterate iterate over _key & value pair::
 
         >>> for elem in foo_store.iter(count=1)):
-        >>> ... print(elem)
+        ...     print(elem)
         [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'}]
 
     - filter by multiple keys, only values for keys that exist will be returned::

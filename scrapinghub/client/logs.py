@@ -28,7 +28,7 @@ class Logs(_ItemsResourceProxy, _DownloadableProxyMixin):
     - iterate through first 100 log entries and print them::
 
         >>> for log in job.logs.iter(count=100):
-        >>> ... print(log)
+        ...     print(log)
 
     - retrieve a single log entry from a job::
 
