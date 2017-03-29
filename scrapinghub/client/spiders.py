@@ -2,17 +2,17 @@ from __future__ import absolute_import
 
 from requests.compat import urljoin
 
+from .exceptions import NotFound, _wrap_http_errors
 from .jobs import Jobs
-from .exceptions import NotFound
-from .exceptions import wrap_http_errors
 from .utils import get_tags_for_update
 
 
 class Spiders(object):
     """Class to work with a collection of project spiders.
 
-    Not a public constructor: use :class:`Project` instance to get
-    a :class:`Spiders` instance. See :attr:`Project.spiders` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
+    instance to get a :class:`Spiders` instance.
+    See :attr:`~scrapinghub.client.projects.Project.spiders` attribute.
 
     :ivar project_id: string project id.
 
@@ -32,8 +32,8 @@ class Spiders(object):
         The method gets/sets spider id (and checks if spider exists).
 
         :param spider: a string spider name.
-        :return: :class:`Spider` object.
-        :rtype: scrapinghub.client.spiders.Spider
+        :return: a spider object.
+        :rtype: :class:`scrapinghub.client.spiders.Spider`
 
         Usage::
 
@@ -52,7 +52,7 @@ class Spiders(object):
         """Get a list of spiders for a project.
 
         :return: a list of dictionaries with spiders metadata.
-        :rtype: list[dict]
+        :rtype: :class:`list[dict]`
 
         Usage::
 
@@ -68,7 +68,7 @@ class Spiders(object):
 
         :return: an iterator over spiders list where each spider is represented
             as a dict containing its metadata.
-        :rtype: collection.Iterable[dict]
+        :rtype: :class:`collection.Iterable[dict]`
 
         Provided for the sake of API consistency.
         """
@@ -84,7 +84,7 @@ class Spider(object):
     :ivar project_id: a string project id.
     :ivar key: a string key in format 'project_id/spider_id'.
     :ivar name: a spider name string.
-    :ivar jobs: a collection of jobs, :class:`Jobs` object.
+    :ivar jobs: a collection of jobs, :class:`~scrapinghub.client.jobs.Jobs` object.
 
     Usage::
 
@@ -103,7 +103,7 @@ class Spider(object):
         self.jobs = Jobs(client, project_id, self)
         self._client = client
 
-    @wrap_http_errors
+    @_wrap_http_errors
     def update_tags(self, add=None, remove=None):
         """Update tags for the spider.
 
@@ -117,12 +117,12 @@ class Spider(object):
         response = self._client._connection._session.patch(url, json=params)
         response.raise_for_status()
 
-    @wrap_http_errors
+    @_wrap_http_errors
     def list_tags(self):
         """List spider tags.
 
         :return: a list of spider tags.
-        :rtype: list[str]
+        :rtype: :class:`list[str]`
         """
         path = 'v2/projects/{}/spiders/{}'.format(self.project_id, self._id)
         url = urljoin(self._client._connection.url, path)

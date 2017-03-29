@@ -8,15 +8,17 @@ from .activity import Activity
 from .collections import Collections
 from .frontiers import _HSFrontier, Frontiers
 from .jobs import Jobs
+from .proxy import _MappingProxy
 from .spiders import Spiders
-from .utils import _MappingProxy, parse_project_id
+from .utils import parse_project_id
 
 
 class Projects(object):
     """Collection of projects available to current user.
 
-    Not a public constructor: use :class:`Scrapinghub` client instance to get
-    a :class:`Projects` instance. See :attr:`Scrapinghub.projects` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.ScrapinghubClient`
+    client instance to get a :class:`Projects` instance.
+    See :attr:`scrapinghub.client.Scrapinghub.projects` attribute.
 
     Usage::
 
@@ -31,8 +33,8 @@ class Projects(object):
         """Get project for a given project id.
 
         :param project_id: integer or string numeric project id.
-        :return: :class:`Project` object.
-        :rtype: scrapinghub.client.projects.Project
+        :return: a project object.
+        :rtype: :class:`Project`
 
         Usage::
 
@@ -46,7 +48,7 @@ class Projects(object):
         """Get list of projects available to current user.
 
         :return: a list of project ids.
-        :rtype: list[int]
+        :rtype: :class:`list[int]`
 
         Usage::
 
@@ -61,7 +63,7 @@ class Projects(object):
         Provided for the sake of API consistency.
 
         :return: an iterator over project ids list.
-        :rtype: collections.Iterable[int]
+        :rtype: :class:`collections.Iterable[int]`
         """
         return iter(self.list())
 
@@ -72,7 +74,7 @@ class Projects(object):
         :return: a list of dictionaries: each dictionary represents a project
             summary (amount of pending/running/finished jobs and a flag if it
             has a capacity to run new jobs).
-        :rtype: list[dict]
+        :rtype: :class:`list[dict]`
 
         Usage::
 
@@ -96,17 +98,18 @@ class Projects(object):
 class Project(object):
     """Class representing a project object and its resources.
 
-    Not a public constructor: use :class:`ScrapinghubClient` instance or
-    :class:`Projects` instance to get a :class:`Project` instance. See
-    :meth:`Scrapinghub.get_project` or :meth:`Projects.get` methods.
+    Not a public constructor: use :class:`~scrapinghub.client.ScrapinghubClient`
+    instance or :class:`Projects` instance to get a :class:`Project` instance.
+    See :meth:`scrapinghub.client.ScrapinghubClient.get_project` or
+    :meth:`Projects.get` methods.
 
     :ivar key: string project id.
-    :ivar activity: :class:`Activity` resource object.
-    :ivar collections: :class:`Collections` resource object.
-    :ivar frontiers: :class:`Frontiers` resource object.
-    :ivar jobs: :class:`Jobs` resource object.
-    :ivar settings: :class:`Settings` resource object.
-    :ivar spiders: :class:`Spiders` resource object.
+    :ivar activity: :class:`~scrapinghub.client.activity.Activity` resource object.
+    :ivar collections: :class:`~scrapinghub.client.collections.Collections` resource object.
+    :ivar frontiers: :class:`~scrapinghub.client.frontiers.Frontiers` resource object.
+    :ivar jobs: :class:`~scrapinghub.client.jobs.Jobs` resource object.
+    :ivar settings: :class:`~scrapinghub.client.settings.Settings` resource object.
+    :ivar spiders: :class:`~scrapinghub.client.spiders.Spiders` resource object.
 
     Usage::
 
@@ -174,5 +177,10 @@ class Settings(_MappingProxy):
         >>> project.settings.delete('job_runtime_limit')
     """
     def set(self, key, value):
+        """Update project setting value by key.
+
+        :param key: a string setting key.
+        :param value: new setting value.
+        """
         # FIXME drop the method when post-by-key is implemented on server side
         self.update({key: value})

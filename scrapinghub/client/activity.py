@@ -1,17 +1,18 @@
 from __future__ import absolute_import
 
-from .utils import _Proxy
-from .utils import parse_job_key
+from .proxy import _Proxy
+from .utils import parse_job_key, update_kwargs
 
 
 class Activity(_Proxy):
     """Representation of collection of job activity events.
 
-    Not a public constructor: use :class:`Project` instance to get a
-    :class:`Activity` instance. See :attr:`Project.activity` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
+    instance to get a :class:`~scrapinghub.client.activity.Activity` instance.
+    See :attr:`~scrapinghub.client.projects.Project.activity` attribute.
 
-    Please note that list() method can use a lot of memory and for a large
-    amount of activities it's recommended to iterate through it via iter()
+    Please note that :meth:`list` method can use a lot of memory and for a large
+    amount of activities it's recommended to iterate through it via :meth:`iter`
     method (all params and available filters are same for both methods).
 
     Usage:
@@ -30,23 +31,29 @@ class Activity(_Proxy):
     - post a new event::
 
         >>> event = {'event': 'job:completed',
-                     'job': '123/2/4',
-                     'user': 'jobrunner'}
+        ...          'job': '123/2/4',
+        ...          'user': 'jobrunner'}
         >>> project.activity.add(event)
 
     - post multiple events at once::
 
         >>> events = [
-            {'event': 'job:completed', 'job': '123/2/5', 'user': 'jobrunner'},
-            {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
-        ]
+        ...    {'event': 'job:completed', 'job': '123/2/5', 'user': 'jobrunner'},
+        ...    {'event': 'job:cancelled', 'job': '123/2/6', 'user': 'john'},
+        ... ]
         >>> project.activity.add(events)
 
     """
-    def __init__(self, *args, **kwargs):
-        super(Activity, self).__init__(*args, **kwargs)
-        self._proxy_methods([('iter', 'list')])
-        self._wrap_iter_methods(['iter'])
+    def iter(self, count=None, **params):
+        """Iterate over activity events.
+
+        :param count: limit amount of elements.
+        :return: a generator object over a list of activity event dicts.
+        :rtype: :class:`types.GeneratorType[dict]`
+        """
+        update_kwargs(params, count=count)
+        params = self._modify_iter_params(params)
+        return self._origin.list(**params)
 
     def add(self, values, **kwargs):
         """Add new event to the project activity.

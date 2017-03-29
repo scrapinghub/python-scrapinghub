@@ -1,5 +1,4 @@
 from __future__ import absolute_import
-import json
 
 from ..hubstorage.job import JobMeta as _JobMeta
 from ..hubstorage.job import Items as _Items
@@ -12,20 +11,20 @@ from .logs import Logs
 from .requests import Requests
 from .samples import Samples
 from .exceptions import NotFound, BadRequest, DuplicateJobError
-from .utils import (
-    _MappingProxy, get_tags_for_update, parse_job_key, update_kwargs,
-)
+from .proxy import _MappingProxy
+from .utils import get_tags_for_update, parse_job_key, update_kwargs
 
 
 class Jobs(object):
     """Class representing a collection of jobs for a project/spider.
 
-    Not a public constructor: use :class:`Project` instance or :class:`Spider`
-    instance to get a :class:`Jobs` instance. See :attr:`Project.jobs` and
-    :attr:`Spider.jobs` attributes.
+    Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
+    instance or :class:`~scrapinghub.client.spiders.Spider` instance to get
+    a :class:`Jobs` instance. See :attr:`scrapinghub.client.projects.Project.jobs`
+    and :attr:`scrapinghub.client.spiders.Spider.jobs` attributes.
 
     :ivar project_id: a string project id.
-    :ivar spider: :class:`Spider` object if defined.
+    :ivar spider: :class:`~scrapinghub.client.spiders.Spider` object if defined.
 
     Usage::
 
@@ -59,7 +58,7 @@ class Jobs(object):
         :param \*\*params: (optional) other filter params.
 
         :return: jobs count.
-        :rtype: int
+        :rtype: :class:`int`
 
         Usage::
 
@@ -98,7 +97,7 @@ class Jobs(object):
 
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.
-        :rtype: types.GeneratorType[dict]
+        :rtype: :class:`types.GeneratorType[dict]`
 
         Usage:
 
@@ -113,16 +112,16 @@ class Jobs(object):
             >>> [job['key'] for job in jobs_summary]
             ['123/1/3', '123/1/2', '123/1/1']
 
-        - job summary fieldset is less detailed than job.metadata but
-        contains few new fields as well. Additional fields can be requested
-        using ``meta`` parameter. If it's used, then it's up to the user
-        to list all the required fields, so only few default fields would
-        be added except requested ones::
+        - job summary fieldset is less detailed than :class:`JobMeta` but
+          contains a few new fields as well. Additional fields can be requested
+          using ``meta`` parameter. If it's used, then it's up to the user to
+          list all the required fields, so only few default fields would be
+          added except requested ones::
 
             >>> jobs_summary = project.jobs.iter(meta=['scheduled_by', ])
 
         - by default :meth:`Jobs.iter` returns maximum last 1000 results.
-        Pagination is available using start parameter::
+          Pagination is available using start parameter::
 
             >>> jobs_summary = spider.jobs.iter(start=1000)
 
@@ -164,11 +163,11 @@ class Jobs(object):
             field name or a list of field names to return.
         :param \*\*params: (optional) other filter params.
 
-        :return: list of dictionaries of jobs summary for a given filter params
-        :rtype: list[dict]
+        :return: list of dictionaries of jobs summary for a given filter params.
+        :rtype: :class:`list[dict]`
 
-        Please note that list() method can use a lot of memory and for a large
-        amount of jobs it's recommended to iterate through it via iter()
+        Please note that :meth:`list` can use a lot of memory and for a large
+        amount of logs it's recommended to iterate through it via :meth:`iter`
         method (all params and available filters are same for both methods).
         """
         # FIXME we double-check the params here, is there a better way?
@@ -196,7 +195,7 @@ class Jobs(object):
         :param \*\*params: (optional) additional keyword args.
 
         :return: a job key string pointing to the new job.
-        :rtype: str
+        :rtype: :class:`str`
 
         Usage::
 
@@ -228,16 +227,17 @@ class Jobs(object):
         return Job(self._client, response['jobid'])
 
     def get(self, job_key):
-        """Get a Job with a given job_key.
+        """Get a :class:`Job` with a given job_key.
 
         :param job_key: a string job key.
 
         job_key's project component should match the project used to get
         :class:`Jobs` instance, and job_key's spider component should match
-        the spider (if :attr:`Spider.jobs` was used).
+        the spider (if :class:`~scrapinghub.client.spiders.Spider` was used
+        to get :class:`Jobs` instance).
 
-        :return: :class:`Job` object.
-        :rtype: scrapinghub.client.jobs.Job
+        :return: a job object.
+        :rtype: :class:`Job`
 
         Usage::
 
@@ -256,12 +256,12 @@ class Jobs(object):
         """Get jobs summary (optionally by state).
 
         :param state: (optional) a string state to filter jobs.
-        :param spider: (optional) a spider name
-            (not needed if instantiated with :cls:`Spider`).
+        :param spider: (optional) a spider name (not needed if instantiated
+            with :class:`~scrapinghub.client.spiders.Spider`).
         :param \*\*params: (optional) additional keyword args.
         :return: a list of dictionaries of jobs summary
             for a given filter params grouped by job state.
-        :rtype: list[dict]
+        :rtype: :class:`list[dict]`
 
         Usage::
 
@@ -284,12 +284,12 @@ class Jobs(object):
         :param start: (optional)
         :param start_after: (optional)
         :param count: (optional)
-        :param spider: (optional) a spider name
-            (not needed if instantiated with :cls:`Spider`).
+        :param spider: (optional) a spider name (not needed if instantiated
+            with :class:`~scrapinghub.client.spiders.Spider`).
         :param \*\*params: (optional) additional keyword args.
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.
-        :rtype: types.GeneratorType[dict]
+        :rtype: :class:`types.GeneratorType[dict]`
 
         Usage:
 
@@ -342,7 +342,7 @@ class Jobs(object):
         have to specify ``spider`` param when using :attr:`Project.jobs`).
 
         :return: amount of jobs that were updated.
-        :rtype: int
+        :rtype: :class:`int`
 
         Usage:
 
@@ -372,21 +372,22 @@ class Jobs(object):
 class Job(object):
     """Class representing a job object.
 
-    Not a public constructor: use :class:`ScrapinghubClient` instance or
-    :class:`Jobs` instance to get a :class:`Job` instance. See
-    :meth:`ScrapinghubClient.get_job` and :meth:`Jobs.get` methods.
+    Not a public constructor: use :class:`~scrapinghub.client.ScrapinghubClient`
+    instance or :class:`Jobs` instance to get a :class:`Job` instance. See
+    :meth:`scrapinghub.client.ScrapinghubClient.get_job` and :meth:`Jobs.get`
+    methods.
 
     :ivar project_id: integer project id.
     :ivar key: a job key.
-    :ivar items: :class:`Items` resource object.
-    :ivar logs: :class:`Logs` resource object.
-    :ivar requests: :class:`Requests` resource object.
-    :ivar samples: :class:`Samples` resource object.
-    :ivar metadata: :class:`Metadata` resource.
+    :ivar items: :class:`~scrapinghub.client.items.Items` resource object.
+    :ivar logs: :class:`~scrapinghub.client.logs.Logs` resource object.
+    :ivar requests: :class:`~scrapinghub.client.requests.Requests` resource object.
+    :ivar samples: :class:`~scrapinghub.client.samples.Samples` resource object.
+    :ivar metadata: :class:`JobMeta` resource object.
 
     Usage::
 
-        >>> job = project.job('123/1/2')
+        >>> job = project.jobs.get('123/1/2')
         >>> job.key
         '123/1/2'
         >>> job.metadata.get('state')
@@ -437,7 +438,7 @@ class Job(object):
 
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
-        :rtype: str
+        :rtype: :class:`str`
 
         Usage::
 
@@ -451,7 +452,7 @@ class Job(object):
 
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
-        :rtype: str
+        :rtype: :class:`str`
 
         Usage::
 
@@ -465,7 +466,7 @@ class Job(object):
 
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
-        :rtype: str
+        :rtype: :class:`str`
 
         Usage::
 
@@ -480,7 +481,7 @@ class Job(object):
         :param state: a new job state.
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
-        :rtype: str
+        :rtype: :class:`str`
 
         Usage::
 
@@ -509,7 +510,7 @@ class JobMeta(_MappingProxy):
     """Class representing job metadata.
 
     Not a public constructor: use :class:`Job` instance to get a
-    :class:`Jobmeta` instance. See :attr:`Job.metadata` attribute.
+    :class:`JobMeta` instance. See :attr:`~Job.metadata` attribute.
 
     Usage:
 
@@ -539,7 +540,7 @@ class JobMeta(_MappingProxy):
 
     - update multiple meta fields at once
 
-        >>> job.metadata.update({'my-meta1': 'test1', 'my-meta2': 'test2})
+        >>> job.metadata.update({'my-meta1': 'test1', 'my-meta2': 'test2'})
 
     - delete meta field by name::
 

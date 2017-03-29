@@ -1,9 +1,8 @@
 from scrapinghub import Connection as _Connection
 from scrapinghub import HubstorageClient as _HubstorageClient
 
+from .exceptions import _wrap_http_errors
 from .projects import Projects
-from .exceptions import wrap_http_errors
-
 from .utils import parse_auth
 from .utils import parse_project_id, parse_job_key
 
@@ -13,14 +12,14 @@ __all__ = ['ScrapinghubClient']
 
 class Connection(_Connection):
 
-    @wrap_http_errors
+    @_wrap_http_errors
     def _request(self, *args, **kwargs):
         return super(Connection, self)._request(*args, **kwargs)
 
 
 class HubstorageClient(_HubstorageClient):
 
-    @wrap_http_errors
+    @_wrap_http_errors
     def request(self, *args, **kwargs):
         return super(HubstorageClient, self).request(*args, **kwargs)
 
@@ -31,9 +30,10 @@ class ScrapinghubClient(object):
     :param auth: Scrapinghub APIKEY or other SH auth credentials.
     :param dash_endpoint: (optional) Scrapinghub Dash panel url.
     :param \*\*kwargs: (optional) Additional arguments for
-        :class:`scrapinghub.hubstorage.HubstorageClient` constructor.
+        :class:`~scrapinghub.hubstorage.HubstorageClient` constructor.
 
-    :ivar projects: projects collection, :class:`Projects` instance.
+    :ivar projects: projects collection,
+        :class:`~scrapinghub.client.projects.Projects` instance.
 
     Usage::
 
@@ -52,13 +52,14 @@ class ScrapinghubClient(object):
         self._hsclient = HubstorageClient(auth=(login, password), **kwargs)
 
     def get_project(self, project_id):
-        """Get :class:`Project` instance with a given project id.
+        """Get :class:`scrapinghub.client.projects.Project` instance with
+        a given project id.
 
         The method is a shortcut for client.projects.get().
 
         :param project_id: integer or string numeric project id.
-        :return: :class:`Project` object.
-        :rtype: scrapinghub.client.projects.Project
+        :return: a project instance.
+        :rtype: :class:`~scrapinghub.client.projects.Project`
 
         Usage::
 
@@ -69,12 +70,12 @@ class ScrapinghubClient(object):
         return self.projects.get(parse_project_id(project_id))
 
     def get_job(self, job_key):
-        """Get Job with a given job key.
+        """Get :class:`~scrapinghub.client.jobs.Job` with a given job key.
 
-        :param job_key: job key string in format 'project_id/spider_id/job_id',
+        :param job_key: job key string in format ``project_id/spider_id/job_id``,
             where all the components are integers.
-        :return: :class:`Job` object.
-        :rtype: scrapinghub.client.jobs.Job
+        :return: a job instance.
+        :rtype: :class:`~scrapinghub.client.jobs.Job`
 
         Usage::
 

@@ -1,17 +1,19 @@
 from __future__ import absolute_import
 
-from .utils import _Proxy
+from .proxy import _ItemsResourceProxy
 
 
-class Samples(_Proxy):
+class Samples(_ItemsResourceProxy):
     """Representation of collection of job samples.
 
-    Not a public constructor: use :class:`Job` instance to get a
-    :class:`Samples` instance. See :attr:`Job.samples` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance
+    to get a :class:`Samples` instance.
+    See :attr:`~scrapinghub.client.jobs.Job.samples` attribute.
 
-    Please note that list() method can use a lot of memory and for a large
-    amount of samples it's recommended to iterate through it via iter()
-    method (all params and available filters are same for both methods).
+    Please note that :meth:`list` method can use a lot of memory and for
+    a large amount of logs it's recommended to iterate through it via
+    :meth:`iter` method (all params and available filters are same for
+    both methods).
 
     Usage:
 

@@ -1,17 +1,19 @@
 from __future__ import absolute_import
 
-from .utils import _Proxy
+from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 
 
-class Items(_Proxy):
+class Items(_ItemsResourceProxy, _DownloadableProxyMixin):
     """Representation of collection of job items.
 
-    Not a public constructor: use :class:`Job` instance to get a :class:`Items`
-    instance. See :attr:`Job.items` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.jobs.Job`
+    instance to get a :class:`Items` instance. See
+    :attr:`~scrapinghub.client.jobs.Job.items` attribute.
 
-    Please note that list() method can use a lot of memory and for a large
-    amount of items it's recommended to iterate through it via iter() method
-    (all params and available filters are same for both methods).
+    Please note that :meth:`list` method can use a lot of memory and for
+    a large amount of logs it's recommended to iterate through it via
+    :meth:`iter` method (all params and available filters are same for
+    both methods).
 
     Usage:
 
@@ -23,7 +25,7 @@ class Items(_Proxy):
     - iterate through first 100 items and print them::
 
         >>> for log in job.logs.iter(count=100):
-        >>> ... print(log)
+        ...     print(log)
 
     - retrieve items with timestamp greater or equal to given timestamp
       (item here is an arbitrary dictionary depending on your code)::
@@ -50,7 +52,7 @@ class Items(_Proxy):
         """Modify iter filter to convert offset to start parameter.
 
         :return: a dict with updated set of params.
-        :rtype: dict
+        :rtype: :class:`dict`
         """
         params = super(Items, self)._modify_iter_params(params)
         offset = params.pop('offset', None)

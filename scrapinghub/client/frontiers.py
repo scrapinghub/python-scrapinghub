@@ -7,7 +7,8 @@ from six import string_types
 from ..hubstorage.frontier import Frontier as _Frontier
 from ..hubstorage.utils import urlpathjoin
 
-from .utils import _Proxy, update_kwargs
+from .proxy import _Proxy
+from .utils import update_kwargs
 
 
 class _HSFrontier(_Frontier):
@@ -22,7 +23,7 @@ class _HSFrontier(_Frontier):
         callback to write newcount data per slot.
 
         :return: a batchuploader writer instance.
-        :rtype: scrapinghub.hubstorage.batchuploader._BatchWriter
+        :rtype: :class:`~scrapinghub.hubstorage.batchuploader._BatchWriter`
         """
         key = (frontier, slot)
         writer = self._writers.get(key)
@@ -41,14 +42,16 @@ class _HSFrontier(_Frontier):
         return writer
 
     def _writer_callback(self, key, response):
+        """Writer callback function when new batch is added."""
         self.newcount[key] += response.json()["newcount"]
 
 
 class Frontiers(_Proxy):
     """Frontiers collection for a project.
 
-    Not a public constructor: use :class:`Project` instance to get a
-    :class:`Frontiers` instance. See :attr:`Project.frontiers` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
+    instance to get a :class:`Frontiers` instance.
+    See :attr:`~scrapinghub.client.Project.frontiers` attribute.
 
     Usage:
 
@@ -82,14 +85,13 @@ class Frontiers(_Proxy):
     """
     def __init__(self, *args, **kwargs):
         super(Frontiers, self).__init__(*args, **kwargs)
-        self._proxy_methods(['close', 'flush'])
 
     def get(self, name):
         """Get a frontier by name.
 
         :param name: a frontier name string.
-        :return: class:`Frontier` instance.
-        :rtype: Frontier
+        :return: a frontier instance.
+        :rtype: :class:`Frontier`
         """
         return Frontier(self._client, self, name)
 
@@ -97,7 +99,7 @@ class Frontiers(_Proxy):
         """Iterate through frontiers.
 
         :return: an iterator over frontiers names.
-        :rtype: collections.Iterable[str]
+        :rtype: :class:`collections.Iterable[str]`
         """
         return iter(self.list())
 
@@ -105,13 +107,22 @@ class Frontiers(_Proxy):
         """List frontiers names.
 
         :return: a list of frontiers names.
-        :rtype: list[str]
+        :rtype: :class:`list[str]`
         """
         return next(self._origin.apiget('list'))
 
     @property
     def newcount(self):
+        """Integer amount of new entries added to all frontiers."""
         return sum(self._origin.newcount.values())
+
+    def flush(self):
+        """Flush data in all frontiers writer threads."""
+        self._origin.flush()
+
+    def close(self):
+        """Close frontier writer threads one-by-one."""
+        self._origin.close()
 
 
 class Frontier(object):
@@ -154,8 +165,8 @@ class Frontier(object):
     def get(self, slot):
         """Get a slot by name.
 
-        :return: class:`FrontierSlot` instance.
-        :rtype: FrontierSlot
+        :return: a frontier slot instance.
+        :rtype: :class:`FrontierSlot`
         """
         return FrontierSlot(self._client, self, slot)
 
@@ -163,7 +174,7 @@ class Frontier(object):
         """Iterate through slots.
 
         :return: an iterator over frontier slots names.
-        :rtype: collections.Iterate[str]
+        :rtype: :class:`collections.Iterable[str]`
         """
         return iter(self.list())
 
@@ -171,7 +182,7 @@ class Frontier(object):
         """List all slots.
 
         :return: a list of frontier slots names.
-        :rtype: list[str]
+        :rtype: :class:`list[str]`
         """
         return next(self._frontiers._origin.apiget((self.key, 'list')))
 
@@ -184,6 +195,7 @@ class Frontier(object):
 
     @property
     def newcount(self):
+        """Integer amount of new entries added to frontier."""
         newcount_values = self._frontiers._origin.newcount
         return sum(v for (frontier, _), v in newcount_values.items()
                    if frontier == self.key)
@@ -249,8 +261,8 @@ class FrontierSlot(object):
     def f(self):
         """Shortcut to have quick access to slot fingerprints.
 
-        :return: class:`FrontierSlotFingerprints` instance.
-        :rtype: FrontierSlotFingerprints
+        :return: fingerprints collection for the slot.
+        :rtype: :class:`FrontierSlotFingerprints`
         """
         return self.fingerprints
 
@@ -258,8 +270,8 @@ class FrontierSlot(object):
     def q(self):
         """Shortcut to have quick access to a slot queue.
 
-        :return: class:`FrontierSlotQueue` instance.
-        :rtype: FrontierSlotQueue
+        :return: queue instance for the slot.
+        :rtype: :class:`FrontierSlotQueue`
         """
         return self.queue
 
@@ -278,11 +290,13 @@ class FrontierSlot(object):
 
     @property
     def newcount(self):
+        """Integer amount of new entries added to slot."""
         newcount_values = self._frontier._frontiers._origin.newcount
         return newcount_values.get((self._frontier.key, self.key), 0)
 
 
 class FrontierSlotFingerprints(object):
+    """Representation of request fingerprints collection stored in slot."""
 
     def __init__(self, slot):
         self.key = slot.key
@@ -290,6 +304,10 @@ class FrontierSlotFingerprints(object):
         self._slot = slot
 
     def add(self, fps):
+        """Add new fingerprints to slot.
+
+        :param fps: a list of string fingerprints to add.
+        """
         origin = self._frontier._frontiers._origin
         writer = origin._get_writer(self._frontier.key, self.key)
         fps = list(fps) if not isinstance(fps, list) else fps
@@ -303,7 +321,7 @@ class FrontierSlotFingerprints(object):
 
         :param \*\*params: (optional) additional query params for the request.
         :return: an iterator over fingerprints.
-        :rtype: collections.Iterable[str]
+        :rtype: :class:`collections.Iterable[str]`
         """
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'f')
@@ -315,12 +333,13 @@ class FrontierSlotFingerprints(object):
 
         :param \*\*params: (optional) additional query params for the request.
         :return: a list of fingerprints.
-        :rtype: list[str]
+        :rtype: :class:`list[str]`
         """
         return list(self.iter(**params))
 
 
 class FrontierSlotQueue(object):
+    """Representation of request batches queue stored in slot."""
 
     def __init__(self, slot):
         self.key = slot.key
@@ -339,7 +358,7 @@ class FrontierSlotQueue(object):
         :param \*\*params: (optional) additional query params for the request.
         :return: an iterator over request batches in the queue where each
             batch is represented with a dict with ('id', 'requests') field.
-        :rtype: collections.Iterable[dict]
+        :rtype: :class:`collections.Iterable[dict]`
         """
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'q')
@@ -353,7 +372,7 @@ class FrontierSlotQueue(object):
         :param \*\*params: (optional) additional query params for the request.
         :return: a list of request batches in the queue where each batch
             is represented with a dict with ('id', 'requests') field.
-        :rtype: list[dict]
+        :rtype: :class:`list[dict]`
         """
         return list(self.iter(mincount=mincount, **params))
 

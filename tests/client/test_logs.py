@@ -1,11 +1,9 @@
-import json
 import types
 from numbers import Integral
 
 import pytest
 
 from scrapinghub.client.utils import LogLevel
-from scrapinghub.hubstorage.serialization import mpdecode
 
 from .conftest import TEST_TS
 
@@ -103,35 +101,3 @@ def test_logs_list_filter(spider):
 
     logs3 = job.logs.list(filter=[('message', 'contains', ['simple'])])
     assert len(logs3) == 3
-
-
-def test_logs_iter_raw_json(spider):
-    job = spider.jobs.run()
-    _add_test_logs(job)
-
-    logs0 = job.logs.iter_raw_json(offset=2)
-    raw_log0 = next(logs0)
-    log0 = json.loads(raw_log0)
-    assert log0.get('message') == 'simple-msg3'
-    assert log0.get('_key')
-    assert isinstance(log0.get('time'), Integral)
-    assert log0.get('level') == 10
-
-    logs1 = job.logs.iter_raw_json(level='ERROR')
-    raw_log1 = next(logs1)
-    log1 = json.loads(raw_log1)
-    assert log1.get('message') == 'error-msg'
-
-
-def test_logs_iter_raw_msgpack(spider):
-    job = spider.jobs.run()
-    _add_test_logs(job)
-
-    logs1 = job.logs.iter_raw_msgpack(offset=2)
-    assert isinstance(logs1, types.GeneratorType)
-    unpacked_logs1 = list(mpdecode(logs1))
-    assert unpacked_logs1[0].get('message') == 'simple-msg3'
-
-    logs2 = job.logs.iter_raw_msgpack(level='ERROR')
-    unpacked_logs2 = list(mpdecode(logs2))
-    assert unpacked_logs2[0].get('message') == 'error-msg'

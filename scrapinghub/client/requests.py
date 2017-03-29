@@ -1,17 +1,19 @@
 from __future__ import absolute_import
 
-from .utils import _Proxy
+from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 
 
-class Requests(_Proxy):
+class Requests(_ItemsResourceProxy, _DownloadableProxyMixin):
     """Representation of collection of job requests.
 
-    Not a public constructor: use :class:`Job` instance to get a
-    :class:`Requests` instance. See :attr:`Job.requests` attribute.
+    Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance
+    to get a :class:`Requests` instance.
+    See :attr:`~scrapinghub.client.jobs.Job.requests` attribute.
 
-    Please note that list() method can use a lot of memory and for a large
-    amount of requests it's recommended to iterate through it via iter()
-    method (all params and available filters are same for both methods).
+    Please note that :meth:`list` method can use a lot of memory and for
+    a large amount of logs it's recommended to iterate through it via
+    :meth:`iter` method (all params and available filters are same for
+    both methods).
 
     Usage:
 
@@ -39,6 +41,17 @@ class Requests(_Proxy):
             'url': 'https://example.com'
         }]
     """
-    def __init__(self, *args, **kwargs):
-        super(Requests, self).__init__(*args, **kwargs)
-        self._proxy_methods(['add'])
+    def add(self, url, status, method, rs, parent, duration, ts, fp=None):
+        """ Add a new requests.
+
+        :param url: string url for the request.
+        :param status: HTTP status of the request.
+        :param method: stringified request method.
+        :param rs: response body length.
+        :param parent: parent request id or ``None``.
+        :param duration: request duration in milliseconds.
+        :param ts: UNIX timestamp in milliseconds.
+        :param fp: (optional) string fingerprint for the request.
+        """
+        return self._origin.add(
+            url, status, method, rs, parent, duration, ts, fp=None)

@@ -1,7 +1,7 @@
 __all__ = ["APIError", "Connection", "HubstorageClient",
            "ScrapinghubClient", "ScrapinghubAPIError",
            "DuplicateJobError", "BadRequest", "NotFound",
-           "Unauthorized", "ValueTooLarge"]
+           "Unauthorized", "ValueTooLarge", "ServerError"]
 
 import pkgutil
 __version__ = pkgutil.get_data(__package__, 'VERSION')
@@ -19,4 +19,5 @@ from .client.exceptions import (
     NotFound,
     Unauthorized,
     ValueTooLarge,
+    ServerError,
 )
