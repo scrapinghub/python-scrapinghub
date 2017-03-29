@@ -62,7 +62,10 @@ class _ItemsResourceProxy(_Proxy):
         return self._origin.get(key, **params)
 
     def write(self, item):
-        """Write new element to collection."""
+        """Write new element to collection.
+
+        :param item: element data dict to write.
+        """
         try:
             return self._origin.write(item)
         except _ValueTooLarge as exc:

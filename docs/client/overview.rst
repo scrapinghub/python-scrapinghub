@@ -20,7 +20,8 @@ for access to client projects.
 Projects
 --------
 
-You can list the projects available to your account::
+You can list the :class:`~scrapinghub.client.projects.Projects` available to your
+account::
 
     >>> client.projects.list()
     [123, 456]
@@ -65,31 +66,6 @@ For example, to schedule a spider run (it returns a
 
     >>> project.jobs.run('spider1', job_args={'arg1': 'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
-
-
-Settings
---------
-
-You can work with project settings via :class:`~scrapinghub.client.projects.Settings`.
-
-To get a list of the project settings::
-
-    >>> project.settings.list()
-    [(u'default_job_units', 2), (u'job_runtime_limit', 24)]]
-
-To get a project setting value by name::
-
-    >>> project.settings.get('job_runtime_limit')
-    24
-
-To update a project setting value by name::
-
-    >>> project.settings.set('job_runtime_limit', 20)
-
-Or update a few project settings at once::
-
-    >>> project.settings.update({'default_job_units': 1,
-    ...                          'job_runtime_limit': 20})
 
 
 Spiders
@@ -427,6 +403,30 @@ Or post multiple events at once::
     ]
     >>> project.activity.add(events)
 
+
+Settings
+--------
+
+You can work with project settings via :class:`~scrapinghub.client.projects.Settings`.
+
+To get a list of the project settings::
+
+    >>> project.settings.list()
+    [(u'default_job_units', 2), (u'job_runtime_limit', 24)]]
+
+To get a project setting value by name::
+
+    >>> project.settings.get('job_runtime_limit')
+    24
+
+To update a project setting value by name::
+
+    >>> project.settings.set('job_runtime_limit', 20)
+
+Or update a few project settings at once::
+
+    >>> project.settings.update({'default_job_units': 1,
+    ...                          'job_runtime_limit': 20})
 
 
 Collections
