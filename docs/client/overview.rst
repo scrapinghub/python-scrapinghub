@@ -596,7 +596,7 @@ Exceptions
 .. autoexception:: scrapinghub.ServerError
 
 
-.. _Scrapinghub API: http://doc.scrapinghub.com/api.html
-.. _Frontier: http://doc.scrapinghub.com/api/frontier.html
+.. _Scrapinghub API: https://doc.scrapinghub.com/scrapy-cloud.html#scrapycloud
+.. _Frontier: https://doc.scrapinghub.com/api/frontier.html
 .. _count endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-count
 .. _list endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-list

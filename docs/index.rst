@@ -7,7 +7,7 @@ Client interface for Scrapinghub API
 
 The ``scrapinghub`` is a Python library for communicating with the `Scrapinghub API`_.
 
-.. _Scrapinghub API: http://doc.scrapinghub.com/api.html
+.. _Scrapinghub API: https://doc.scrapinghub.com/scrapy-cloud.html#scrapycloud
 
 .. toctree::
    :maxdepth: 1
