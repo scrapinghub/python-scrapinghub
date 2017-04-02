@@ -34,6 +34,7 @@ def test_add_read(hsproject):
 def test_add_multiple_chunks(hsproject):
     frontier = hsproject.frontier
     old_count = frontier.newcount
+    initial_count = frontier.count_slot(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT)
 
     batch_size = 50
     fps1 = [{'fp': '/index_%s.html' % fp} for fp in range(0, batch_size)]
@@ -49,6 +50,10 @@ def test_add_multiple_chunks(hsproject):
     frontier.flush()
 
     assert frontier.newcount == 150 + old_count
+
+    # test count_slot
+    count = frontier.count_slot(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT)
+    assert count['count'] == initial_count['count'] + 150
 
     # insert repeated fingerprints
     fps4 = [{'fp': '/index_%s.html' % fp} for fp in range(0, batch_size)]
@@ -68,6 +73,10 @@ def test_add_multiple_chunks(hsproject):
     # delete first 100
     ids = [batch['id'] for batch in batches]
     frontier.delete(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT, ids)
+
+    # test count_slot again
+    count = frontier.count_slot(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT)
+    assert count['count'] - initial_count['count'] == 150 - 100
 
     # get remaining 50
     batches = list(frontier.read(TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT))

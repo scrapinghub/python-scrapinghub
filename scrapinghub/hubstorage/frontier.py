@@ -63,3 +63,21 @@ class Frontier(ResourceType):
 
     def delete_slot(self, frontier, slot):
         self.apidelete((frontier, 's', slot))
+
+    def count_slot(self, frontier, slot):
+        total = {
+            'count': 0,
+            'scanned': 0,
+        }
+        start = None
+        while True:
+            ret = list(self.apiget(
+                (frontier, 's', slot, 'q/count'),
+                params={'start': start}
+            ))
+            total['count'] += ret[0]['count']
+            total['scanned'] += ret[0]['scanned']
+            start = ret[0].get('nextstart')
+            if not start:
+                break
+        return total
