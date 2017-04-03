@@ -194,12 +194,15 @@ class Jobs(object):
         :param cmd_args: (optional) a string with script command args.
         :param \*\*params: (optional) additional keyword args.
 
-        :return: a job key string pointing to the new job.
-        :rtype: :class:`str`
+        :return: a job instance, representing the scheduled job.
+        :rtype: :class:`Job`
 
         Usage::
 
-            >>> project.jobs.run('spider1', job_args={'arg1': 'val1'})
+            >>> job = project.jobs.run('spider1', job_args={'arg1': 'val1'})
+            >>> job
+            <scrapinghub.client.jobs.Job at 0x7fcb7c01df60>
+            >>> job.key
             '123/1/1'
         """
         if not spider and not self.spider:
