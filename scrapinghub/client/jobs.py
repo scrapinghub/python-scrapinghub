@@ -188,7 +188,7 @@ class Jobs(object):
         :param units: (optional) amount of units for the job.
         :param priority: (optional) integer priority value.
         :param meta: (optional) a dictionary with metadata.
-        :param add_tag: (optional) a string tag of a list of tags to add.
+        :param add_tag: (optional) a string tag or a list of tags to add.
         :param job_args: (optional) a dictionary with job arguments.
         :param job_settings: (optional) a dictionary with job settings.
         :param cmd_args: (optional) a string with script command args.
