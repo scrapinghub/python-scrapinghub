@@ -26,7 +26,7 @@ def _add_test_logs(job):
     job.logs.flush()
 
 
-def test_logs_base(spider):
+def test_logs_base(spider, json_and_msgpack):
     job = spider.jobs.run()
     assert list(job.logs.iter()) == []
     assert job.logs.batch_write_start() == 0
@@ -42,7 +42,7 @@ def test_logs_base(spider):
     job.logs.close()
 
 
-def test_logs_iter(spider):
+def test_logs_iter(spider, json_and_msgpack):
     job = spider.jobs.run()
     _add_test_logs(job)
 
@@ -64,7 +64,7 @@ def test_logs_iter(spider):
         next(logs3).get('message')
 
 
-def test_logs_list(spider):
+def test_logs_list(spider, json_and_msgpack):
     job = spider.jobs.run()
     _add_test_logs(job)
 
@@ -87,7 +87,7 @@ def test_logs_list(spider):
     assert logs3[0].get('message') == 'error-msg'
 
 
-def test_logs_list_filter(spider):
+def test_logs_list_filter(spider, json_and_msgpack):
     job = spider.jobs.run()
     _add_test_logs(job)
 

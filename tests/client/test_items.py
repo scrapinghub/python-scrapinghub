@@ -9,7 +9,7 @@ def _add_test_items(job):
     job.items.close()
 
 
-def test_items_iter(spider):
+def test_items_iter(spider, json_and_msgpack):
     job = spider.jobs.run(meta={'state': 'running'})
     _add_test_items(job)
 
@@ -26,7 +26,7 @@ def test_items_iter(spider):
         next(o)
 
 
-def test_items_list(spider):
+def test_items_list(spider, json_and_msgpack):
     job = spider.jobs.run(meta={'state': 'running'})
     _add_test_items(job)
 

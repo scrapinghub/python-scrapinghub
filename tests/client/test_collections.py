@@ -36,7 +36,7 @@ def test_simple_count(project, collection):
     assert collection.count() == 1
 
 
-def test_post_get_delete(project):
+def test_post_get_delete(project, json_and_msgpack):
     test_item = _mkitem()
     item_to_send = dict(test_item)
     item_to_send['_key'] = test_key = 'insert_test_key'
@@ -61,7 +61,7 @@ def test_post_get_delete(project):
             col.get(test_key)
 
 
-def test_post_scan(project, collection):
+def test_post_scan(project, collection, json_and_msgpack):
     # populate with 20 items
     test_item = _mkitem()
     last_key = None
@@ -105,7 +105,7 @@ def test_post_scan(project, collection):
         collection.get(last_key)
 
 
-def test_errors_bad_key(collection):
+def test_errors_bad_key(collection, json_and_msgpack):
     with pytest.raises(NotFound):
         collection.get('does_not_exist')
 
