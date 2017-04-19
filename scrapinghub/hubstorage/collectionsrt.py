@@ -3,7 +3,6 @@ import re
 from requests.exceptions import HTTPError
 
 from .resourcetype import DownloadableResource
-from .serialization import MSGPACK_AVAILABLE
 from .utils import urlpathjoin
 
 

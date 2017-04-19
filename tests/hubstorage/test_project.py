@@ -291,7 +291,7 @@ def test_output_string(hsclient, hsproject):
     ('33/1/stats/', False),
     ((33, 1, 'stats'), False),
 ])
-def test_allows_msgpack(monkeypatch, msgpack_available, path, expected_result):
+def test_allows_msgpack(msgpack_available, path, expected_result):
     hsclient = HubstorageClient(use_msgpack=msgpack_available)
     job = hsclient.get_job('2222000/1/1')
     for resource in [job.items, job.logs, job.samples]:
