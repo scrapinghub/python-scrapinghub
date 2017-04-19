@@ -1,5 +1,3 @@
--r requirements-pypy.txt
-
 mock
 vcrpy==1.10.3
 pytest
