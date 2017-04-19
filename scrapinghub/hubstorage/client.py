@@ -88,6 +88,9 @@ class HubstorageClient(object):
         self.root = ResourceType(self, None)
         self._batchuploader = None
         self.use_msgpack = MSGPACK_AVAILABLE and use_msgpack
+        if use_msgpack != self.use_msgpack:
+            logger.warning('Messagepack is not available, please ensure that '
+                           'msgpack-python library is properly installed.')
 
     def request(self, is_idempotent=False, **kwargs):
         """
