@@ -86,7 +86,7 @@ def post_scan_test(hsproject, hscollection):
         hscollection.get(last_key)
 
 
-def test_errors_bad_key(hscollection):
+def test_errors_bad_key(hscollection, json_and_msgpack):
     with pytest.raises(KeyError):
         hscollection.get('does_not_exist')
 

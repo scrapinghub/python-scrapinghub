@@ -11,6 +11,8 @@ from scrapinghub import ScrapinghubClient
 from scrapinghub.client.exceptions import NotFound
 from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
 
+from ..conftest import request_accept_header_matcher
+
 
 TEST_PROJECT_ID = "2222222"
 TEST_SPIDER_NAME = 'hs-test-spider'
@@ -47,31 +49,12 @@ class VCRGzipSerializer(object):
         return pickle.loads(zlib.decompress(decoded))
 
 
-def request_accept_header_matcher(r1, r2):
-    """Custom VCR.py matcher by Accept header."""
-
-    def _get_accept_header(request):
-        return request.headers.get('Accept', '').lower()
-
-    return _get_accept_header(r1) == _get_accept_header(r2)
-
-
 my_vcr = vcr.VCR(cassette_library_dir=VCR_CASSETES_DIR, record_mode='once')
 my_vcr.register_serializer('gz', VCRGzipSerializer())
 my_vcr.register_matcher('accept_header', request_accept_header_matcher)
 my_vcr.serializer = 'gz'
 my_vcr.match_on = ('method', 'scheme', 'host', 'port',
                    'path', 'query', 'accept_header')
-
-
-@pytest.fixture(params=['json', 'msgpack'])
-def json_and_msgpack(pytestconfig, monkeypatch, request):
-    if request.param == 'json':
-        monkeypatch.setattr('scrapinghub.hubstorage.resourcetype.MSGPACK_AVAILABLE', False)
-        monkeypatch.setattr('scrapinghub.hubstorage.collectionsrt.MSGPACK_AVAILABLE', False)
-    elif not MSGPACK_AVAILABLE or request.config.getoption("--disable-msgpack"):
-        pytest.skip("messagepack-based tests are disabled")
-    return request.param
 
 
 def pytest_configure(config):
