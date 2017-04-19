@@ -32,7 +32,7 @@ class Collections(DownloadableResource):
         :param path: None, tuple or string
 
         """
-        if not MSGPACK_AVAILABLE:
+        if not MSGPACK_AVAILABLE or not self.client.use_msgpack:
             return False
         path = urlpathjoin(path or '')
         match = COLLECTIONS_MSGPACK_REGEX.match(path)
