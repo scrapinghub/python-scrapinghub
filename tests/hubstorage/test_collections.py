@@ -154,9 +154,7 @@ def test_invalid_collection_name(hsproject):
         ('list', False),
         (None, False),
 ])
-def test_allows_msgpack(monkeypatch, msgpack_available, path, expected_result):
-    monkeypatch.setattr(
-        'scrapinghub.hubstorage.collectionsrt.MSGPACK_AVAILABLE', msgpack_available)
-    hsclient = HubstorageClient()
+def test_allows_msgpack(msgpack_available, path, expected_result):
+    hsclient = HubstorageClient(use_msgpack=msgpack_available)
     collections = hsclient.get_project(2222000).collections
     assert collections._allows_mpack(path) is (msgpack_available and expected_result)

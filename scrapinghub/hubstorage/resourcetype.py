@@ -5,7 +5,6 @@ from collections import MutableMapping
 import requests.exceptions as rexc
 from .utils import urlpathjoin, xauth
 from .serialization import jlencode, jldecode, mpdecode
-from .serialization import MSGPACK_AVAILABLE
 
 logger = logging.getLogger('hubstorage.resourcetype')
 CHUNK_SIZE = 512
@@ -32,7 +31,7 @@ class ResourceType(object):
         :param path: None, tuple or string
 
         """
-        if not MSGPACK_AVAILABLE:
+        if not self.client.use_msgpack:
             return False
         path = urlpathjoin(path or '')
         return (

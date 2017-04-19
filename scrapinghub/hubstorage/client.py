@@ -10,6 +10,7 @@ from .job import Job
 from .jobq import JobQ
 from .batchuploader import BatchUploader
 from .resourcetype import ResourceType
+from .serialization import MSGPACK_AVAILABLE
 
 
 __all__ = ["HubstorageClient"]
@@ -56,7 +57,8 @@ class HubstorageClient(object):
     RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS = 500
 
     def __init__(self, auth=None, endpoint=None, connection_timeout=None,
-                 max_retries=None, max_retry_time=None, user_agent=None):
+                 max_retries=None, max_retry_time=None, user_agent=None,
+                 use_msgpack=True):
         """
         Note:
             max_retries and max_retry_time change how the client attempt to retry failing requests that are
@@ -73,6 +75,7 @@ class HubstorageClient(object):
             connection_timeout (int): The connection timeout for a _single request_
             max_retries (int): The number of time idempotent requests may be retried
             max_retry_time (int): The time, in seconds, during which the client can retry a request
+            use_msgpack (bool): Flag to enable/disable msgpack use for serialization
         """
         self.auth = xauth(auth)
         self.endpoint = endpoint or self.DEFAULT_ENDPOINT
@@ -84,6 +87,10 @@ class HubstorageClient(object):
         self.projects = Projects(self, None)
         self.root = ResourceType(self, None)
         self._batchuploader = None
+        self.use_msgpack = MSGPACK_AVAILABLE and use_msgpack
+        if use_msgpack != self.use_msgpack:
+            logger.warning('Messagepack is not available, please ensure that '
+                           'msgpack-python library is properly installed.')
 
     def request(self, is_idempotent=False, **kwargs):
         """

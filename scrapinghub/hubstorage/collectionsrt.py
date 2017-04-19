@@ -3,7 +3,6 @@ import re
 from requests.exceptions import HTTPError
 
 from .resourcetype import DownloadableResource
-from .serialization import MSGPACK_AVAILABLE
 from .utils import urlpathjoin
 
 
@@ -32,7 +31,7 @@ class Collections(DownloadableResource):
         :param path: None, tuple or string
 
         """
-        if not MSGPACK_AVAILABLE:
+        if not self.client.use_msgpack:
             return False
         path = urlpathjoin(path or '')
         match = COLLECTIONS_MSGPACK_REGEX.match(path)
