@@ -32,7 +32,7 @@ class ResourceType(object):
         :param path: None, tuple or string
 
         """
-        if not MSGPACK_AVAILABLE or not self.client.use_msgpack:
+        if not self.client.use_msgpack:
             return False
         path = urlpathjoin(path or '')
         return (

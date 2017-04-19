@@ -292,9 +292,7 @@ def test_output_string(hsclient, hsproject):
     ((33, 1, 'stats'), False),
 ])
 def test_allows_msgpack(monkeypatch, msgpack_available, path, expected_result):
-    monkeypatch.setattr(
-        'scrapinghub.hubstorage.resourcetype.MSGPACK_AVAILABLE', msgpack_available)
-    hsclient = HubstorageClient()
+    hsclient = HubstorageClient(use_msgpack=msgpack_available)
     job = hsclient.get_job('2222000/1/1')
     for resource in [job.items, job.logs, job.samples]:
         assert resource._allows_mpack(path) is (msgpack_available and expected_result)
