@@ -1,32 +1,34 @@
 Overview
 ========
 
-The :class:`~scrapinghub.client.ScrapinghubClient` is a new Python client for
+:class:`~scrapinghub.client.ScrapinghubClient` is a Python client for
 communicating with the `Scrapinghub API`_.
-It takes best from :class:`~scrapinghub.legacy.Connection` and
-:class:`~scrapinghub.hubstorage.HubstorageClient`, and combines it under single
-interface.
 
-First, you instantiate new client::
+First, you instantiate a new client with your Scrapinghub API key::
 
     >>> from scrapinghub import ScrapinghubClient
-    >>> client = ScrapinghubClient('APIKEY')
+    >>> apikey = '84c87545607a4bc0****************'
+    >>> client = ScrapinghubClient(apikey)
     >>> client
     <scrapinghub.client.ScrapinghubClient at 0x1047af2e8>
 
-Client instance has :attr:`~scrapinghub.client.ScrapinghubClient.projects` field
-for access to client projects.
+Working with projects
+---------------------
 
-Projects
---------
+This client instance has a :attr:`~scrapinghub.client.ScrapinghubClient.projects`
+attribute for accessing your projects on Scrapinghub's platform.
 
-You can list the :class:`~scrapinghub.client.projects.Projects` available to your
-account::
+With it, you can list the project IDs available in your account::
 
     >>> client.projects.list()
     [123, 456]
 
-Or check the projects summary::
+.. note::
+    ``.list()`` does not return :class:`~scrapinghub.client.projects.Project`
+    instances, but their numeric IDs.
+
+Or you can get a summary of all your projects (how many jobs are finished,
+running or pending to be run)::
 
     >>> client.projects.summary()
     [{'finished': 674,
@@ -40,7 +42,8 @@ Or check the projects summary::
       'project': 456,
       'running': 2}]
 
-And select a particular project to work with::
+
+To work with a particular project, reference it using its numeric ID::
 
     >>> project = client.get_project(123)
     >>> project
@@ -48,32 +51,24 @@ And select a particular project to work with::
     >>> project.key
     '123'
 
+.. note::
+    ``get_project()`` returns a :class:`~scrapinghub.client.projects.Project`
+    instance.
+
 .. tip:: The above is a shortcut for ``client.projects.get(123)``.
 
 
-Project
--------
+Working with spiders
+--------------------
 
-:class:`~scrapinghub.client.projects.Project` instance has
-:attr:`~scrapinghub.client.projects.Project.jobs` field to work with
-the project jobs.
+A Scrapinghub project (usually) consists of a group of web crawlers
+called "spiders".
 
-:class:`~scrapinghub.client.jobs.Jobs` instance is described well in
-:ref:`Jobs <jobs>` section below.
+The different spiders within your project are accessible via the
+:class:`spiders <~scrapinghub.client.spiders.Spiders>` attribute of the
+:class:`~scrapinghub.client.projects.Project` instance.
 
-For example, to schedule a spider run (it returns a
-:class:`~scrapinghub.client.jobs.Job` object)::
-
-    >>> project.jobs.run('spider1', job_args={'arg1': 'val1'})
-    <scrapinghub.client.Job at 0x106ee12e8>>
-
-
-Spiders
--------
-
-Spiders collection is accessible via :class:`~scrapinghub.client.spiders.Spiders`.
-
-To get the list of spiders of the project::
+To get the list of spiders in the project, use ``.spiders.list()``::
 
     >>> project.spiders.list()
     [
@@ -81,7 +76,9 @@ To get the list of spiders of the project::
       {'id': 'spider2', 'tags': [], 'type': 'manual', 'version': '123'}
     ]
 
-To select a particular spider to work with::
+.. _spider:
+
+To select a particular spider to work with, use ``.spiders.get(<spidername>)``::
 
     >>> spider = project.spiders.get('spider2')
     >>> spider
@@ -91,33 +88,66 @@ To select a particular spider to work with::
     >>> spider.name
     spider2
 
-.. _spider:
+With ``.spiders.get(<spidername>)``, you get a :class:`~scrapinghub.client.spiders.Spider`
+instance back.
 
-Spider
-------
+.. note::
+    ``.spiders.list()`` does not return :class:`~scrapinghub.client.spiders.Spider`
+    instances. The ``id`` key in the returned dicts corresponds to
+    the ``.name`` attribute of :class:`~scrapinghub.client.spiders.Spider`
+    that you get with ``.spiders.get(<spidername>)``.
 
-Like project instance, :class:`~scrapinghub.client.spiders.Spider` instance has
-``jobs`` field to work with the spider's jobs.
-
-To schedule a spider run::
-
-    >>> spider.jobs.run(job_args={'arg1': 'val1'})
-    <scrapinghub.client.Job at 0x106ee12e8>>
-
-Note that you don't need to specify spider name explicitly.
 
 .. _jobs:
 
-Jobs
-----
+Working with jobs collections
+-----------------------------
 
-:class:`~scrapinghub.client.jobs.Jobs` collection is available on project/spider
-level.
+Essentially, the purpose of spiders is to be run in Scrapinghub's platform.
+Each spider run is called a "job".
+And a collection of spider jobs is represented by a :class:`~scrapinghub.client.jobs.Jobs`
+object.
 
-get
-^^^
+Both project-level jobs (i.e. all jobs from a project) and spider-level jobs
+(i.e. all jobs for a specific spider) are available as a :class:`jobs
+<~scrapinghub.client.jobs.Jobs>` attribute of a
+:class:`~scrapinghub.client.projects.Project` instance
+or a :class:`~scrapinghub.client.spiders.Spider` instance respectively.
 
-To select a specific job for a project::
+Running jobs
+^^^^^^^^^^^^
+
+Use the ``.jobs.run()`` method to run a new job for a project or a particular spider,::
+
+    >>> job = spider.jobs.run()
+
+You can also use ``.jobs.run()`` at the project level, the difference being that
+a spider name is required::
+
+    >>> job = project.jobs.run('spider1')
+
+Scheduling jobs supports different options, passed as arguments to ``.run()``:
+
+- **job_args** (dict): to provide arguments for the job
+- **job_settings** (dict): to pass additional settings for the job
+- **units** (integer): to specify amount of units to run the job
+- **priority** (integer): to set higher/lower priority for the job
+- **add_tag** (list of strings): to create a job with a set of initial tags
+- **meta** (dict): to pass additional custom metadata
+
+Check the `run endpoint`_ for more information.
+
+For example, to run a new job for a given spider with custom parameters::
+
+    >>> job = spider.jobs.run(units=2, job_settings={'SETTING': 'VALUE'}, priority=1,
+    ...                       add_tag=['tagA','tagB'], meta={'custom-data': 'val1'})
+
+
+
+Geting job information
+^^^^^^^^^^^^^^^^^^^^^^
+
+To select a specific job for a project, use ``.jobs.get(<jobKey>)``::
 
     >>> job = project.jobs.get('123/1/2')
     >>> job.key
@@ -127,71 +157,72 @@ Also there's a shortcut to get same job with client instance::
 
     >>> job = client.get_job('123/1/2')
 
-run
-^^^
+These methods return a :class:`~scrapinghub.client.jobs.Job` instance
+(see :ref:`below <job>`).
 
-Use ``run`` method to run a new job for project/spider::
+Counting jobs
+^^^^^^^^^^^^^
 
-    >>> job = spider.jobs.run()
-
-Scheduling logic supports different options, like
-
-- **job_args** to provide arguments for the job
-- **units** to specify amount of units to run the job
-- **job_settings** to pass additional settings for the job
-- **priority** to set higher/lower priority of the job
-- **add_tag** to create a job with a set of initial tags
-- **meta** to pass additional custom metadata
-
-For example, to run a new job for a given spider with custom params::
-
-    >>> job = spider.jobs.run(units=2, job_settings={'SETTING': 'VALUE'}, priority=1,
-    ...                       add_tag=['tagA','tagB'], meta={'custom-data': 'val1'})
-
-Note that if you run a job on project level, spider name is required::
-
-    >>> job = project.jobs.run('spider1')
-
-count
-^^^^^
-
-It's also possible to count jobs for a given project/spider::
+It's also possible to count jobs for a given project or spider via
+``.jobs.count()``::
 
     >>> spider.jobs.count()
     5
 
-Count logic supports different filters, as described for `count endpoint`_.
+The counting logic supports different filters, as described for `count endpoint`_.
 
 
-iter
-^^^^
+Iterating over jobs
+^^^^^^^^^^^^^^^^^^^
 
-To iterate through the spider jobs (descending order)::
+To loop over the spider jobs (most recently finished first),
+you can use ``.jobs.iter()`` to get an iterator object::
 
     >>> jobs_summary = spider.jobs.iter()
     >>> [j['key'] for j in jobs_summary]
     ['123/1/3', '123/1/2', '123/1/1']
 
-``jobs_summary`` is an iterator and, when iterated, returns an iterable
-of dict objects, so you typically use it like this::
+The ``.jobs.iter()`` iterator generates dicts
+(not :class:`~scrapinghub.client.jobs.Job` objects), e.g::
+
+    {u'close_reason': u'finished',
+     u'elapsed': 201815620,
+     u'finished_time': 1492843577852,
+     u'items': 2,
+     u'key': u'123320/3/155',
+     u'logs': 21,
+     u'pages': 2,
+     u'pending_time': 1492843520319,
+     u'running_time': 1492843526622,
+     u'spider': u'spider001',
+     u'state': u'finished',
+     u'ts': 1492843563720,
+     u'version': u'792458b-master'}
+
+You typically use it like this::
 
     >>> for job in jobs_summary:
     ...     # do something with job data
 
-Or, if you just want to get the job ids::
+Or, if you just want to get the job IDs::
 
     >>> [x['key'] for x in jobs_summary]
     ['123/1/3', '123/1/2', '123/1/1']
 
-Job summary fieldset from ``iter()`` is less detailed than ``job.metadata``,
-but contains few new fields as well. Additional fields can be requested using
-the ``jobmeta`` parameter. If it used, then it's up to the user to list all the
-required fields, so only few default fields would be added except requested
-ones::
+The job's dict fieldset from ``.jobs.iter()`` is less detailed than ``job.metadata`` (see below),
+but can contain a few additional fields as well, on demand.
+Additional fields can be requested using the ``jobmeta`` argument.
 
+When ``jobmeta`` is used, the user MUST list all required fields,
+even default ones::
+
+    >>> # by default, the "spider" key is available in the dict from iter()
     >>> job_summary = next(project.jobs.iter())
     >>> job_summary.get('spider', 'missing')
     'foo'
+    >>>
+    >>> # when jobmeta is use, if "spider" in not list in it,
+    >>> # iter() will not include "spider" key in the returned dicts
     >>> jobs_summary = project.jobs.iter(jobmeta=['scheduled_by'])
     >>> job_summary = next(jobs_summary)
     >>> job_summary.get('scheduled_by', 'missing')
@@ -199,35 +230,40 @@ ones::
     >>> job_summary.get('spider', 'missing')
     missing
 
-By default ``jobs.iter()`` returns maximum last 1000 results.
-Pagination is available using the ``start`` parameter::
+By default ``.jobs.iter()`` returns the last 1000 jobs at most.
+To get more than the last 1000, you need to paginate through results
+in batches, using the ``start`` parameter::
 
     >>> jobs_summary = spider.jobs.iter(start=1000)
 
-There are several filters like spider, state, has_tag, lacks_tag,
-startts and endts (check `list endpoint`_ for more details).
+There are several filters like ``spider``, ``state``, ``has_tag``,
+``lacks_tag``, ``startts`` and ``endts`` (check `list endpoint`_ for more details).
 
 To get jobs filtered by tags::
 
     >>> jobs_summary = project.jobs.iter(has_tag=['new', 'verified'], lacks_tag='obsolete')
 
-List of tags in **has_tag** has ``OR`` power, so in the case above jobs with
-``new`` or ``verified`` tag are expected (while list of tags in **lacks_tag**
-has ``AND`` power).
+.. warning::
+    The list of tags in ``has_tag`` is an *OR* condition, so in the case above,
+    jobs with either ``'new'`` or ``'verified'`` tag are selected.
 
-To get certain number of last finished jobs per some spider::
+    On the contrary the list of tags in ``lacks_tag`` is a logical *AND*.
+
+To get a specific number of last finished jobs of some spider,
+use ``spider``, ``state`` and ``count`` arguments::
 
     >>> jobs_summary = project.jobs.iter(spider='foo', state='finished', count=3)
 
-There are 4 possible job states, which can be used as values
+There are 4 possible job states, which can be used as (string) values
 for filtering by state:
 
-- pending
-- running
-- finished
-- deleted
+- ``'pending'``: the job is scheduled to run when enough units become available;
+- ``'running'``: the job is running;
+- ``'finished'``: the job has ended;
+- ``'deleted'``: the jobs has been deleted and will become unavailable
+  when the platform performs its next cleanup.
 
-Dictionary entries returned by ``iter`` method contain some additional meta,
+Dictionary entries returned by ``.jobs.iter()`` method contain some additional meta,
 but can be easily converted to :class:`~scrapinghub.client.jobs.Job` instances with::
 
     >>> [Job(client, x['key']) for x in jobs]
@@ -237,8 +273,8 @@ but can be easily converted to :class:`~scrapinghub.client.jobs.Job` instances w
       <scrapinghub.client.Job at 0x106e26a20>,
     ]
 
-summary
-^^^^^^^
+Jobs summaries
+^^^^^^^^^^^^^^
 
 To check jobs summary::
 
@@ -268,8 +304,8 @@ It's also possible to get last jobs summary (for each spider)::
 Note that there can be a lot of spiders, so the method above returns an iterator.
 
 
-update_tags
-^^^^^^^^^^^
+Updating tags
+^^^^^^^^^^^^^
 
 Tags is a convenient way to mark specific jobs (for better search, postprocessing etc).
 
@@ -282,44 +318,113 @@ To remove existing tag ``existing`` for all spider jobs::
 
     >>> spider.jobs.update_tags(remove=['existing'])
 
-Modifying tags is available on :class:`~scrapinghub.client.spiders.Spider`/
-:class:`~scrapinghub.client.jobs.Job` levels.
+Modifying tags is available at :class:`~scrapinghub.client.spiders.Spider`
+level and :class:`~scrapinghub.client.jobs.Job` level.
 
 
-Job
----
+.. _job:
 
-:class:`~scrapinghub.client.jobs.Job` instance provides access to a job data
-with the following fields:
 
-- metadata
-- items
-- logs
-- requests
-- samples
+.. _job-actions:
 
-Request to cancel a job::
+Job actions
+-----------
+
+You can perform actions on a :class:`~scrapinghub.client.jobs.Job` instance.
+
+For example, to cancel a running or pending job, simply call ``cancel()``
+on it::
 
     >>> job.cancel()
 
-To delete a job::
+To delete a job, its metadata, logs and items, call ``delete()``::
 
     >>> job.delete()
 
-To mark a job with tag ``consumed``::
+To mark a job with the tag ``'consumed'``, call ``update_tags()``::
 
     >>> job.update_tags(add=['consumed'])
+
+
+.. _job-data:
+
+Job data
+--------
+
+A :class:`~scrapinghub.client.jobs.Job` instance provides access to its
+associated data, using the following attributes:
+
+- ``metadata``: various information on the job itself;
+- ``items``: the data items that the job produced;
+- ``logs``: log entries that the job produced;
+- ``requests``: HTTP requests that the job issued;
+- ``samples``: runtime stats that the job uploaded;
+
 
 .. _job-metadata:
 
 Metadata
 ^^^^^^^^
 
-:class:`~scrapinghub.client.jobs.JobMeta` details can be found in jobs metadata
-and it's scrapystats::
+Metadata about a job details can be accessed via its ``metadata`` attribute.
+The :class:`corresponding object <scrapinghub.client.jobs.JobMeta>`
+acts like a Python dictionary::
 
     >>> job.metadata.get('version')
     '5123a86-master'
+
+To check what keys are available (they ultimately depend on the job),
+you can use its ``.iter()`` method (here, it's wrapped inside a dict for readibility)::
+
+    >>> dict(job.metadata.iter())
+    {...
+     u'close_reason': u'finished',
+     u'completed_by': u'jobrunner',
+     u'deploy_id': 16,
+     u'finished_time': 1493007370566,
+     u'pending_time': 1493006433100,
+     u'priority': 2,
+     u'project': 123456,
+     u'running_time': 1493006488829,
+     u'scheduled_by': u'periodicjobs',
+     u'scrapystats': {u'downloader/request_bytes': 96774,
+                      u'downloader/request_count': 228,
+                      u'downloader/request_method_count/GET': 228,
+                      u'downloader/response_bytes': 923251,
+                      u'downloader/response_count': 228,
+                      u'downloader/response_status_count/200': 228,
+                      u'finish_reason': u'finished',
+                      u'finish_time': 1493007337660.0,
+                      u'httpcache/firsthand': 228,
+                      u'httpcache/miss': 228,
+                      u'httpcache/store': 228,
+                      u'item_scraped_count': 684,
+                      u'log_count/INFO': 22,
+                      u'memusage/max': 63311872,
+                      u'memusage/startup': 60248064,
+                      u'request_depth_max': 50,
+                      u'response_received_count': 228,
+                      u'scheduler/dequeued': 228,
+                      u'scheduler/dequeued/disk': 228,
+                      u'scheduler/enqueued': 228,
+                      u'scheduler/enqueued/disk': 228,
+                      u'start_time': 1493006508701.0},
+     u'spider': u'myspider',
+     u'spider_args': {u'arg1': u'value1',
+                      u'arg2': u'value2'},
+     u'spider_type': u'manual',
+     u'started_by': u'jobrunner',
+     u'state': u'finished',
+     u'tags': [],
+     u'units': 1,
+     u'version': u'792458b-master'}
+
+
+As you may have noticed in the example above, if the job was a Scrapy
+spider run, the metadata object contains a special ``'scrapystats'`` key,
+which is a dict representation of the crawl's `Scrapy stats`_
+values::
+
     >>> job.metadata.get('scrapystats')
     ...
     'downloader/response_count': 104,
@@ -334,17 +439,21 @@ and it's scrapystats::
     'memusage/startup': 62439424,
     ...
 
-Anything can be stored in metadata, here is example how to add tags::
+
+Anything can be stored in a job's metadata, here is example how to add tags::
 
     >>> job.metadata.set('tags', ['obsolete'])
+
+
+.. _Scrapy stats: https://docs.scrapy.org/en/latest/topics/stats.html
 
 .. _job-items:
 
 Items
 ^^^^^
 
-To retrieve all scraped items from a job use
-:class:`~scrapinghub.client.items.Items`::
+To retrieve all scraped items (as Python dicts) from a job, use
+:class:`job.items.iter() <scrapinghub.client.items.Items>`::
 
     >>> for item in job.items.iter():
     ...     # do something with item (it's just a dict)
@@ -354,7 +463,8 @@ To retrieve all scraped items from a job use
 Logs
 ^^^^
 
-To retrieve all log entries from a job use :class:`~scrapinghub.client.logs.Logs`::
+To retrieve all log entries from a job use :class:`job.logs.iter()
+<scrapinghub.client.logs.Logs>`::
 
     >>> for logitem in job.logs.iter():
     ...     # logitem is a dict with level, message, time
@@ -370,7 +480,8 @@ To retrieve all log entries from a job use :class:`~scrapinghub.client.logs.Logs
 Requests
 ^^^^^^^^
 
-To retrieve all requests from a job there's :class:`~scrapinghub.client.requests.Requests`::
+To retrieve all requests from a job, there's :class:`job.requests.iter()
+<scrapinghub.client.requests.Requests>`::
 
     >>> for reqitem in job.requests.iter():
     ...     # reqitem is a dict
@@ -385,36 +496,37 @@ To retrieve all requests from a job there's :class:`~scrapinghub.client.requests
       'url': 'https://example.com'
     }]
 
-.. _job-samples:
 
-Samples
-^^^^^^^
+Project activity log
+--------------------
 
-:class:`~scrapinghub.client.samples.Samples` is useful to retrieve all samples
-for a job::
+:class:`Project.activity <scrapinghub.client.activity.Activity>` provides a
+convenient interface to project activity events.
 
-    >>> for sample in job.samples.iter():
-    ...     # sample is a list with a timestamp and data
-    >>> sample
-    [1482233732452, 0, 0, 0, 0, 0]
+To retrieve activity events from a project, you can use ``.activity.iter()``,
+with optional arguments (here, the last 3 events, with timestamp information)::
 
+    >>> list(project.activity.iter(count=3, meta="_ts"))
+    [{u'_ts': 1493362000130,
+      u'event': u'job:completed',
+      u'job': u'123456/3/161',
+      u'user': u'jobrunner'},
+     {u'_ts': 1493361946077,
+      u'event': u'job:started',
+      u'job': u'123456/3/161',
+      u'user': u'jobrunner'},
+     {u'_ts': 1493361942440,
+      u'event': u'job:scheduled',
+      u'job': u'123456/3/161',
+      u'user': u'periodicjobs'}]
 
-Activity
---------
-
-:class:`~scrapinghub.client.activity.Activity` provides a convenient interface
-to project activity events.
-
-To retrieve all activity events from a project::
-
-    >>> project.activity.iter()
-    <generator object jldecode at 0x1049ee990>
+To retrieve all the events, use ``.activity.list()``
 
     >>> project.activity.list()
     [{'event': 'job:completed', 'job': '123/2/3', 'user': 'jobrunner'},
      {'event': 'job:cancelled', 'job': '123/2/3', 'user': 'john'}]
 
-To post a new activity event::
+To post a new activity event, use ``.activity.add()``::
 
     >>> event = {'event': 'job:completed', 'job': '123/2/4', 'user': 'john'}
     >>> project.activity.add(event)
@@ -431,9 +543,25 @@ Or post multiple events at once::
 Collections
 -----------
 
-As an example, let's store hash and timestamp pair for foo spider.
+Scrapinghub’s Collections provide a way to store an arbitrary number of
+records indexed by a key.
+They’re often used by Scrapinghub projects as a single place to write
+information from multiple scraping jobs.
 
-Usual workflow with :class:`~scrapinghub.client.collections.Collections` would be::
+Read more about *Collections* `in the official docs`_.
+
+As an example, let's store a hash and timestamp pair for spider 'foo'.
+
+The usual workflow with :class:`project.collections
+<scrapinghub.client.collections.Collections>` would be:
+
+1. reference your project's ``collections`` attribute,
+2. call ``.get_store(<somename>)`` to create or access the named collection
+   you want (the collection will be created automatically if it doesn't exist) ;
+   you get a "store" object back,
+3. call ``.set(<key/value> pairs)`` to store data.
+
+::
 
     >>> collections = project.collections
     >>> foo_store = collections.get_store('foo_store')
@@ -452,7 +580,9 @@ Usual workflow with :class:`~scrapinghub.client.collections.Collections` would b
     >>> foo_store.count()
     0
 
-Collections are available on project level only.
+Collections are available at project level only.
+
+.. _in the official docs: https://doc.scrapinghub.com/api/collections.html
 
 
 Frontiers
@@ -600,3 +730,4 @@ Exceptions
 .. _Frontier: https://doc.scrapinghub.com/api/frontier.html
 .. _count endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-count
 .. _list endpoint: https://doc.scrapinghub.com/api/jobq.html#jobq-project-id-list
+.. _run endpoint: https://doc.scrapinghub.com/api/jobs.html#run-json
