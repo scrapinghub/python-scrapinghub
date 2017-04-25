@@ -20,7 +20,7 @@ def _job_and_writer(hsclient, hsproject, **writerargs):
     return job, writer
 
 
-def test_writer_batchsize(hsclient, hsproject):
+def test_writer_batchsize(hsclient, hsproject, json_and_msgpack):
     job, writer = _job_and_writer(hsclient, hsproject, size=10)
     for x in range(111):
         writer.write({'x': x})
@@ -76,7 +76,7 @@ def test_writer_contentencoding(hsclient, hsproject):
         assert job.items.stats()['totals']['input_values'] == 111
 
 
-def test_writer_interval(hsclient, hsproject):
+def test_writer_interval(hsclient, hsproject, json_and_msgpack):
     job, writer = _job_and_writer(hsclient, hsproject,
                                   size=1000, interval=1)
     for x in range(111):

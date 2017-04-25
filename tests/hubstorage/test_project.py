@@ -86,7 +86,7 @@ def test_push_job(hsproject):
     assert job.metadata.get('foo') == u'bar'
 
 
-def test_auth(hsclient):
+def test_auth(hsclient, json_and_msgpack):
     # client without global auth set
     hsc = HubstorageClient(endpoint=hsclient.endpoint)
     assert hsc.auth is None
@@ -130,7 +130,7 @@ def test_auth(hsclient):
     assert samejob.key == job.key
 
 
-def test_broad(hsproject, hsspiderid):
+def test_broad(hsproject, hsspiderid, json_and_msgpack):
     # populate project with at least one job
     job = hsproject.push_job(TEST_SPIDER_NAME)
     assert job.metadata.get('state') == 'pending'
@@ -215,7 +215,7 @@ def test_requests(hsproject):
         next(rr)
 
 
-def test_samples(hsproject):
+def test_samples(hsproject, json_and_msgpack):
     # use some fixed timestamp to represent current time
     ts = 1476803148638
     # no samples stored
@@ -254,7 +254,7 @@ def test_jobsummary(hsproject):
     assert 'running' in js, js
 
 
-def test_bulkdata(hsproject):
+def test_bulkdata(hsproject, json_and_msgpack):
     j = hsproject.push_job(TEST_SPIDER_NAME, state='running')
     for i in range(20):
         j.logs.info("log line %d" % i)

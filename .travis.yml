@@ -2,17 +2,29 @@ language: python
 matrix:
   include:
     - python: 2.7
-      env: TOXENV=py27
+      env: TOXENV=py27-json
+    - python: 2.7
+      env: TOXENV=py27-msgpack
     - python: pypy
-      env: TOXENV=pypy
+      env: TOXENV=pypy-json
+    - python: pypy
+      env: TOXENV=pypy-msgpack
     - python: 3.3
-      env: TOXENV=py33
+      env: TOXENV=py33-json
+    - python: 3.3
+      env: TOXENV=py33-msgpack
     - python: 3.4
-      env: TOXENV=py34
+      env: TOXENV=py34-json
+    - python: 3.4
+      env: TOXENV=py34-msgpack
     - python: 3.5
-      env: TOXENV=py35
+      env: TOXENV=py35-json
+    - python: 3.5
+      env: TOXENV=py35-msgpack
     - python: 3.6
-      env: TOXENV=py36
+      env: TOXENV=py36-json
+    - python: 3.6
+      env: TOXENV=py36-msgpack
 install:
   - pip install -U tox coverage codecov pytest-xdist
 script:
@@ -27,7 +39,7 @@ deploy:
   distributions: sdist bdist_wheel
   on:
     tags: true
-    condition: $TOXENV == py27 && $TRAVIS_TAG =~ ^[0-9]+[.][0-9]+[.][0-9]+(rc[0-9]+|[.]dev[0-9]+)?$
+    condition: $TOXENV == py27-msgpack && $TRAVIS_TAG =~ ^[0-9]+[.][0-9]+[.][0-9]+(rc[0-9]+|[.]dev[0-9]+)?$
   user: scrapinghub
   password:
     secure: SMPghJT7GScj6jQBimk8r58vRNfbKQQkXvfh5DJC38d0XeNtpBJQ750LT7Zlw8R+qAadT8sA7M1YYZY8mIQgdakQv48zX7EVxyc/8a2rAOF9p/ikRn0Dc50Qzr9U5Rtbsp7PMYlmUyeo9VjrStPPkHUPW2Q7vprTpdFrlDaf3WA=

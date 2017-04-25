@@ -24,7 +24,7 @@ setup(
     platforms = ['Any'],
     packages=['scrapinghub', 'scrapinghub.client', 'scrapinghub.hubstorage'],
     package_data={'scrapinghub': ['VERSION']},
-    install_requires=['requests', 'retrying>=1.3.3', 'six>=1.10.0'],
+    install_requires=['requests>=1.0', 'retrying>=1.3.3', 'six>=1.10.0'],
     extras_require = {'msgpack': [mpack_required]},
     classifiers = [
         'Development Status :: 5 - Production/Stable',
