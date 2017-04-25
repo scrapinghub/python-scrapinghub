@@ -126,6 +126,15 @@ def setup_session(client, project, collection, request):
     client.close()
 
 
+@pytest.fixture(params=['json', 'msgpack'])
+def json_and_msgpack(client, monkeypatch, request):
+    if request.param == 'json':
+        monkeypatch.setattr(client._hsclient, 'use_msgpack', False)
+    elif not MSGPACK_AVAILABLE or request.config.getoption("--disable-msgpack"):
+        pytest.skip("messagepack-based tests are disabled")
+    return request.param
+
+
 @pytest.fixture(autouse=True)
 def setup_vcrpy(request, project):
     # generates names like "test_module/test_function{-json}.yaml"

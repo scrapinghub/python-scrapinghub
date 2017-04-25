@@ -16,16 +16,6 @@ def pytest_addoption(parser):
         help="disable messagepack-serialization based tests")
 
 
-@pytest.fixture(params=['json', 'msgpack'])
-def json_and_msgpack(pytestconfig, monkeypatch, request):
-    if request.param == 'json':
-        monkeypatch.setattr('scrapinghub.hubstorage.resourcetype.MSGPACK_AVAILABLE', False)
-        monkeypatch.setattr('scrapinghub.hubstorage.collectionsrt.MSGPACK_AVAILABLE', False)
-    elif not MSGPACK_AVAILABLE or request.config.getoption("--disable-msgpack"):
-        pytest.skip("messagepack-based tests are disabled")
-    return request.param
-
-
 def request_accept_header_matcher(r1, r2):
     """Custom VCR.py matcher by Accept header."""
 

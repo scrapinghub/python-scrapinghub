@@ -134,7 +134,6 @@ def test_invalid_collection_name(hsproject):
             method(*args)
 
 
-@pytest.mark.parametrize('msgpack_available', [True, False])
 @pytest.mark.parametrize('path,expected_result', [
         ('s/foo', True),
         ('s/foo/', True),
@@ -154,7 +153,6 @@ def test_invalid_collection_name(hsproject):
         ('list', False),
         (None, False),
 ])
-def test_allows_msgpack(msgpack_available, path, expected_result):
-    hsclient = HubstorageClient(use_msgpack=msgpack_available)
+def test_allows_msgpack(hsclient, path, expected_result, json_and_msgpack):
     collections = hsclient.get_project(2222000).collections
-    assert collections._allows_mpack(path) is (msgpack_available and expected_result)
+    assert collections._allows_mpack(path) is (hsclient.use_msgpack and expected_result)

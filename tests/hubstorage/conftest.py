@@ -11,6 +11,7 @@ from requests import HTTPError
 
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import urlpathjoin
+from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
 
 from ..conftest import request_accept_header_matcher
 
@@ -103,6 +104,15 @@ def setup_session(hsclient, hsproject, hscollection, request):
         remove_all_jobs(hsproject)
     yield
     hsclient.close()
+
+
+@pytest.fixture(params=['json', 'msgpack'])
+def json_and_msgpack(hsclient, monkeypatch, request):
+    if request.param == 'json':
+        monkeypatch.setattr(hsclient, 'use_msgpack', False)
+    elif not MSGPACK_AVAILABLE or request.config.getoption("--disable-msgpack"):
+        pytest.skip("messagepack-based tests are disabled")
+    return request.param
 
 
 @pytest.fixture(autouse=True)
