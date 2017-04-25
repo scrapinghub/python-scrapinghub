@@ -88,7 +88,8 @@ def test_push_job(hsproject):
 
 def test_auth(hsclient, json_and_msgpack):
     # client without global auth set
-    hsc = HubstorageClient(endpoint=hsclient.endpoint)
+    hsc = HubstorageClient(endpoint=hsclient.endpoint,
+                           use_msgpack=hsclient.use_msgpack)
     assert hsc.auth is None
 
     # check no-auth access
@@ -279,7 +280,6 @@ def test_output_string(hsclient, hsproject):
     assert isinstance(next(items), str)
 
 
-@pytest.mark.parametrize('msgpack_available', [True, False])
 @pytest.mark.parametrize('path,expected_result', [
     (None, True),
     ('33/1', True),
@@ -291,11 +291,10 @@ def test_output_string(hsclient, hsproject):
     ('33/1/stats/', False),
     ((33, 1, 'stats'), False),
 ])
-def test_allows_msgpack(msgpack_available, path, expected_result):
-    hsclient = HubstorageClient(use_msgpack=msgpack_available)
+def test_allows_msgpack(hsclient, path, expected_result, json_and_msgpack):
     job = hsclient.get_job('2222000/1/1')
     for resource in [job.items, job.logs, job.samples]:
-        assert resource._allows_mpack(path) is (msgpack_available and expected_result)
+        assert resource._allows_mpack(path) is (hsclient.use_msgpack and expected_result)
     assert job.requests._allows_mpack(path) is False
     assert job.metadata._allows_mpack(path) is False
     assert job.jobq._allows_mpack(path) is False
