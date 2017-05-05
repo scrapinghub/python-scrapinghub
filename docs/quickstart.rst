@@ -14,8 +14,8 @@ The quick way::
 
     pip install scrapinghub
 
-You can also install the library with `MessagePack`_ support, it provides better
-response time and improved bandwidth usage::
+It is recommended to install the library with `MessagePack`_ support,
+it provides better response time and improved bandwidth usage::
 
     pip install scrapinghub[msgpack]
 
@@ -23,34 +23,46 @@ response time and improved bandwidth usage::
 Basic usage
 -----------
 
-Instantiate new client::
+Instantiate a new client with your Scrapinghub API key::
 
     >>> from scrapinghub import ScrapinghubClient
-    >>> client = ScrapinghubClient('APIKEY')
+    >>> apikey = '84c87545607a4bc0****************' # your API key as a string
+    >>> client = ScrapinghubClient(apikey)
 
-Work with your projects::
+.. note::
+    Your Scrapinghub API key is available at https://app.scrapinghub.com/account/apikey
+    after you sign up with the service.
+
+List your deployed projects::
 
     >>> client.projects.list()
     [123, 456]
 
-Run new jobs from the client::
+Run a new job for one of your projects::
 
     >>> project = client.get_project(123)
     >>> project.jobs.run('spider1', job_args={'arg1': 'val1'})
     <scrapinghub.client.Job at 0x106ee12e8>>
 
-Access your jobs data::
+Access your job's output data::
 
     >>> job = client.get_job('123/1/2')
     >>> for item in job.items():
     ...     print(item)
     {
+        'name': ['Some item'],
+        'url': 'http://some-url/item.html',
+        'value': 25,
+    }
+    {
         'name': ['Some other item'],
         'url': 'http://some-url/other-item.html',
-        'size': 35000,
+        'value': 35,
     }
+    ...
 
-Many more features `are awaiting`_ for you.
+Checkout all the other features in :doc:`client/overview` or in the more
+detailed :doc:`client/apidocs`.
 
 
 Tests
@@ -81,5 +93,4 @@ Note that internally the above command erases the whole folder with cassettes.
 
 
 .. _MessagePack: https://en.wikipedia.org/wiki/MessagePack
-.. _are awaiting: client/overview.html
 .. _VCR.py: https://pypi.python.org/pypi/vcrpy
