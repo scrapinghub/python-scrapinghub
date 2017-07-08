@@ -221,7 +221,7 @@ even default ones::
     >>> job_summary.get('spider', 'missing')
     'foo'
     >>>
-    >>> # when jobmeta is use, if "spider" in not list in it,
+    >>> # when jobmeta is use, if "spider" is not list in it,
     >>> # iter() will not include "spider" key in the returned dicts
     >>> jobs_summary = project.jobs.iter(jobmeta=['scheduled_by'])
     >>> job_summary = next(jobs_summary)
