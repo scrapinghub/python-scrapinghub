@@ -1,7 +1,7 @@
 Release notes
 =============
 
-2.0.0 (2016-03-29)
+2.0.0 (2017-03-29)
 ------------------
 
 Major release with a lot of new features.
