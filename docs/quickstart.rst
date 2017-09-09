@@ -47,7 +47,7 @@ Run a new job for one of your projects::
 Access your job's output data::
 
     >>> job = client.get_job('123/1/2')
-    >>> for item in job.items():
+    >>> for item in job.items.iter():
     ...     print(item)
     {
         'name': ['Some item'],
