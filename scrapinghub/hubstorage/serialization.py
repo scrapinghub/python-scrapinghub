@@ -40,6 +40,9 @@ def jsonencode(o):
 
 def jsondefault(o):
     if isinstance(o, datetime):
+        # convert TZ-aware datetime object to POSIX timestamp
+        if o.tzinfo:
+            o = o.replace(tzinfo=None) - o.utcoffset()
         delta = o - EPOCH
         u = delta.microseconds
         s = delta.seconds
