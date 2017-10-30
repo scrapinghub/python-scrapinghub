@@ -1,3 +1,4 @@
+from functools import partial
 
 from .resourcetype import ResourceType
 from .utils import urlpathjoin
@@ -17,6 +18,7 @@ class Frontier(ResourceType):
     def __init__(self, *a, **kw):
         self._writers = {}  # dict of writers indexed by (frontier, slot)
         self.newcount = 0
+        self.newcounts = {}  # newcounts indexed by (frontier, slot)
         super(Frontier, self).__init__(*a, **kw)
 
     def _get_writer(self, frontier, slot):
@@ -31,13 +33,15 @@ class Frontier(ResourceType):
                 interval=self.batch_interval,
                 qsize=self.batch_qsize,
                 content_encoding=self.batch_content_encoding,
-                callback=self._writer_callback
+                callback=partial(self._writer_callback, key=key)
             )
             self._writers[key] = writer
         return writer
 
-    def _writer_callback(self, response):
-        self.newcount += response.json()["newcount"]
+    def _writer_callback(self, key, response):
+        newcount = response.json()["newcount"]
+        self.newcount += newcount
+        self.newcounts[key] = self.newcounts.get(key, 0) + newcount
 
     def close(self, block=True):
         for writer in self._writers.values():
