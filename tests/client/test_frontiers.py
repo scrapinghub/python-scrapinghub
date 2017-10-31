@@ -5,7 +5,7 @@ from collections import Iterable
 from six import string_types
 
 from scrapinghub.client.frontiers import Frontiers, Frontier, FrontierSlot
-from .conftest import TEST_FRONTIER_NAME, TEST_FRONTIER_SLOT
+from .conftest import TEST_FRONTIER_SLOT
 
 
 def _add_test_requests_to_frontier(frontier):
@@ -14,7 +14,7 @@ def _add_test_requests_to_frontier(frontier):
     slot.flush()
 
 
-def test_frontiers(project, frontier):
+def test_frontiers(project, frontier, hsfrontier_name):
     # reset a test slot and add some requests to init it
     frontier.get(TEST_FRONTIER_SLOT).delete()
     _add_test_requests_to_frontier(frontier)
@@ -25,14 +25,14 @@ def test_frontiers(project, frontier):
     # test for iter() method
     frontiers_names = frontiers.iter()
     assert isinstance(frontiers_names, Iterable)
-    assert TEST_FRONTIER_NAME in list(frontiers_names)
+    assert hsfrontier_name in list(frontiers_names)
 
     # test for list() method
     frontiers_names = frontiers.list()
-    assert TEST_FRONTIER_NAME in frontiers_names
+    assert hsfrontier_name in frontiers_names
 
     # test for get() method
-    frontier = frontiers.get(TEST_FRONTIER_NAME)
+    frontier = frontiers.get(hsfrontier_name)
     assert isinstance(frontier, Frontier)
 
     # other tests
@@ -98,9 +98,9 @@ def test_frontier_slot(project, frontier):
     assert TEST_FRONTIER_SLOT not in frontier.list()
 
 
-def test_frontier_newcount(project):
+def test_frontier_newcount(project, hsfrontier_name):
     # add some requests to test frontier to init a test slot
-    frontier = project.frontiers.get(TEST_FRONTIER_NAME)
+    frontier = project.frontiers.get(hsfrontier_name)
     first_slot = frontier.get(TEST_FRONTIER_SLOT)
     first_slot.delete()
 

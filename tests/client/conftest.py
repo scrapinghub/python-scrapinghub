@@ -16,7 +16,6 @@ from ..conftest import request_accept_header_matcher
 
 TEST_PROJECT_ID = "2222222"
 TEST_SPIDER_NAME = 'hs-test-spider'
-TEST_FRONTIER_NAME = 'test'
 TEST_FRONTIER_SLOT = 'site.com'
 TEST_BOTGROUP = 'python-hubstorage-test'
 TEST_COLLECTION_NAME = "test_collection_123"
@@ -110,9 +109,8 @@ def collection(project, request):
     yield collection
 
 
-@pytest.fixture(scope='session')
-def frontier(project, request):
-    frontier = project.frontiers.get(TEST_FRONTIER_NAME)
+def frontier(project, request, hsfrontier_name):
+    frontier = project.frontiers.get(hsfrontier_name)
     if is_using_real_services(request):
         clean_frontier_slot(frontier)
     yield frontier

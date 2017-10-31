@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+import re
 
 from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
 
@@ -23,3 +24,9 @@ def request_accept_header_matcher(r1, r2):
         return request.headers.get('Accept', '').lower()
 
     return _get_accept_header(r1) == _get_accept_header(r2)
+
+
+@pytest.fixture
+def hsfrontier_name(request):
+    """Provide a name for test-unique HS frontier."""
+    return re.sub('\W+', '-', request.node.nodeid)
