@@ -14,7 +14,19 @@ def _add_test_requests_to_frontier(frontier):
     slot.flush()
 
 
-def test_frontiers(project, frontier, hsfrontier_name):
+def _clean_project_frontiers(project):
+    """Helper to clean slots of all frontiers for a project.
+
+    frontier fixture cleans a test slot before each test, but for some tests
+    it's convenient to clean all frontiers and test with 0 counters.
+    """
+    for frontier_name in project.frontiers.iter():
+        frontier = project.frontiers.get(frontier_name)
+        for slot_name in frontier.iter():
+            frontier.get(slot_name).delete()
+
+
+def test_frontiers(project, frontier, frontier_name):
     # reset a test slot and add some requests to init it
     frontier.get(TEST_FRONTIER_SLOT).delete()
     _add_test_requests_to_frontier(frontier)
@@ -25,14 +37,14 @@ def test_frontiers(project, frontier, hsfrontier_name):
     # test for iter() method
     frontiers_names = frontiers.iter()
     assert isinstance(frontiers_names, Iterable)
-    assert hsfrontier_name in list(frontiers_names)
+    assert frontier_name in list(frontiers_names)
 
     # test for list() method
     frontiers_names = frontiers.list()
-    assert hsfrontier_name in frontiers_names
+    assert frontier_name in frontiers_names
 
     # test for get() method
-    frontier = frontiers.get(hsfrontier_name)
+    frontier = frontiers.get(frontier_name)
     assert isinstance(frontier, Frontier)
 
     # other tests
@@ -98,11 +110,9 @@ def test_frontier_slot(project, frontier):
     assert TEST_FRONTIER_SLOT not in frontier.list()
 
 
-def test_frontier_newcount(project, hsfrontier_name):
-    # add some requests to test frontier to init a test slot
-    frontier = project.frontiers.get(hsfrontier_name)
+def test_frontier_newcount(project, frontier):
+    _clean_project_frontiers(project)
     first_slot = frontier.get(TEST_FRONTIER_SLOT)
-    first_slot.delete()
 
     assert frontier._frontiers.newcount == 0
     assert frontier.newcount == 0
