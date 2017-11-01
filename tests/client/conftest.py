@@ -109,8 +109,9 @@ def collection(project, request):
     yield collection
 
 
-def frontier(project, request, hsfrontier_name):
-    frontier = project.frontiers.get(hsfrontier_name)
+@pytest.fixture(scope='function')
+def frontier(project, request, frontier_name):
+    frontier = project.frontiers.get(frontier_name)
     if is_using_real_services(request):
         clean_frontier_slot(frontier)
     yield frontier
