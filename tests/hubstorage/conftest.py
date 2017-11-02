@@ -18,7 +18,6 @@ from ..conftest import request_accept_header_matcher
 
 TEST_PROJECT_ID = "2222222"
 TEST_SPIDER_NAME = 'hs-test-spider'
-TEST_FRONTIER_NAME = 'test'
 TEST_FRONTIER_SLOT = 'site.com'
 TEST_BOTGROUP = 'python-hubstorage-test'
 TEST_COLLECTION_NAME = "test_collection_123"
