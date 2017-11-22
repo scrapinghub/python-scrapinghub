@@ -54,7 +54,9 @@ class ResourceType(object):
         kwargs['url'] = urlpathjoin(self.url, _path)
         kwargs.setdefault('auth', self.auth)
         if 'jl' in kwargs:
-            kwargs['data'] = jlencode(kwargs.pop('jl'))
+            # XXX explicitly encode data to overcome shazow/urllib3#717
+            # when dealing with large POST requests with enabled TLS
+            kwargs['data'] = jlencode(kwargs.pop('jl')).encode('utf-8')
 
         r = self.client.request(**kwargs)
 
