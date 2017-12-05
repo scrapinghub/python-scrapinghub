@@ -1,6 +1,8 @@
 mock
 vcrpy==1.10.3
-pytest
+# FIXME remove the constraint after resolving
+# https://github.com/pytest-dev/pytest/issues/2966
+pytest<3.3.0
 pytest-cov
 pytest-catchlog
 responses==0.5.0
