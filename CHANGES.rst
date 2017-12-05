@@ -1,6 +1,20 @@
 Release notes
 =============
 
+2.0.2 (2017-12-05)
+------------------
+
+- add support for TZ-aware datetime objects
+- better tests
+
+2.0.1 (2017-07-19)
+------------------
+
+- add a client parameter to disable msgpack use
+- add VCR.py json-serialized tests
+- make `parent` param optional for requests.add
+- improve documentation
+
 2.0.0 (2017-03-29)
 ------------------
 
