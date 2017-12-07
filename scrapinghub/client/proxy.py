@@ -78,7 +78,7 @@ class _ItemsResourceProxy(_Proxy):
         :return: a generator object over a list of element dictionaries.
         :rtype: :class:`types.GeneratorType[dict]`
         """
-        update_kwargs(params or {}, count=count)
+        update_kwargs(params, count=count)
         params = self._modify_iter_params(params)
         return self._origin.list(_key, **params)
 

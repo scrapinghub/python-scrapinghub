@@ -1,6 +1,8 @@
+import mock
 import pytest
 
 from scrapinghub.client.proxy import _format_iter_filters
+from scrapinghub.client.proxy import _ItemsResourceProxy
 
 
 def test_format_iter_filters():
@@ -36,3 +38,18 @@ def test_format_iter_filters():
     # exception if entry is not list/tuple or string
     with pytest.raises(ValueError):
         _format_iter_filters({'filter': ['test', 123]})
+
+
+def test_item_resource_iter_no_params():
+    items_proxy = _ItemsResourceProxy(mock.Mock, mock.Mock(), 'mocked_key')
+    items_proxy._origin = mock.Mock()
+    items_proxy.iter(count=123)
+    assert items_proxy._origin.list.call_args == mock.call(None, count=123)
+
+
+def test_item_resource_iter_with_params():
+    items_proxy = _ItemsResourceProxy(mock.Mock, mock.Mock(), 'mocked_key')
+    items_proxy._origin = mock.Mock()
+    items_proxy.iter(count=123, startts=12345)
+    assert (items_proxy._origin.list.call_args ==
+            mock.call(None, count=123, startts=12345))
