@@ -1,6 +1,11 @@
 Release notes
 =============
 
+2.0.3 (2017-12-08)
+------------------
+
+- fix `iter` logic when applying single `count` param
+
 2.0.2 (2017-12-05)
 ------------------
 
