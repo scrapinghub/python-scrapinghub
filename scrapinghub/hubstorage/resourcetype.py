@@ -1,13 +1,20 @@
+import time
+import json
+import socket
+import logging
+from collections import MutableMapping
+
 import six
 from six.moves import range
-import logging, time, json, socket
-from collections import MutableMapping
 import requests.exceptions as rexc
+
 from .utils import urlpathjoin, xauth
 from .serialization import jlencode, jldecode, mpdecode
 
+
 logger = logging.getLogger('hubstorage.resourcetype')
 CHUNK_SIZE = 512
+STATS_CHUNK_SIZE = 512 * 1024
 
 
 class ResourceType(object):
@@ -53,6 +60,7 @@ class ResourceType(object):
     def _iter_lines(self, _path, **kwargs):
         kwargs['url'] = urlpathjoin(self.url, _path)
         kwargs.setdefault('auth', self.auth)
+        chunk_size = kwargs.pop('chunk_size', CHUNK_SIZE)
         if 'jl' in kwargs:
             # XXX explicitly encode data to overcome shazow/urllib3#717
             # when dealing with large POST requests with enabled TLS
@@ -60,7 +68,7 @@ class ResourceType(object):
 
         r = self.client.request(**kwargs)
 
-        lines = r.iter_lines()
+        lines = r.iter_lines(chunk_size=chunk_size)
         if six.PY3:
             return (l.decode(r.encoding or 'utf8') for l in lines)
         return lines
@@ -217,7 +225,7 @@ class ItemsResourceType(ResourceType):
             return o
 
     def stats(self):
-        return next(self.apiget('stats'))
+        return next(self.apiget('stats', chunk_size=STATS_CHUNK_SIZE))
 
 
 class MappingResourceType(ResourceType, MutableMapping):
