@@ -82,6 +82,14 @@ class ResourceType(object):
         return self.apirequest(_path, method='GET', **kwargs)
 
     def apiget_json(self, _path, **kwargs):
+        """Optimized GET logic for endpoints returning a single JSON line.
+
+        Some endpoints, like /items/stats, can return a large JSON line, and
+        due to chunking logic in _iter_lines() it can take double time to get
+        the chunks one by one, join and convert it to a single JSON line. This
+        method should be called for endpoints that always return a single JSON
+        line in the response.
+        """
         kwargs.update(method='GET', url=urlpathjoin(self.url, _path))
         kwargs.setdefault('auth', self.auth)
         kwargs.setdefault('is_idempotent', True)
