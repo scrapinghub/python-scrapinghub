@@ -62,7 +62,9 @@ class ResourceType(object):
             # XXX explicitly encode data to overcome shazow/urllib3#717
             # when dealing with large POST requests with enabled TLS
             kwargs['data'] = jlencode(kwargs.pop('jl')).encode('utf-8')
+
         r = self.client.request(**kwargs)
+
         lines = r.iter_lines()
         if six.PY3:
             return (l.decode(r.encoding or 'utf8') for l in lines)
