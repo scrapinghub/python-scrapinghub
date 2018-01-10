@@ -1,8 +1,13 @@
+import time
+import json
+import socket
+import logging
+from collections import MutableMapping
+
 import six
 from six.moves import range
-import logging, time, json, socket
-from collections import MutableMapping
 import requests.exceptions as rexc
+
 from .utils import urlpathjoin, xauth
 from .serialization import jlencode, jldecode, mpdecode
 
@@ -57,9 +62,7 @@ class ResourceType(object):
             # XXX explicitly encode data to overcome shazow/urllib3#717
             # when dealing with large POST requests with enabled TLS
             kwargs['data'] = jlencode(kwargs.pop('jl')).encode('utf-8')
-
         r = self.client.request(**kwargs)
-
         lines = r.iter_lines()
         if six.PY3:
             return (l.decode(r.encoding or 'utf8') for l in lines)
@@ -77,6 +80,14 @@ class ResourceType(object):
     def apiget(self, _path=None, **kwargs):
         kwargs.setdefault('is_idempotent', True)
         return self.apirequest(_path, method='GET', **kwargs)
+
+    def apiget_json(self, _path, **kwargs):
+        kwargs.update(method='GET', url=urlpathjoin(self.url, _path))
+        kwargs.setdefault('auth', self.auth)
+        kwargs.setdefault('is_idempotent', True)
+        r = self.client.request(**kwargs)
+        r.raise_for_status()
+        return r.json()
 
     def apidelete(self, _path=None, **kwargs):
         kwargs.setdefault('is_idempotent', True)
@@ -217,7 +228,7 @@ class ItemsResourceType(ResourceType):
             return o
 
     def stats(self):
-        return next(self.apiget('stats'))
+        return self.apiget_json('stats')
 
 
 class MappingResourceType(ResourceType, MutableMapping):
