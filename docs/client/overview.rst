@@ -382,6 +382,8 @@ you can use its ``.iter()`` method (here, it's wrapped inside a dict for readibi
      u'completed_by': u'jobrunner',
      u'deploy_id': 16,
      u'finished_time': 1493007370566,
+     u'job_settings': {u'CLOSESPIDER_PAGECOUNT': 5,
+                       u'SOME_CUSTOM_SETTING': 10},
      u'pending_time': 1493006433100,
      u'priority': 2,
      u'project': 123456,
