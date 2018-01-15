@@ -37,6 +37,16 @@ def test_connection_init_with_default_url():
     assert conn.url == Connection.DEFAULT_ENDPOINT
 
 
+def test_connection_init_with_default_timeout():
+    conn = Connection(apikey='testkey')
+    assert conn._connection_timeout is None
+
+
+def test_connection_init_with_custom_timeout():
+    conn = Connection(apikey='testkey', connection_timeout=60)
+    assert conn._connection_timeout == 60
+
+
 def test_connection_init_ok(connection):
     assert connection.apikey == 'testkey'
     assert connection.url == 'http://test-url'
@@ -113,7 +123,10 @@ def test_connection_post(connection):
          {'Header': 'value'}, 'json', True, {'fileA': 'content'}), {})]
 
 
-def test_connection_request_handle_get(connection):
+@pytest.mark.parametrize("timeout", [None, 0.1])
+def test_connection_request_handle_get(connection, timeout):
+    if timeout:
+        connection._connection_timeout = timeout
     connection._session = mock.Mock()
     connection._session.get.return_value = 'get_response'
     connection._decode_response = mock.Mock()
@@ -123,13 +136,17 @@ def test_connection_request_handle_get(connection):
         format='json', raw=False, files=None) == 'expected'
     assert connection._session.get.called
     assert connection._session.get.call_args_list == [
-        (('http://some-url',), {'headers': {'HeaderA': 'value'}})]
+        (('http://some-url',),
+         {'headers': {'HeaderA': 'value'}, 'timeout': timeout})]
     assert connection._decode_response.called
     assert connection._decode_response.call_args_list == [
         (('get_response', 'json', False),)]
 
 
-def test_connection_request_handle_post(connection):
+@pytest.mark.parametrize("timeout", [None, 0.1])
+def test_connection_request_handle_post(connection, timeout):
+    if timeout:
+        connection._connection_timeout = timeout
     connection._session = mock.Mock()
     connection._session.post.return_value = 'post_response'
     connection._decode_response = mock.Mock()
@@ -141,7 +158,8 @@ def test_connection_request_handle_post(connection):
     assert connection._session.post.call_args_list == [
         (('http://some-url',),
          {'headers': {'HeaderA': 'value'}, 'data': 'data',
-          'files': {'fileA': 'content'}})]
+          'files': {'fileA': 'content'},
+          'timeout': timeout})]
     assert connection._decode_response.called
     assert connection._decode_response.call_args_list == [
         (('post_response', 'json', True),)]
