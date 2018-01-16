@@ -49,13 +49,13 @@ class ScrapinghubClient(object):
                  connection_timeout=DEFAULT_CONNECTION_TIMEOUT, **kwargs):
         self.projects = Projects(self)
         login, password = parse_auth(auth)
+        timeout = connection_timeout or DEFAULT_CONNECTION_TIMEOUT
         self._connection = Connection(apikey=login,
                                       password=password,
                                       url=dash_endpoint,
-                                      connection_timeout=connection_timeout)
+                                      connection_timeout=timeout)
         self._hsclient = HubstorageClient(auth=(login, password),
-                                          connection_timeout=connection_timeout,
-                                          **kwargs)
+                                          connection_timeout=timeout, **kwargs)
 
     def get_project(self, project_id):
         """Get :class:`scrapinghub.client.projects.Project` instance with
