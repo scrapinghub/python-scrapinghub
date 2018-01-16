@@ -53,7 +53,8 @@ class Connection(object):
         'reports_add': 'reports/add',
     }
 
-    def __init__(self, apikey=None, password='', _old_passwd='', url=None):
+    def __init__(self, apikey=None, password='', _old_passwd='',
+                 url=None, connection_timeout=None):
         if apikey is None:
             apikey = os.environ.get('SH_APIKEY')
             if apikey is None:
@@ -67,6 +68,7 @@ class Connection(object):
         self.password = password or ''
         self.url = url or self.DEFAULT_ENDPOINT
         self._session = self._create_session()
+        self._connection_timeout = connection_timeout
 
     def __repr__(self):
         return "Connection(%r)" % self.apikey
@@ -132,10 +134,12 @@ class Connection(object):
                            _type=APIError.ERR_VALUE_ERROR)
 
         if data is None and files is None:
-            response = self._session.get(url, headers=headers)
+            response = self._session.get(url, headers=headers,
+                                         timeout=self._connection_timeout)
         else:
             response = self._session.post(url, headers=headers,
-                                          data=data, files=files)
+                                          data=data, files=files,
+                                          timeout=self._connection_timeout)
         return self._decode_response(response, format, raw)
 
     def _decode_response(self, response, format, raw):

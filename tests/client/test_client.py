@@ -2,6 +2,7 @@ from scrapinghub import Connection
 from scrapinghub import HubstorageClient
 from scrapinghub import ScrapinghubClient
 
+from scrapinghub.client import DEFAULT_CONNECTION_TIMEOUT
 from scrapinghub.client.jobs import Job
 from scrapinghub.client.projects import Projects, Project
 
@@ -18,6 +19,7 @@ def test_client_base(client):
     assert isinstance(client._hsclient, HubstorageClient)
     assert client._connection
     assert isinstance(client._connection, Connection)
+    assert client._connection._connection_timeout == DEFAULT_CONNECTION_TIMEOUT
     assert client.projects
     assert isinstance(client.projects, Projects)
 

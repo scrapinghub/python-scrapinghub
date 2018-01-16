@@ -9,6 +9,8 @@ from .utils import parse_project_id, parse_job_key
 
 __all__ = ['ScrapinghubClient']
 
+DEFAULT_CONNECTION_TIMEOUT = 60
+
 
 class Connection(_Connection):
 
@@ -43,13 +45,17 @@ class ScrapinghubClient(object):
         <scrapinghub.client.ScrapinghubClient at 0x1047af2e8>
     """
 
-    def __init__(self, auth=None, dash_endpoint=None, **kwargs):
+    def __init__(self, auth=None, dash_endpoint=None,
+                 connection_timeout=DEFAULT_CONNECTION_TIMEOUT, **kwargs):
         self.projects = Projects(self)
         login, password = parse_auth(auth)
+        timeout = connection_timeout or DEFAULT_CONNECTION_TIMEOUT
         self._connection = Connection(apikey=login,
                                       password=password,
-                                      url=dash_endpoint)
-        self._hsclient = HubstorageClient(auth=(login, password), **kwargs)
+                                      url=dash_endpoint,
+                                      connection_timeout=timeout)
+        self._hsclient = HubstorageClient(auth=(login, password),
+                                          connection_timeout=timeout, **kwargs)
 
     def get_project(self, project_id):
         """Get :class:`scrapinghub.client.projects.Project` instance with
