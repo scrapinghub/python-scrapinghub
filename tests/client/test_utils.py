@@ -4,7 +4,7 @@ from codecs import encode
 
 import mock
 
-from scrapinghub.client.utils import parse_auth
+from scrapinghub.client.utils import parse_auth, parse_job_key
 
 
 def test_parse_auth_none():
@@ -50,3 +50,20 @@ def test_parse_auth_jwt_token():
     raw_token = (test_job + ':' + test_token).encode('utf8')
     encoded_token = encode(raw_token, 'hex_codec').decode('ascii')
     assert parse_auth(encoded_token) == (test_job, test_token)
+
+
+def test_parse_job_key():
+    job_key = parse_job_key('123/10/11')
+    assert job_key.project_id == '123'
+    assert job_key.spider_id == '10'
+    assert job_key.job_id == '11'
+
+
+def test_parse_job_key_non_numeric():
+    with pytest.raises(ValueError):
+        parse_job_key('123/a/6')
+
+
+def test_parse_job_key_incorrect_length():
+    with pytest.raises(ValueError):
+        parse_job_key('123/1')
