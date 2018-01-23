@@ -60,7 +60,7 @@ def parse_job_key(job_key):
         raise ValueError(
             "Job key should consist of project_id/spider_id/job_id")
     try:
-        map(int, parts)
+        list(map(int, parts))
     except ValueError:
         raise ValueError("Job key parts should be integers")
     return JobKey(*map(str, parts))
