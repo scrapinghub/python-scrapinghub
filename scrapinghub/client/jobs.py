@@ -60,6 +60,9 @@ class Jobs(object):
         :return: jobs count.
         :rtype: :class:`int`
 
+        The endpoint used by the method counts only finished jobs by default,
+        use ``state`` parameter to count jobs in other states.
+
         Usage::
 
             >>> spider = project.spiders.get('spider1')
@@ -98,6 +101,9 @@ class Jobs(object):
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.
         :rtype: :class:`types.GeneratorType[dict]`
+
+        The endpoint used by the method returns only finished jobs by default,
+        use ``state`` parameter to return jobs in other states.
 
         Usage:
 
@@ -165,6 +171,9 @@ class Jobs(object):
 
         :return: list of dictionaries of jobs summary for a given filter params.
         :rtype: :class:`list[dict]`
+
+        The endpoint used by the method returns only finished jobs by default,
+        use ``state`` parameter to return jobs in other states.
 
         Please note that :meth:`list` can use a lot of memory and for a large
         amount of logs it's recommended to iterate through it via :meth:`iter`
