@@ -11,7 +11,7 @@ class Items(_ItemsResourceProxy, _DownloadableProxyMixin):
     :attr:`~scrapinghub.client.jobs.Job.items` attribute.
 
     Please note that :meth:`list` method can use a lot of memory and for
-    a large amount of logs it's recommended to iterate through it via
+    a large number of items it's recommended to iterate through them via
     :meth:`iter` method (all params and available filters are same for
     both methods).
 
@@ -24,8 +24,8 @@ class Items(_ItemsResourceProxy, _DownloadableProxyMixin):
 
     - iterate through first 100 items and print them::
 
-        >>> for log in job.logs.iter(count=100):
-        ...     print(log)
+        >>> for item in job.items.iter(count=100):
+        ...     print(item)
 
     - retrieve items with timestamp greater or equal to given timestamp
       (item here is an arbitrary dictionary depending on your code)::
