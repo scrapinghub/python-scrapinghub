@@ -4,6 +4,7 @@ import os
 import json
 import logging
 import binascii
+import warnings
 from codecs import decode
 
 import six
@@ -101,10 +102,17 @@ def parse_auth(auth):
     """
     if auth is None:
         apikey = os.environ.get('SH_APIKEY')
-        if apikey is None:
-            raise RuntimeError("No API key provided and SH_APIKEY "
-                               "environment variable not set")
-        return (apikey, '')
+        if apikey:
+            return (apikey, '')
+
+        jobauth = os.environ.get('SHUB_JOBAUTH')
+        if jobauth:
+            warnings.warn("You are using the SHUB_JOBAUTH environment "
+                          "variable which may not work for some API endpoints")
+            return _search_for_jwt_credentials(jobauth)
+
+        raise RuntimeError("No API key provided and neither SH_APIKEY "
+                           "nor SHUB_JOBAUTH environment variables is set")
 
     if isinstance(auth, tuple):
         all_strings = all(isinstance(k, six.string_types) for k in auth)
