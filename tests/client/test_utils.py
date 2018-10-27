@@ -17,6 +17,11 @@ def test_parse_auth_none_with_env():
     assert parse_auth(None) == ('testkey', '')
 
 
+@mock.patch.dict(os.environ, {'SH_APIKEY': 'testkey', 'SHUB_JOBAUTH': 'jwt'})
+def test_parse_auth_none_with_multiple_env():
+    assert parse_auth(None) == ('testkey', '')
+
+
 def test_parse_auth_tuple():
     assert parse_auth(('test', 'test')) == ('test', 'test')
     assert parse_auth(('apikey', '')) == ('apikey', '')
@@ -50,6 +55,28 @@ def test_parse_auth_jwt_token():
     raw_token = (test_job + ':' + test_token).encode('utf8')
     encoded_token = encode(raw_token, 'hex_codec').decode('ascii')
     assert parse_auth(encoded_token) == (test_job, test_token)
+
+
+def test_parse_auth_jwt_token_with_jwt_token_env():
+    dummy_test_job, dummy_test_token = '1/2/3', 'some.dummy.jwt.token'
+    raw_token = (dummy_test_job + ':' + dummy_test_token).encode('utf8')
+    dummy_encoded_token = encode(raw_token, 'hex_codec').decode('ascii')
+
+    test_job, test_token = '1/2/3', 'some.jwt.token'
+    raw_token = (test_job + ':' + test_token).encode('utf8')
+    encoded_token = encode(raw_token, 'hex_codec').decode('ascii')
+
+    with mock.patch.dict(os.environ, {'SHUB_JOBAUTH': dummy_encoded_token}):
+        assert parse_auth(encoded_token) == (test_job, test_token)
+
+
+def test_parse_auth_none_with_jwt_token_env():
+    test_job, test_token = '1/2/3', 'some.jwt.token'
+    raw_token = (test_job + ':' + test_token).encode('utf8')
+    encoded_token = encode(raw_token, 'hex_codec').decode('ascii')
+
+    with mock.patch.dict(os.environ, {'SHUB_JOBAUTH': encoded_token}):
+        assert parse_auth(None) == (test_job, test_token)
 
 
 def test_parse_job_key():
