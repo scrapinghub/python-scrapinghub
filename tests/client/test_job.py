@@ -1,5 +1,7 @@
 from collections import Iterator
 
+import pytest
+
 from scrapinghub.client.items import Items
 from scrapinghub.client.jobs import Job
 from scrapinghub.client.jobs import JobMeta
@@ -51,6 +53,14 @@ def test_job_start(spider):
     assert isinstance(job.metadata.get('running_time'), int)
     assert job.metadata.get('spider') == TEST_SPIDER_NAME
     assert job.metadata.get('priority') == 2
+
+
+def test_job_start_with_environment(spider):
+    with pytest.raises(ValueError):
+        spider.jobs.run(environment='wrong-env')
+    env = {'VAR1': 'VAL1', 'VAR2': 'VAL2'}
+    job = spider.jobs.run(environment=env)
+    assert job.metadata.get('environment') == env
 
 
 def test_job_start_extras(spider):
