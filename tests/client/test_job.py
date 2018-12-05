@@ -53,6 +53,16 @@ def test_job_start(spider):
     assert job.metadata.get('priority') == 2
 
 
+def test_job_start_latest(spider):
+    job1 = spider.jobs.run()
+    job1.finish()
+    assert job1.metadata.get('version') == 'test-version'
+    assert job1.metadata.get('deploy_id') == 1
+    job2 = spider.jobs.run(latest=True)
+    assert job2.metadata.get('version') is None
+    assert job2.metadata.get('deploy_id') is None
+
+
 def test_job_start_extras(spider):
     job = spider.jobs.run()
     extras = {

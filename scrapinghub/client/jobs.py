@@ -189,7 +189,7 @@ class Jobs(object):
 
     def run(self, spider=None, units=None, priority=None, meta=None,
             add_tag=None, job_args=None, job_settings=None, cmd_args=None,
-            **params):
+            latest=False, **params):
         """Schedule a new job and returns its job key.
 
         :param spider: a spider name string
@@ -201,6 +201,7 @@ class Jobs(object):
         :param job_args: (optional) a dictionary with job arguments.
         :param job_settings: (optional) a dictionary with job settings.
         :param cmd_args: (optional) a string with script command args.
+        :param latest: (optional) a flag to run latest deploy at runtime
         :param \*\*params: (optional) additional keyword args.
 
         :return: a job instance, representing the scheduled job.
@@ -222,6 +223,9 @@ class Jobs(object):
             cleaned_args = {k: v for k, v in job_args.items()
                             if k not in params}
             params.update(cleaned_args)
+        if latest:
+            meta = meta or {}
+            meta['deploy_id'] = 'latest'
 
         params['project'] = self.project_id
         params['spider'] = spider or self.spider.name
