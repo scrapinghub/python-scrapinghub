@@ -1,6 +1,16 @@
 Release notes
 =============
 
+2.1.0 (2019-01-14)
+------------------
+
+- add an option to schedule jobs with custom environment variables
+- fallback to `SHUB_JOBAUTH` environment variable if `SH_APIKEY` is not set
+- provide a unified connection timeout used by both internal clients
+- increase a chunk size when working with the items stats endpoint
+
+Python 3.3 is considered unmaintained.
+
 2.0.3 (2017-12-08)
 ------------------
 
