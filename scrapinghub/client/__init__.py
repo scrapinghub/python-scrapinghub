@@ -29,7 +29,9 @@ class HubstorageClient(_HubstorageClient):
 class ScrapinghubClient(object):
     """Main class to work with Scrapinghub API.
 
-    :param auth: Scrapinghub APIKEY or other SH auth credentials.
+    :param auth: (optional) Scrapinghub APIKEY or other SH auth credentials.
+        If not provided, it will read, respectively, from 
+        ``SH_APIKEY`` or ``SHUB_JOBAUTH`` environment variables.
     :param dash_endpoint: (optional) Scrapinghub Dash panel url.
     :param \*\*kwargs: (optional) Additional arguments for
         :class:`~scrapinghub.hubstorage.HubstorageClient` constructor.
