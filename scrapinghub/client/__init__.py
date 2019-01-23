@@ -32,23 +32,11 @@ class ScrapinghubClient(object):
     :param auth: (optional) Scrapinghub APIKEY or other SH auth credentials.
         If not provided, it will read, respectively, from 
         ``SH_APIKEY`` or ``SHUB_JOBAUTH`` environment variables.
-        ``SH_APIKEY`` must be set when deploying the spider and
-        ``SHUB_JOBAUTH`` is an internal environment variable
-        available in *Scrapy Cloud* and can't be used locally.
-        Also note that some functionality might not be available through
-        ``SHUB_JOBAUTH``, but most of the Hubstorage public endpoints
-        can be accessed.
-        The following endpoints are available:
-
-        * job data endpoints (``/items/``, ``/logs/``, ``/requests/``, ``/samples/``)
-        * job metadata endpoints (``/meta/``)
-        * project collection endpoints (``/collections/``)
-        * project activity endpoints (``/activity/``)
-        * hub crawl frontier endpoints (``/hcf/``)
-
-        Please refer to the 
-        `oficial docs <https://doc.scrapinghub.com/scrapy-cloud.html>`_
-        for more information about the endpoints.
+        ``SHUB_JOBAUTH`` is available by default in *Scrapy Cloud*, but it does
+        not provide access to all endpoints (e.g. job scheduling), but it is allowed
+        to access job data, collections, crawl frontier.
+        If you need full access to *Scrapy Cloud* features, you'll need to
+        provide a Scrapinghub APIKEY through this argument or deploying ``SH_APIKEY``.
     :param dash_endpoint: (optional) Scrapinghub Dash panel url.
     :param \*\*kwargs: (optional) Additional arguments for
         :class:`~scrapinghub.hubstorage.HubstorageClient` constructor.
