@@ -29,7 +29,14 @@ class HubstorageClient(_HubstorageClient):
 class ScrapinghubClient(object):
     """Main class to work with Scrapinghub API.
 
-    :param auth: Scrapinghub APIKEY or other SH auth credentials.
+    :param auth: (optional) Scrapinghub APIKEY or other SH auth credentials.
+        If not provided, it will read, respectively, from 
+        ``SH_APIKEY`` or ``SHUB_JOBAUTH`` environment variables.
+        ``SHUB_JOBAUTH`` is available by default in *Scrapy Cloud*, but it does
+        not provide access to all endpoints (e.g. job scheduling), but it is allowed
+        to access job data, collections, crawl frontier.
+        If you need full access to *Scrapy Cloud* features, you'll need to
+        provide a Scrapinghub APIKEY through this argument or deploying ``SH_APIKEY``.
     :param dash_endpoint: (optional) Scrapinghub Dash panel url.
     :param \*\*kwargs: (optional) Additional arguments for
         :class:`~scrapinghub.hubstorage.HubstorageClient` constructor.
