@@ -7,7 +7,7 @@ from scrapinghub.client.exceptions import BadRequest
 from scrapinghub.client.exceptions import NotFound
 from scrapinghub.client.exceptions import ValueTooLarge
 
-from .conftest import TEST_COLLECTION_NAME
+from ..conftest import TEST_COLLECTION_NAME
 
 
 def _mkitem():

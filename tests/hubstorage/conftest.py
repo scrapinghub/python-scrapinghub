@@ -1,7 +1,4 @@
 import os
-import zlib
-import base64
-import pickle
 
 import vcr
 import pytest
@@ -14,35 +11,18 @@ from scrapinghub.hubstorage.utils import urlpathjoin
 from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
 
 from ..conftest import request_accept_header_matcher
-
-
-TEST_PROJECT_ID = "2222222"
-TEST_SPIDER_NAME = 'hs-test-spider'
-TEST_FRONTIER_SLOT = 'site.com'
-TEST_BOTGROUP = 'python-hubstorage-test'
-TEST_COLLECTION_NAME = "test_collection_123"
-TEST_AUTH = os.getenv('HS_AUTH', 'f' * 32)
-TEST_ENDPOINT = os.getenv('HS_ENDPOINT', 'http://storage.vm.scrapinghub.com')
+from ..conftest import VCRGzipSerializer
+from ..conftest import (
+    TEST_PROJECT_ID,
+    TEST_ENDPOINT,
+    TEST_AUTH,
+    TEST_BOTGROUP,
+    TEST_COLLECTION_NAME,
+    TEST_SPIDER_NAME,
+)
 
 # vcrpy creates the cassetes automatically under VCR_CASSETES_DIR
 VCR_CASSETES_DIR = 'tests/hubstorage/cassetes'
-
-
-class VCRGzipSerializer(object):
-    """Custom ZIP serializer for VCR.py."""
-
-    def serialize(self, cassette_dict):
-        # receives a dict, must return a string
-        # there can be binary data inside some of the requests,
-        # so it's impossible to use json for serialization to string
-        compressed = zlib.compress(pickle.dumps(cassette_dict, protocol=2))
-        return base64.b64encode(compressed).decode('utf8')
-
-    def deserialize(self, cassette_string):
-        # receives a string, must return a dict
-        decoded = base64.b64decode(cassette_string.encode('utf8'))
-        return pickle.loads(zlib.decompress(decoded))
-
 
 my_vcr = vcr.VCR(cassette_library_dir=VCR_CASSETES_DIR, record_mode='once')
 my_vcr.register_serializer('gz', VCRGzipSerializer())

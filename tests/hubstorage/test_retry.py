@@ -11,8 +11,8 @@ from requests import HTTPError, ConnectionError
 from scrapinghub import HubstorageClient
 from six.moves.http_client import BadStatusLine
 
-from .conftest import TEST_AUTH, TEST_ENDPOINT
-from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
+from ..conftest import TEST_AUTH, TEST_ENDPOINT
+from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 
 
 GET = responses.GET

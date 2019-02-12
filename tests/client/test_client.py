@@ -6,7 +6,7 @@ from scrapinghub.client import DEFAULT_CONNECTION_TIMEOUT
 from scrapinghub.client.jobs import Job
 from scrapinghub.client.projects import Projects, Project
 
-from .conftest import TEST_PROJECT_ID
+from ..conftest import TEST_PROJECT_ID
 
 
 # ScrapinghubClient class tests

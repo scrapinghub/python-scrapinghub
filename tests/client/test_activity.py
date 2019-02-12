@@ -2,7 +2,7 @@ import types
 
 import pytest
 
-from .conftest import TEST_PROJECT_ID
+from ..conftest import TEST_PROJECT_ID
 
 
 def _add_test_activity(project):

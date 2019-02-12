@@ -3,7 +3,7 @@ Test Frontier
 """
 import pytest
 
-from .conftest import TEST_FRONTIER_SLOT
+from ..conftest import TEST_FRONTIER_SLOT
 
 
 @pytest.fixture(autouse=True)

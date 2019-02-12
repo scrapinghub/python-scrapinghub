@@ -1,5 +1,5 @@
-from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
-from .conftest import TEST_DASH_ENDPOINT
+from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
+from ..conftest import TEST_DASH_ENDPOINT
 
 
 def validate_default_meta(meta, state='pending', units=1,

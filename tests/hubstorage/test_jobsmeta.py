@@ -3,7 +3,7 @@ Test job metadata
 
 System tests for operations on stored job metadata
 """
-from .conftest import TEST_SPIDER_NAME
+from ..conftest import TEST_SPIDER_NAME
 from .conftest import start_job
 
 

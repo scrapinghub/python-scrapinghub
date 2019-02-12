@@ -5,7 +5,7 @@ from collections import Iterable
 from six import string_types
 
 from scrapinghub.client.frontiers import Frontiers, Frontier, FrontierSlot
-from .conftest import TEST_FRONTIER_SLOT
+from ..conftest import TEST_FRONTIER_SLOT
 
 
 def _add_test_requests_to_frontier(frontier):
