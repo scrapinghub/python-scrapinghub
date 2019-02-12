@@ -11,3 +11,6 @@ dist
 
 # documentation
 docs/_build
+
+.DS_Store
+pytestdebug.log
