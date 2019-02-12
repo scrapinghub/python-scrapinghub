@@ -62,6 +62,9 @@ class Collections(DownloadableResource):
     def delete(self, _type, _name, _keys):
         return self.apipost((_type, _name, 'deleted'), is_idempotent=True, jl=_keys)
 
+    def truncate(self, _name):
+        return self.apipost('delete', params={'name': _name})
+
     def iter_json(self, _type, _name, requests_params=None, **apiparams):
         return DownloadableResource.iter_json(self, (_type, _name),
             requests_params=requests_params, **apiparams)
@@ -152,6 +155,9 @@ class Collection(object):
 
     def delete(self, *args, **kwargs):
         return self._collections.delete(self.coltype, self.colname, *args, **kwargs)
+
+    def truncate(self):
+        return self._collections.truncate(self.colname)
 
     def count(self, *args, **kwargs):
         return self._collections.count(self.coltype, self.colname, *args, **kwargs)

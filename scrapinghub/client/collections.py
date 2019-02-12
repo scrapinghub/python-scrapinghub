@@ -180,6 +180,12 @@ class Collection(object):
                              "object providing string keys")
         self._origin.delete(keys)
 
+    def truncate(self):
+        """Truncate/delete entire collection.
+        The method returns ``None`` (original method returns an empty generator).
+        """
+        self._origin.truncate()
+
     def count(self, *args, **kwargs):
         """Count collection items with a given filters.
 
