@@ -151,3 +151,18 @@ def test_invalid_collection_name(project):
             (cols.get_store, ('/foo',))]:
         with pytest.raises(ValueError):
             method(*args)
+
+
+def test_truncate(collection):
+    # populate with 20 items
+    test_item = _mkitem()
+    with closing(collection.create_writer()) as writer:
+        for i in range(20):
+            test_item['_key'] = "my_key_%d" % i
+            test_item['counter'] = i
+            writer.write(test_item)
+
+    assert len(list(collection.iter(prefix='my_key'))) == 20
+
+    collection.truncate()
+    assert len(list(collection.iter(prefix='my_key'))) == 0

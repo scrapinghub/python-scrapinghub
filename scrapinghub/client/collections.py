@@ -139,6 +139,10 @@ class Collection(object):
     - delete an item by key::
 
         >>> foo_store.delete('002d050ee3ff6192dcbecc4e4b4457d7')
+
+    - remove the entire collection with a single API call::
+
+        >>> foo_store.truncate()
     """
 
     def __init__(self, client, collections, type_, name):
@@ -179,6 +183,13 @@ class Collection(object):
             raise ValueError("You should provide string key or iterable "
                              "object providing string keys")
         self._origin.delete(keys)
+
+    def truncate(self):
+        """Remove the entire collection with a single API call.
+
+        The method returns ``None`` (original method returns an empty generator).
+        """
+        self._origin.truncate()
 
     def count(self, *args, **kwargs):
         """Count collection items with a given filters.

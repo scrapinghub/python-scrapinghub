@@ -156,3 +156,18 @@ def test_invalid_collection_name(hsproject):
 def test_allows_msgpack(hsclient, path, expected_result, json_and_msgpack):
     collections = hsclient.get_project(2222000).collections
     assert collections._allows_mpack(path) is (hsclient.use_msgpack and expected_result)
+
+
+def test_truncate(hscollection):
+    # populate with 20 items
+    test_item = _mkitem()
+    with closing(hscollection.create_writer()) as writer:
+        for i in range(20):
+            test_item['_key'] = "my_key_%d" % i
+            test_item['counter'] = i
+            writer.write(test_item)
+
+    assert len(list(hscollection.iter_values(prefix='my_key'))) == 20
+
+    hscollection.truncate()
+    assert len(list(hscollection.iter_values(prefix='my_key'))) == 0
