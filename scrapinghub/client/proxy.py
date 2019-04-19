@@ -80,7 +80,7 @@ class _ItemsResourceProxy(_Proxy):
         """
         update_kwargs(params, count=count)
         params = self._modify_iter_params(params)
-        return self._origin.list(_key, **params)
+        return self._origin.iter_values(_key, **params)
 
     def flush(self):
         """Flush data from writer threads."""
