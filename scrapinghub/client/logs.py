@@ -7,7 +7,7 @@ from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 from .utils import LogLevel
 
 
-class Logs(_ItemsResourceProxy, _DownloadableProxyMixin):
+class Logs(_DownloadableProxyMixin, _ItemsResourceProxy):
     """Representation of collection of job logs.
 
     Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance

@@ -5,11 +5,11 @@ from six import string_types
 
 from ..hubstorage.collectionsrt import Collection as _Collection
 
-from .proxy import _Proxy, _DownloadableProxyMixin
+from .proxy import _Proxy
 from .utils import update_kwargs
 
 
-class Collections(_Proxy, _DownloadableProxyMixin):
+class Collections(_Proxy):
     """Access to project collections.
 
     Not a public constructor: use :class:`~scrapinghub.client.projects.Project`

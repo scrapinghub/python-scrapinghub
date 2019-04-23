@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 
 
-class Requests(_ItemsResourceProxy, _DownloadableProxyMixin):
+class Requests(_DownloadableProxyMixin, _ItemsResourceProxy):
     """Representation of collection of job requests.
 
     Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance
