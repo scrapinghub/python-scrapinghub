@@ -54,4 +54,4 @@ class Requests(_DownloadableProxyMixin, _ItemsResourceProxy):
         :param fp: (optional) string fingerprint for the request.
         """
         return self._origin.add(
-            url, status, method, rs, parent, duration, ts, fp=None)
+            url, status, method, rs, parent, duration, ts, fp=fp)
