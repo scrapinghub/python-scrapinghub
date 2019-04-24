@@ -202,13 +202,11 @@ def test_api_delete_can_be_set_to_non_idempotent(hsspiderid):
 def test_collection_store_and_delete_are_retried():
     # Prepare
     client = hsclient_with_retries()
-
     callback_post, attempts_count_post = make_request_callback(2, [])
     callback_delete, attempts_count_delete = make_request_callback(2, [])
-
-    mock_api(method=POST, callback=callback_delete, url_match='/.*/deleted')
-    # /!\ default regexp matches all paths, has to be added last
-    mock_api(method=POST, callback=callback_post)
+    # responses>0.6.1 could reorder callbacks, let's be concrete
+    mock_api(method=POST, callback=callback_post, url_match='/.*/foo$')
+    mock_api(method=POST, callback=callback_delete, url_match='/.*/deleted$')
     # Act
     project = client.get_project(TEST_PROJECT_ID)
     store = project.collections.new_store('foo')

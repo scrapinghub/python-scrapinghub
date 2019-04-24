@@ -21,6 +21,12 @@ matrix:
       env: TOXENV=py36-json
     - python: 3.6
       env: TOXENV=py36-msgpack
+    - python: 3.7
+      dist: xenial
+      env: TOXENV=py37-json
+    - python: 3.7
+      dist: xenial
+      env: TOXENV=py37-msgpack
 install:
   - pip install -U tox coverage codecov pytest-xdist
 script:

@@ -5,4 +5,4 @@ vcrpy==1.10.3
 pytest<3.3.0
 pytest-cov<2.6.0
 pytest-catchlog
-responses==0.5.0
+responses==0.10.6
