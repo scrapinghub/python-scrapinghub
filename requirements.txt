@@ -1,2 +1,2 @@
 -r requirements-base.txt
-msgpack-python>=0.4.7
+msgpack>=0.6.1
