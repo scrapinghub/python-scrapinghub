@@ -3,7 +3,7 @@ from __future__ import absolute_import
 from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 
 
-class Requests(_ItemsResourceProxy, _DownloadableProxyMixin):
+class Requests(_DownloadableProxyMixin, _ItemsResourceProxy):
     """Representation of collection of job requests.
 
     Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance
@@ -54,4 +54,4 @@ class Requests(_ItemsResourceProxy, _DownloadableProxyMixin):
         :param fp: (optional) string fingerprint for the request.
         """
         return self._origin.add(
-            url, status, method, rs, parent, duration, ts, fp=None)
+            url, status, method, rs, parent, duration, ts, fp=fp)
