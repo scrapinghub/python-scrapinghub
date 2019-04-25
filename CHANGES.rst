@@ -1,6 +1,15 @@
 Release notes
 =============
 
+2.1.1 (2019-04-25)
+------------------
+
+- add Python 3.7 support
+- update msgpack dependency
+- fix `iter` logic for items/requests/logs
+- add `truncate` method to collections
+- improve documnentation
+
 2.1.0 (2019-01-14)
 ------------------
 
