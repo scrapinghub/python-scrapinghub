@@ -14,6 +14,8 @@ from scrapinghub.legacy import Connection
 DEFAULT_PROJECT_ID = "2222222"
 DEFAULT_ENDPOINT = 'http://storage.vm.scrapinghub.com'
 DEFAULT_DASH_ENDPOINT = 'http://33.33.33.51:8080/api/'
+DEFAULT_ADMIN_AUTH = 'f' * 32
+DEFAULT_USER_AUTH = 'e' * 32
 
 
 TEST_PROJECT_ID = os.getenv('HS_PROJECT_ID', DEFAULT_PROJECT_ID)
@@ -21,11 +23,11 @@ TEST_SPIDER_NAME = 'hs-test-spider'
 TEST_FRONTIER_SLOT = 'site.com'
 TEST_BOTGROUP = 'python-hubstorage-test'
 TEST_COLLECTION_NAME = "test_collection_123"
-TEST_AUTH = os.getenv('HS_AUTH', 'f' * 32)
+TEST_AUTH = os.getenv('HS_AUTH', DEFAULT_ADMIN_AUTH)
 TEST_ENDPOINT = os.getenv('HS_ENDPOINT', DEFAULT_ENDPOINT)
 TEST_COLLECTION_NAME = "test_collection_123"
-TEST_ADMIN_AUTH = os.getenv('AUTH', 'f' * 32)
-TEST_USER_AUTH = os.getenv('USER_AUTH', 'e' * 32)
+TEST_ADMIN_AUTH = os.getenv('AUTH', DEFAULT_ADMIN_AUTH)
+TEST_USER_AUTH = os.getenv('USER_AUTH', DEFAULT_USER_AUTH)
 TEST_DASH_ENDPOINT = os.getenv('DASH_ENDPOINT', DEFAULT_DASH_ENDPOINT)
 
 
@@ -76,7 +78,7 @@ def normalize_cassette(cassette_dict):
             interaction['request']['headers']['Authorization'] = (
                 'Basic {}'.format(
                     base64.b64encode(
-                        '{}:'.format('f' * 32).encode('utf-8')
+                        '{}:'.format(DEFAULT_ADMIN_AUTH).encode('utf-8')
                     ).decode('utf-8')
                 )
             )
