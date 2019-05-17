@@ -47,16 +47,7 @@ class VCRGzipSerializer(object):
 
 
 def normalize_endpoint(uri, endpoint, default_endpoint):
-    old = endpoint
-    new = default_endpoint
-
-    if old.endswith('/'):
-        old = old[:-1]
-
-    if new.endswith('/'):
-        new = new[:-1]
-
-    return uri.replace(old, new)
+    return uri.replace(endpoint.rstrip('/'), default_endpoint.rstrip('/'))
 
 
 def normalize_cassette(cassette_dict):
