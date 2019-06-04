@@ -8,7 +8,7 @@ Release notes
 - update msgpack dependency
 - fix `iter` logic for items/requests/logs
 - add `truncate` method to collections
-- improve documnentation
+- improve documentation
 
 2.1.0 (2019-01-14)
 ------------------
