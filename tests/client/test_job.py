@@ -9,8 +9,8 @@ from scrapinghub.client.logs import Logs
 from scrapinghub.client.requests import Requests
 from scrapinghub.client.samples import Samples
 
-from .conftest import TEST_PROJECT_ID
-from .conftest import TEST_SPIDER_NAME
+from ..conftest import TEST_PROJECT_ID
+from ..conftest import TEST_SPIDER_NAME
 
 
 def test_job_base(client, spider):

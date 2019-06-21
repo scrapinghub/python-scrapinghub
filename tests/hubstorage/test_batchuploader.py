@@ -7,7 +7,7 @@ from six.moves import range
 from collections import defaultdict
 
 from scrapinghub.hubstorage import ValueTooLarge
-from .conftest import TEST_SPIDER_NAME, TEST_AUTH
+from ..conftest import TEST_SPIDER_NAME, TEST_AUTH
 from .conftest import start_job
 
 

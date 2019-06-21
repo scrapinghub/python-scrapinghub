@@ -1,7 +1,4 @@
 import os
-import zlib
-import base64
-import pickle
 
 import vcr
 import pytest
@@ -12,41 +9,22 @@ from scrapinghub.client.exceptions import NotFound
 from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
 
 from ..conftest import request_accept_header_matcher
-
-
-TEST_PROJECT_ID = "2222222"
-TEST_SPIDER_NAME = 'hs-test-spider'
-TEST_FRONTIER_SLOT = 'site.com'
-TEST_BOTGROUP = 'python-hubstorage-test'
-TEST_COLLECTION_NAME = "test_collection_123"
-TEST_ADMIN_AUTH = os.getenv('AUTH', 'f' * 32)
-TEST_USER_AUTH = os.getenv('USER_AUTH', 'e' * 32)
-TEST_DASH_ENDPOINT = os.getenv('DASH_ENDPOINT', 'http://33.33.33.51:8080/api/')
-TEST_HS_ENDPOINT = os.getenv('HS_ENDPOINT',
-                             'http://storage.vm.scrapinghub.com')
+from ..conftest import VCRGzipSerializer
+from ..conftest import (
+    TEST_SPIDER_NAME,
+    TEST_FRONTIER_SLOT,
+    TEST_COLLECTION_NAME,
+    TEST_ENDPOINT,
+    TEST_PROJECT_ID,
+    TEST_ADMIN_AUTH,
+    TEST_DASH_ENDPOINT,
+)
 
 # use some fixed timestamp to represent current time
 TEST_TS = 1476803148638
 
 # vcrpy creates the cassetes automatically under VCR_CASSETES_DIR
 VCR_CASSETES_DIR = 'tests/client/cassetes'
-
-
-class VCRGzipSerializer(object):
-    """Custom ZIP serializer for VCR.py."""
-
-    def serialize(self, cassette_dict):
-        # receives a dict, must return a string
-        # there can be binary data inside some of the requests,
-        # so it's impossible to use json for serialization to string
-        compressed = zlib.compress(pickle.dumps(cassette_dict, protocol=2))
-        return base64.b64encode(compressed).decode('utf8')
-
-    def deserialize(self, cassette_string):
-        # receives a string, must return a dict
-        decoded = base64.b64decode(cassette_string.encode('utf8'))
-        return pickle.loads(zlib.decompress(decoded))
-
 
 my_vcr = vcr.VCR(cassette_library_dir=VCR_CASSETES_DIR, record_mode='once')
 my_vcr.register_serializer('gz', VCRGzipSerializer())
@@ -79,7 +57,7 @@ def is_using_real_services(request):
 @pytest.fixture(scope='session')
 def client():
     return ScrapinghubClient(auth=TEST_ADMIN_AUTH,
-                             endpoint=TEST_HS_ENDPOINT,
+                             endpoint=TEST_ENDPOINT,
                              dash_endpoint=TEST_DASH_ENDPOINT)
 
 

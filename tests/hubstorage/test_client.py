@@ -4,8 +4,8 @@ Test Client
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import apipoll
 
-from .conftest import TEST_AUTH, TEST_ENDPOINT
-from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
+from ..conftest import TEST_AUTH, TEST_ENDPOINT
+from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import start_job
 
 

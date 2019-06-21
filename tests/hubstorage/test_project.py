@@ -9,7 +9,7 @@ from requests.exceptions import HTTPError
 
 from scrapinghub import HubstorageClient
 
-from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
+from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import hsspiderid
 from .conftest import start_job
 from .conftest import set_testbotgroup, unset_testbotgroup

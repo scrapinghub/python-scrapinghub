@@ -9,7 +9,7 @@ from six.moves import range
 from scrapinghub.hubstorage.jobq import DuplicateJobError
 from scrapinghub.hubstorage.utils import apipoll
 
-from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
+from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import hsspiderid
 
 

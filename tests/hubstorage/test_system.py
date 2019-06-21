@@ -7,8 +7,8 @@ from six.moves import range
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import millitime
 
-from .conftest import TEST_ENDPOINT, TEST_SPIDER_NAME
-from .conftest import TEST_PROJECT_ID, TEST_AUTH
+from ..conftest import TEST_ENDPOINT, TEST_SPIDER_NAME
+from ..conftest import TEST_PROJECT_ID, TEST_AUTH
 from .conftest import start_job
 
 

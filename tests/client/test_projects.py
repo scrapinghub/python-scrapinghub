@@ -17,8 +17,8 @@ from scrapinghub.client.spiders import Spiders
 
 from scrapinghub.hubstorage.utils import apipoll
 
-from .conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
-from .conftest import TEST_USER_AUTH, TEST_DASH_ENDPOINT
+from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
+from ..conftest import TEST_USER_AUTH, TEST_DASH_ENDPOINT
 from .utils import validate_default_meta
 
 
