@@ -8,6 +8,7 @@ from scrapinghub.client.jobs import JobMeta
 from scrapinghub.client.logs import Logs
 from scrapinghub.client.requests import Requests
 from scrapinghub.client.samples import Samples
+from scrapinghub.client.exceptions import BadRequest
 
 from ..conftest import TEST_PROJECT_ID
 from ..conftest import TEST_SPIDER_NAME
@@ -42,6 +43,56 @@ def test_job_update_tags(spider):
 
     # assert that 2nd job tags weren't changed
     assert job2.metadata.get('tags') == ['tag2']
+
+
+def test_cancel_jobs_validation(spider):
+    with pytest.raises(ValueError) as err:
+        spider.jobs.cancel_jobs()
+
+    assert 'keys or count should be defined' in str(err)
+
+    with pytest.raises(ValueError) as err:
+        spider.jobs.cancel_jobs(['2222222/1/1'], count=2)
+
+    assert "keys and count can't be defined simultaneously" in str(err)
+
+    with pytest.raises(ValueError) as err:
+        spider.jobs.cancel_jobs(keys="testing")
+
+    assert 'keys should be a list' in str(err)
+
+    with pytest.raises(ValueError) as err:
+        spider.jobs.cancel_jobs(count=[1,2])
+
+    assert 'count should be an int' in str(err)
+
+    with pytest.raises(ValueError) as err:
+        spider.jobs.cancel_jobs(['2222222/1/1', '2222226/1/1'])
+
+    assert 'all keys should belong to project' in str(err)
+
+
+def test_cancel_jobs(spider):
+    job1 = spider.jobs.run(job_args={'subid': 'tags-1'}, add_tag=['tag1'])
+    job2 = spider.jobs.run(job_args={'subid': 'tags-2'}, add_tag=['tag2'])
+    assert job1.metadata.get('state') == 'pending'
+    assert job2.metadata.get('state') == 'pending'
+
+    output = spider.jobs.cancel_jobs([job1.key, job2.key])
+
+    assert job1.metadata.get('state') == 'finished'
+    assert job2.metadata.get('state') == 'finished'
+    assert output == {'count': 2}
+
+
+def test_cancel_jobs_non_existent(spider):
+    job1 = spider.jobs.run(job_args={'subid': 'tags-1'}, add_tag=['tag1'])
+    assert job1.metadata.get('state') == 'pending'
+
+    # Non-existent job
+    output = spider.jobs.cancel_jobs(['%s/1/10000' % job1.project_id])
+    assert output == {'count': 0}
+    assert job1.metadata.get('state') == 'pending'
 
 
 def test_job_start(spider):
