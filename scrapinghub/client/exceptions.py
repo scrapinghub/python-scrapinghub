@@ -40,6 +40,11 @@ class Unauthorized(ScrapinghubAPIError):
     """Request lacks valid authentication credentials for the target resource."""
 
 
+class Forbidden(ScrapinghubAPIError):
+    """You don't have the permission to access the requested resource.
+    It is either read-protected or not readable by the server."""
+
+
 class NotFound(ScrapinghubAPIError):
     """Entity doesn't exist (e.g. spider or project)."""
 
@@ -68,6 +73,8 @@ def _wrap_http_errors(method):
                 raise BadRequest(http_error=exc)
             elif status_code == 401:
                 raise Unauthorized(http_error=exc)
+            elif status_code == 403:
+                raise Forbidden(http_error=exc)
             elif status_code == 404:
                 raise NotFound(http_error=exc)
             elif status_code == 413:

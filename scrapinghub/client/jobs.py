@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import json
+
 from ..hubstorage.job import JobMeta as _JobMeta
 from ..hubstorage.job import Items as _Items
 from ..hubstorage.job import Logs as _Logs
@@ -76,6 +78,64 @@ class Jobs(object):
         if self.spider:
             params['spider'] = self.spider.name
         return next(self._project.jobq.apiget(('count',), params=params))
+
+    def cancel_jobs(self, keys=None, count=None, **params):
+        """Cancel a list of jobs using the keys provided.
+
+        :param keys: (optional) a list of strings containing the job keys in
+            the format: <project>/<spider>/<job_id>.
+        :param count: (optional) it requires admin access. Used for admins
+            to bulk cancel an amount of ``count`` jobs.
+
+        :return: a dict with the amount of jobs cancelled.
+        :rtype: :class:`dict`
+
+        Usage:
+
+        - cancel jobs 123 and 321 from project 111 and spiders 222 and 333::
+
+            >>> project.jobs.cancel_jobs(['111/222/123', '111/333/321'])
+            {'count': 2}
+
+        - cancel 100 jobs asynchronously::
+
+            >>> project.jobs.cancel_jobs(count=100)
+            {'count': 100}
+        """
+        update_kwargs(params, count=count, keys=keys)
+        keys = params.get('keys')
+        count = params.get('count')
+
+        if keys and count:
+            raise ValueError("keys and count can't be defined simultaneously")
+
+        elif not keys and not count:
+            raise ValueError("keys or count should be defined")
+
+        elif keys:
+            if not isinstance(keys, list):
+                raise ValueError("keys should be a list")
+
+            # it raises ValueError if invalid
+            keys = [parse_job_key(k) for k in keys]
+
+            if not all([key.project_id == self.project_id for key in keys]):
+                raise ValueError(
+                    "all keys should belong to project: %s" % self.project_id
+                )
+
+            # change it to the format in which JobQ expects.
+            data = [{"key": str(k)} for k in keys]
+
+            # may raise BadRequest if JobQ doesn't validate
+            return list(self._project.jobq.apipost("cancel",
+                                                   data=json.dumps(data)))[0]
+        elif count:
+            if not isinstance(count, int):
+                raise ValueError("count should be an int")
+
+            # may raise Forbidden
+            return self._project.jobq.apipost("cancel?count=%s" % count)
 
     def iter(self, count=None, start=None, spider=None, state=None,
              has_tag=None, lacks_tag=None, startts=None, endts=None,
