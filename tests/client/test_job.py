@@ -47,27 +47,27 @@ def test_job_update_tags(spider):
 
 def test_cancel_jobs_validation(spider):
     with pytest.raises(ValueError) as err:
-        spider.jobs.cancel_jobs()
+        spider.jobs.cancel()
 
     assert 'keys or count should be defined' in str(err)
 
     with pytest.raises(ValueError) as err:
-        spider.jobs.cancel_jobs(['2222222/1/1'], count=2)
+        spider.jobs.cancel(['2222222/1/1'], count=2)
 
     assert "keys and count can't be defined simultaneously" in str(err)
 
     with pytest.raises(ValueError) as err:
-        spider.jobs.cancel_jobs(keys="testing")
+        spider.jobs.cancel(keys="testing")
 
     assert 'keys should be a list' in str(err)
 
     with pytest.raises(ValueError) as err:
-        spider.jobs.cancel_jobs(count=[1,2])
+        spider.jobs.cancel(count=[1,2])
 
     assert 'count should be an int' in str(err)
 
     with pytest.raises(ValueError) as err:
-        spider.jobs.cancel_jobs(['2222222/1/1', '2222226/1/1'])
+        spider.jobs.cancel(['2222222/1/1', '2222226/1/1'])
 
     assert 'all keys should belong to project' in str(err)
 
@@ -78,7 +78,7 @@ def test_cancel_jobs(spider):
     assert job1.metadata.get('state') == 'pending'
     assert job2.metadata.get('state') == 'pending'
 
-    output = spider.jobs.cancel_jobs([job1.key, job2.key])
+    output = spider.jobs.cancel([job1.key, job2.key])
 
     assert job1.metadata.get('state') == 'finished'
     assert job2.metadata.get('state') == 'finished'
@@ -90,7 +90,7 @@ def test_cancel_jobs_non_existent(spider):
     assert job1.metadata.get('state') == 'pending'
 
     # Non-existent job
-    output = spider.jobs.cancel_jobs(['%s/1/10000' % job1.project_id])
+    output = spider.jobs.cancel(['%s/1/10000' % job1.project_id])
     assert output == {'count': 0}
     assert job1.metadata.get('state') == 'pending'
 
