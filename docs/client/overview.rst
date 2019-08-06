@@ -322,6 +322,19 @@ Modifying tags is available at :class:`~scrapinghub.client.spiders.Spider`
 level and :class:`~scrapinghub.client.jobs.Job` level.
 
 
+Canceling jobs
+^^^^^^^^^^^^^^
+
+To cancel a few jobs by keys at once::
+
+    >>> spider.jobs.cancel(['123/1/2', '123/1/3'])
+
+All jobs should belong to the same project.
+
+Note that there's a limit on amount of job keys you can cancel with a single call,
+please contact support if the amount is more than 1k.
+
+
 .. _job:
 
 
