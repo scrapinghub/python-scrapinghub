@@ -79,7 +79,7 @@ class Jobs(object):
             params['spider'] = self.spider.name
         return next(self._project.jobq.apiget(('count',), params=params))
 
-    def cancel_jobs(self, keys=None, count=None, **params):
+    def cancel(self, keys=None, count=None, **params):
         """Cancel a list of jobs using the keys provided.
 
         :param keys: (optional) a list of strings containing the job keys in
@@ -94,12 +94,12 @@ class Jobs(object):
 
         - cancel jobs 123 and 321 from project 111 and spiders 222 and 333::
 
-            >>> project.jobs.cancel_jobs(['111/222/123', '111/333/321'])
+            >>> project.jobs.cancel(['111/222/123', '111/333/321'])
             {'count': 2}
 
         - cancel 100 jobs asynchronously::
 
-            >>> project.jobs.cancel_jobs(count=100)
+            >>> project.jobs.cancel(count=100)
             {'count': 100}
         """
         update_kwargs(params, count=count, keys=keys)
