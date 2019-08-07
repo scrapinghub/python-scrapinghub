@@ -1,6 +1,18 @@
 Release notes
 =============
 
+2.2.1 (2019-08-07)
+------------------
+
+- use `jobs.cancel` command name to maintain consistency
+- provide basic documentation for the new feature
+
+2.2.0 (2019-08-06)
+------------------
+
+- add a command to cancel multiple jobs per call
+- normalize and simplify using VCR.py cassettes in tests
+
 2.1.1 (2019-04-25)
 ------------------
 
