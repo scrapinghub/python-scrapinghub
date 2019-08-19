@@ -131,11 +131,10 @@ class Collection(object):
         ...     print(elem)
         [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'}]
         
-    - get 1000th item key::
+    - get generator over item keys::
     
-        >>> import itertools
         >>> keys = foo_store.iter(nodata=True, meta=["_key"]))
-        >>> next(itertools.islice(keys, 1000, 1001))
+        >>> next(keys)
         {'_key': '002d050ee3ff6192dcbecc4e4b4457d7'}
 
     - filter by multiple keys, only values for keys that exist will be returned::
