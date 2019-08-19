@@ -133,8 +133,9 @@ class Collection(object):
         
     - get 1000th item key::
     
-        >>> keys = foo_store.list(nodata=True, meta=["_key"]))
-        >>> keys[1000]
+        >>> import itertools
+        >>> keys = foo_store.iter(nodata=True, meta=["_key"]))
+        >>> next(itertools.islice(keys, 1000, 1001))
         {'_key': '002d050ee3ff6192dcbecc4e4b4457d7'}
 
     - filter by multiple keys, only values for keys that exist will be returned::
