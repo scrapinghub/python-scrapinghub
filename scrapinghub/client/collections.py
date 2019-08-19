@@ -125,11 +125,17 @@ class Collection(object):
         >>> foo_store.iter()
         <generator object jldecode at 0x1049eef10>
 
-    - iterate iterate over _key & value pair::
+    - iterate over _key & value pair::
 
         >>> for elem in foo_store.iter(count=1)):
         ...     print(elem)
         [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'}]
+        
+    - get 1000th item key::
+    
+        >>> keys = foo_store.list(nodata=True, meta=["_key"]))
+        >>> keys[1000]
+        {'_key': '002d050ee3ff6192dcbecc4e4b4457d7'}
 
     - filter by multiple keys, only values for keys that exist will be returned::
 
