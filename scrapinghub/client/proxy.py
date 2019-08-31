@@ -108,8 +108,6 @@ class _DownloadableProxyMixin(object):
         :return: an iterator over elements list.
         :rtype: :class:`collections.Iterable`
         """
-        requests_params = requests_params or {}
-        requests_params.setdefault('is_idempotent', True)
         update_kwargs(apiparams, count=count)
         apiparams = self._modify_iter_params(apiparams)
         drop_key = '_key' not in apiparams.get('meta', [])
