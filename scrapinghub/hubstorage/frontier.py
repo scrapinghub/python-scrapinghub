@@ -59,7 +59,7 @@ class Frontier(ResourceType):
         return self.apiget((frontier, 's', slot, 'q'), params=params)
 
     def delete(self, frontier, slot, ids):
-        self.apipost((frontier, 's', slot, 'q/deleted'), jl=ids)
+        self.apipost((frontier, 's', slot, 'q/deleted'), jl=ids, is_idempotent=True)
 
     def delete_slot(self, frontier, slot):
         self.apidelete((frontier, 's', slot))

@@ -158,6 +158,7 @@ class DownloadableResource(ResourceType):
         requests_params = dict(requests_params or {})
         requests_params.setdefault('method', 'GET')
         requests_params.setdefault('stream', True)
+        requests_params.setdefault('is_idempotent', True)
         requests_params = self._enforce_msgpack(**requests_params)
         for chunk in self._retry(self._iter_content, False, _path,
                                  requests_params, **apiparams):
@@ -168,6 +169,7 @@ class DownloadableResource(ResourceType):
         requests_params = dict(requests_params or {})
         requests_params.setdefault('method', 'GET')
         requests_params.setdefault('stream', True)
+        requests_params.setdefault('is_idempotent', True)
         for line in self._retry(self._iter_lines, True, _path, requests_params,
                                 **apiparams):
             yield line

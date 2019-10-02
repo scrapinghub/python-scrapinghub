@@ -63,7 +63,7 @@ class Collections(DownloadableResource):
         return self.apipost((_type, _name, 'deleted'), is_idempotent=True, jl=_keys)
 
     def truncate(self, _name):
-        return self.apipost('delete', params={'name': _name})
+        return self.apipost('delete', params={'name': _name}, is_idempotent=True)
 
     def iter_json(self, _type, _name, requests_params=None, **apiparams):
         return DownloadableResource.iter_json(self, (_type, _name),
@@ -115,7 +115,10 @@ class Collections(DownloadableResource):
         getparams = dict(params)
         try:
             while True:
-                r = next(self.apirequest(path, method=method, params=getparams))
+                r = next(self.apirequest(
+                    path, method=method, params=getparams,
+                    is_idempotent=method=='GET',
+                ))
                 total += r[total_param]
                 next_start = r.get('nextstart')
                 if next_start is None:
