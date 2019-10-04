@@ -36,3 +36,20 @@ def test_items_list(spider, json_and_msgpack):
     assert o[0] == {'id': 0, 'data': 'data0'}
     assert o[1] == {'id': 1, 'data': 'data1'}
     assert o[2] == {'id': 2, 'data': 'data2'}
+
+
+def test_items_iter_by_chunks(spider, json_and_msgpack):
+    job = spider.jobs.run(meta={'state': 'running'})
+    _add_test_items(job)
+
+    o = job.items.iter_by_chunks(2)
+    assert next(o) == [
+        {'id': 0, 'data': 'data0'},
+        {'id': 1, 'data': 'data1'},
+    ]
+    assert next(o) == [
+        {'id': 2, 'data': 'data2'},
+    ]
+    next(o)
+    with pytest.raises(StopIteration):
+        next(o)

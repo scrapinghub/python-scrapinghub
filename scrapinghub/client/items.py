@@ -59,3 +59,30 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
         if offset:
             params['start'] = '{}/{}'.format(self.key, offset)
         return params
+
+    def iter_by_chunks(self, chunksize=10000, *args, **kwargs):
+        """An alternative for reading and processing items by returning a
+        generator of item chunks.
+
+        This is a convenient method for cases when processing a large amount of
+        items from a job isn't ideal in one go due to the large memory needed.
+        Instead, this allows you to process it chunk by chunk.
+
+        You can improve I/O overheads by increasing the chunk value but that
+        would also increase the memory consumption.
+
+        :return: an iterator over a list of elements.
+        :rtype: :class:`collections.Iterable`
+        """
+
+        processed = 0
+        while True:
+            next_key = self.key + '/' + str(processed)
+            items = [
+                item for item in self.iter(
+                    count=chunksize, start=next_key, *args, **kwargs)
+            ]
+            yield items
+            processed += len(items)
+            if len(items) < chunksize:
+                break
