@@ -37,6 +37,20 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
             'size': 100000,
         }]
 
+    - retrieve items via a generator of lists. This is most useful in cases
+      where the job has a huge amount of items and it needs to be broken down
+      into chunks when consumed. This example shows a job with 3 items::
+
+        >>> gen = job.items.list_iter(chunksize=2)
+        >>> next(gen)
+        [{'name': 'Item #1'}, {'name': 'Item #2'}]
+        >>> next(gen)
+        [{'name': 'Item #3'}]
+        >>> next(gen)
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        StopIteration
+
     - retrieve 1 item with multiple filters::
 
         >>> filters = [("size", ">", [30000]), ("size", "<", [40000])]
