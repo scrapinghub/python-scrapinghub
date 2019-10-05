@@ -61,8 +61,8 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
         return params
 
     def list_iter(self, chunksize=10000, *args, **kwargs):
-        """An alternative for reading and processing items by returning a
-        generator of item chunks.
+        """An alternative interface for reading items by returning them
+        as a generator which yields lists of items sized as `chunksize`.
 
         This is a convenient method for cases when processing a large amount of
         items from a job isn't ideal in one go due to the large memory needed.
@@ -71,7 +71,7 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
         You can improve I/O overheads by increasing the chunk value but that
         would also increase the memory consumption.
 
-        :return: an iterator over a list of elements.
+        :return: an iterator over items, yielding lists of items.
         :rtype: :class:`collections.Iterable`
         """
 
