@@ -74,7 +74,7 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
             params['start'] = '{}/{}'.format(self.key, offset)
         return params
 
-    def list_iter(self, chunksize=10000, *args, **kwargs):
+    def list_iter(self, chunksize=1000, *args, **kwargs):
         """An alternative interface for reading items by returning them
         as a generator which yields lists of items sized as `chunksize`.
 
