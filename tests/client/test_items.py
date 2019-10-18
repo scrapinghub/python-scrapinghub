@@ -1,6 +1,8 @@
 import pytest
 from six.moves import range
 
+from .utils import normalize_job_for_tests
+
 
 def _add_test_items(job):
     for i in range(3):
@@ -28,6 +30,7 @@ def test_items_iter(spider, json_and_msgpack):
 
 def test_items_list(spider, json_and_msgpack):
     job = spider.jobs.run(meta={'state': 'running'})
+    job = normalize_job_for_tests(job)
     _add_test_items(job)
 
     o = job.items.list()
@@ -40,6 +43,7 @@ def test_items_list(spider, json_and_msgpack):
 
 def test_items_list_iter(spider, json_and_msgpack):
     job = spider.jobs.run(meta={'state': 'running'})
+    job = normalize_job_for_tests(job)
     _add_test_items(job)
 
     o = job.items.list_iter(2)
