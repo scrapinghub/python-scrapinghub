@@ -61,6 +61,7 @@ def test_items_list_iter(spider, json_and_msgpack):
 
 def test_items_list_iter_with_start_and_count(spider, json_and_msgpack):
     job = spider.jobs.run(meta={'state': 'running'})
+    job = normalize_job_for_tests(job)
     _add_test_items(job, size=10)
     job.finish()
 
