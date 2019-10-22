@@ -65,7 +65,7 @@ def test_items_list_iter_with_start_and_count(spider, json_and_msgpack):
     _add_test_items(job, size=10)
     job.finish()
 
-    o = job.items.list_iter(chunksize=3, start=3, size=7)
+    o = job.items.list_iter(chunksize=3, start=3, count=7)
     assert next(o) == [
         {'id': 3, 'data': 'data3'},
         {'id': 4, 'data': 'data4'},
