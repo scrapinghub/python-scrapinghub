@@ -57,7 +57,7 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
       params. This is useful when you want to only retrieve a subset of items in
       a job. The example below belongs to a job with 10 items::
 
-        >>> gen = job.items.list_iter(chunksize=2, start=5, size=3)
+        >>> gen = job.items.list_iter(chunksize=2, start=5, count=3)
         >>> next(gen)
         [{'name': 'Item #5'}, {'name': 'Item #6'}]
         >>> next(gen)
@@ -116,6 +116,8 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
 
         while True:
             next_key = self.key + "/" + str(start)
+            if processed + chunksize > count:
+                chunksize = count - processed
             items = [
                 item for item in self.iter(
                     count=chunksize, start=next_key, *args, **kwargs)

@@ -81,3 +81,25 @@ def test_items_list_iter_with_start_and_count(spider, json_and_msgpack):
     ]
     with pytest.raises(StopIteration):
         next(o)
+
+
+def test_items_list_iter_with_start_and_count_2(spider, json_and_msgpack):
+    """2nd version from the test above but this case makes sure that the total
+    number of items returned would be equal to `count`.
+    """
+
+    job = spider.jobs.run(meta={'state': 'running'})
+    job = normalize_job_for_tests(job)
+    _add_test_items(job, size=10)
+    job.finish()
+
+    o = job.items.list_iter(chunksize=2, start=3, count=3)
+    assert next(o) == [
+        {'id': 3, 'data': 'data3'},
+        {'id': 4, 'data': 'data4'},
+    ]
+    assert next(o) == [
+        {'id': 5, 'data': 'data5'},
+    ]
+    with pytest.raises(StopIteration):
+        next(o)
