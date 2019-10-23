@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import sys
+
 from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 
 
@@ -37,6 +39,34 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
             'size': 100000,
         }]
 
+    - retrieve items via a generator of lists. This is most useful in cases
+      where the job has a huge amount of items and it needs to be broken down
+      into chunks when consumed. This example shows a job with 3 items::
+
+        >>> gen = job.items.list_iter(chunksize=2)
+        >>> next(gen)
+        [{'name': 'Item #1'}, {'name': 'Item #2'}]
+        >>> next(gen)
+        [{'name': 'Item #3'}]
+        >>> next(gen)
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        StopIteration
+
+    - retrieving via meth::`list_iter` also supports the `start` and `count`.
+      params. This is useful when you want to only retrieve a subset of items in
+      a job. The example below belongs to a job with 10 items::
+
+        >>> gen = job.items.list_iter(chunksize=2, start=5, count=3)
+        >>> next(gen)
+        [{'name': 'Item #5'}, {'name': 'Item #6'}]
+        >>> next(gen)
+        [{'name': 'Item #7'}]
+        >>> next(gen)
+        Traceback (most recent call last):
+          File "<stdin>", line 1, in <module>
+        StopIteration
+
     - retrieve 1 item with multiple filters::
 
         >>> filters = [("size", ">", [30000]), ("size", "<", [40000])]
@@ -59,3 +89,43 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
         if offset:
             params['start'] = '{}/{}'.format(self.key, offset)
         return params
+
+    def list_iter(self, chunksize=1000, *args, **kwargs):
+        """An alternative interface for reading items by returning them
+        as a generator which yields lists of items sized as `chunksize`.
+
+        This is a convenient method for cases when processing a large amount of
+        items from a job isn't ideal in one go due to the large memory needed.
+        Instead, this allows you to process it chunk by chunk.
+
+        You can improve I/O overheads by increasing the chunk value but that
+        would also increase the memory consumption.
+
+        :param chunksize: size of list to be returned per iteration
+        :param start: offset to specify the start of the item iteration
+        :param count: overall number of items to be returned, which is broken
+            down by `chunksize`.
+
+        :return: an iterator over items, yielding lists of items.
+        :rtype: :class:`collections.Iterable`
+        """
+
+        start = kwargs.pop("start", 0)
+        count = kwargs.pop("count", sys.maxsize)
+        processed = 0
+
+        while True:
+            next_key = self.key + "/" + str(start)
+            if processed + chunksize > count:
+                chunksize = count - processed
+            items = [
+                item for item in self.iter(
+                    count=chunksize, start=next_key, *args, **kwargs)
+            ]
+            yield items
+            processed += len(items)
+            start += len(items)
+            if processed >= count:
+                break
+            if len(items) < chunksize:
+                break
