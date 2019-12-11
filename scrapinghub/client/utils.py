@@ -56,14 +56,17 @@ def parse_job_key(job_key):
     elif isinstance(job_key, six.string_types):
         parts = job_key.split('/')
     else:
-        raise ValueError("Job key should be a string or a tuple")
+        raise ValueError("Job key should be a string or a tuple, got {}: {}"
+                         .format(type(job_key), repr(job_key)))
     if len(parts) != 3:
         raise ValueError(
-            "Job key should consist of project_id/spider_id/job_id")
+            "Job key should consist of project_id/spider_id/job_id, got {}"
+            .format(repr(job_key)))
     try:
         list(map(int, parts))
     except ValueError:
-        raise ValueError("Job key parts should be integers")
+        raise ValueError("Job key parts should be integers, got {}"
+                         .format(repr(job_key)))
     return JobKey(*map(str, parts))
 
 
