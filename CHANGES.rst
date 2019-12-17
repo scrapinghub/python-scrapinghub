@@ -1,6 +1,13 @@
 Release notes
 =============
 
+2.3.0 (2019-12-17)
+------------------
+
+- add `items.list_iter` method to iterate by chunks
+- fix retrying logic for HTTP errors
+- improve documentation
+
 2.2.1 (2019-08-07)
 ------------------
 
