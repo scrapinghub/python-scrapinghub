@@ -15,7 +15,7 @@ class Project(object):
         self.client = client
         self.projectid = urlpathjoin(projectid)
         assert len(self.projectid.split('/')) == 1, \
-                'projectkey must be just one id: %s' % projectid
+            'projectkey must be just one id: %s' % projectid
         self.auth = xauth(auth) or client.auth
         self.jobs = Jobs(client, self.projectid, auth=auth)
         self.items = Items(client, self.projectid, auth=auth)
@@ -67,6 +67,7 @@ class Jobs(ResourceType):
 
     def list(self, _key=None, **params):
         return self.apiget(_key, params=params)
+
 
 class Items(ResourceType):
 

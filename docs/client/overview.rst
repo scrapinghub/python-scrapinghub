@@ -144,7 +144,7 @@ For example, to run a new job for a given spider with custom parameters::
 
 
 
-Geting job information
+Getting job information
 ^^^^^^^^^^^^^^^^^^^^^^
 
 To select a specific job for a project, use ``.jobs.get(<jobKey>)``::
@@ -387,7 +387,7 @@ acts like a Python dictionary::
     '5123a86-master'
 
 To check what keys are available (they ultimately depend on the job),
-you can use its ``.iter()`` method (here, it's wrapped inside a dict for readibility)::
+you can use its ``.iter()`` method (here, it's wrapped inside a dict for readability)::
 
     >>> dict(job.metadata.iter())
     {...

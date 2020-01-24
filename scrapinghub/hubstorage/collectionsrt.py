@@ -66,12 +66,14 @@ class Collections(DownloadableResource):
         return self.apipost('delete', params={'name': _name}, is_idempotent=True)
 
     def iter_json(self, _type, _name, requests_params=None, **apiparams):
-        return DownloadableResource.iter_json(self, (_type, _name),
-            requests_params=requests_params, **apiparams)
+        return DownloadableResource.iter_json(
+            self, (_type, _name), requests_params=requests_params, **apiparams
+        )
 
     def iter_msgpack(self, _type, _name, requests_params=None, **apiparams):
-        return DownloadableResource.iter_msgpack(self, (_type, _name),
-            requests_params=requests_params, **apiparams)
+        return DownloadableResource.iter_msgpack(
+            self, (_type, _name), requests_params=requests_params, **apiparams
+        )
 
     def create_writer(self, coltype, colname, **writer_kwargs):
         self._validate_collection(coltype, colname)
@@ -79,8 +81,7 @@ class Collections(DownloadableResource):
         kwargs.setdefault('content_encoding', 'gzip')
         kwargs.setdefault('auth', self.auth)
         url = urlpathjoin(self.url, coltype, colname)
-        return self.client.batchuploader.create_writer(url,
-            **kwargs)
+        return self.client.batchuploader.create_writer(url, **kwargs)
 
     def new_collection(self, coltype, colname):
         self._validate_collection(coltype, colname)
@@ -109,7 +110,6 @@ class Collections(DownloadableResource):
             raise ValueError('Invalid collection name {!r}, only alphanumeric '
                              'characters'.format(colname))
 
-
     def _batch(self, method, path, total_param, progress=None, **params):
         total = 0
         getparams = dict(params)
@@ -117,7 +117,7 @@ class Collections(DownloadableResource):
             while True:
                 r = next(self.apirequest(
                     path, method=method, params=getparams,
-                    is_idempotent=method=='GET',
+                    is_idempotent=method == 'GET',
                 ))
                 total += r[total_param]
                 next_start = r.get('nextstart')
@@ -147,8 +147,7 @@ class Collection(object):
         kwargs are passed to batchuploader.create_writer, but auth and gzip
         content encoding are specified if not provided
         """
-        return self._collections.create_writer(self.coltype, self.colname,
-            **kwargs)
+        return self._collections.create_writer(self.coltype, self.colname, **kwargs)
 
     def get(self, *args, **kwargs):
         return self._collections.get(self.coltype, self.colname, *args, **kwargs)
@@ -166,9 +165,11 @@ class Collection(object):
         return self._collections.count(self.coltype, self.colname, *args, **kwargs)
 
     def iter_json(self, requests_params=None, **apiparams):
-        return self._collections.iter_json(self.coltype, self.colname,
-            requests_params=requests_params, **apiparams)
+        return self._collections.iter_json(
+            self.coltype, self.colname, requests_params=requests_params, **apiparams
+        )
 
     def iter_values(self, requests_params=None, **apiparams):
-        return self._collections.iter_values(self.coltype, self.colname,
-            requests_params=requests_params, **apiparams)
+        return self._collections.iter_values(
+            self.coltype, self.colname, requests_params=requests_params, **apiparams
+        )

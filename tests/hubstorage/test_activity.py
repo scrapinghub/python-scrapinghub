@@ -1,5 +1,5 @@
 """
-Test Activty
+Test Activity
 """
 from six.moves import range
 

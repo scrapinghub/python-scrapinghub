@@ -45,7 +45,7 @@ def urlpathjoin(*parts):
 
 
 def xauth(auth):
-    """Expand authentification token
+    """Expand authentication token
 
     >>> xauth(None)
     >>> xauth(('user', 'pass'))

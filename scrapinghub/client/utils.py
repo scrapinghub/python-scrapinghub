@@ -89,7 +89,7 @@ def update_kwargs(kwargs, **params):
 
 
 def parse_auth(auth):
-    """Parse authentification token.
+    """Parse authentication token.
 
     >>> os.environ['SH_APIKEY'] = 'apikey'
     >>> parse_auth(None)
@@ -106,7 +106,7 @@ def parse_auth(auth):
     if auth is None:
         apikey = os.environ.get('SH_APIKEY')
         if apikey:
-            return (apikey, '')
+            return apikey, ''
 
         jobauth = os.environ.get('SHUB_JOBAUTH')
         if jobauth:
@@ -131,7 +131,7 @@ def parse_auth(auth):
         return jwt_auth
 
     login, _, password = auth.partition(':')
-    return (login, password)
+    return login, password
 
 
 def _search_for_jwt_credentials(auth):
@@ -144,6 +144,6 @@ def _search_for_jwt_credentials(auth):
             decoded_auth = decoded_auth.decode('ascii')
         login, _, password = decoded_auth.partition(':')
         if password and parse_job_key(login):
-            return (login, password)
+            return login, password
     except (UnicodeDecodeError, ValueError):
         pass

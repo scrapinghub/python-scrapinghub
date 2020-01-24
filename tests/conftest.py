@@ -113,4 +113,4 @@ def request_accept_header_matcher(r1, r2):
 @pytest.fixture
 def frontier_name(request):
     """Provide a name for test-unique HS frontier."""
-    return re.sub('\W+', '-', request.node.nodeid)
+    return re.sub(r'\W+', '-', request.node.nodeid)

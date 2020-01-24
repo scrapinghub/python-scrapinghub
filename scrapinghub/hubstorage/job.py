@@ -1,6 +1,6 @@
 import logging
 from .resourcetype import (ItemsResourceType, DownloadableResource,
-    MappingResourceType)
+                           MappingResourceType)
 from .utils import millitime, urlpathjoin
 from .jobq import JobQ
 

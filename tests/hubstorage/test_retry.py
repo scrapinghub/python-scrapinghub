@@ -71,12 +71,12 @@ def make_request_callback(timeout_count, body_on_success,
         attempts[0] += 1
 
         if attempts[0] <= timeout_count:
-            return (http_error_status, {}, "Timeout")
+            return http_error_status, {}, "Timeout"
         else:
             resp_body = dict(body_on_success)
-            return (200, {}, json.dumps(resp_body))
+            return 200, {}, json.dumps(resp_body)
 
-    return (request_callback, attempts)
+    return request_callback, attempts
 
 
 def test_delete_on_hubstorage_api_does_not_404():
@@ -154,10 +154,10 @@ def test_retrier_catches_badstatusline_and_selected_http_errors(hsspiderid, err_
         if attempts_count[0] <= 2:
             raise ConnectionError("Connection aborted.", BadStatusLine("''"))
         if attempts_count[0] == 3:
-            return (err_code, {}, u'')
+            return err_code, {}, u''
         else:
             resp_body = dict(job_metadata)
-            return (200, {}, json.dumps(resp_body))
+            return 200, {}, json.dumps(resp_body)
 
     mock_api(callback=request_callback)
 

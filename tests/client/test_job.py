@@ -62,7 +62,7 @@ def test_cancel_jobs_validation(spider):
     assert 'keys should be a list' in str(err)
 
     with pytest.raises(ValueError) as err:
-        spider.jobs.cancel(count=[1,2])
+        spider.jobs.cancel(count=[1, 2])
 
     assert 'count should be an int' in str(err)
 

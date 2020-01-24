@@ -72,7 +72,7 @@ def post_scan_test(hsproject, hscollection):
 
     # combining with normal filters
     result = list(hscollection.get(filter='["counter", ">", [5]]',
-                          prefix='post_scan_test1'))
+                                   prefix='post_scan_test1'))
     # 10-19
     assert len(result) == 10
 
