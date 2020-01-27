@@ -196,6 +196,7 @@ class BatchUploader(object):
             headers=headers,
         )
 
+
 class ValueTooLarge(ValueError):
     """Raised when a serialized item is greater than 1MB"""
 

@@ -172,6 +172,7 @@ import sphinx_rtd_theme
 html_theme = 'sphinx_rtd_theme'
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
+
 # disable cross-reference for ivar
 # patch taken from http://stackoverflow.com/a/41184353/1932023
 def patched_make_field(self, types, domain, items, env=None):

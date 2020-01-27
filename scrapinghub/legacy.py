@@ -61,7 +61,7 @@ class Connection(object):
                 raise RuntimeError("No API key provided and SH_APIKEY environment variable not set")
 
         assert not apikey.startswith('http://'), \
-                "Instantiating scrapinghub.Connection with url as first argument is not supported"
+            "Instantiating scrapinghub.Connection with url as first argument is not supported"
         if password:
             warnings.warn("A lot of endpoints support authentication only via apikey.")
         self.apikey = apikey
@@ -77,7 +77,7 @@ class Connection(object):
     def auth(self):
         warnings.warn("'auth' connection attribute is deprecated, "
                       "use 'apikey' attribute instead", stacklevel=2)
-        return (self.apikey, self.password)
+        return self.apikey, self.password
 
     def _create_session(self):
         from requests import session
@@ -169,8 +169,8 @@ class Connection(object):
                 raise APIError("JSON response does not contain status")
         else:  # jl
             return (json.loads(line.decode('utf-8')
-                              if isinstance(line, _BINARY_TYPE) else line)
-                        for line in response.iter_lines())
+                               if isinstance(line, _BINARY_TYPE) else line)
+                    for line in response.iter_lines())
 
     ##
     ## public methods
