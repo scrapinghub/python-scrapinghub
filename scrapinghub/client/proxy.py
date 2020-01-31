@@ -110,7 +110,7 @@ class _DownloadableProxyMixin(object):
         """
         update_kwargs(apiparams, count=count)
         apiparams = self._modify_iter_params(apiparams)
-        drop_key = '_key' not in apiparams.get('meta', [])
+        drop_key = '_key' not in (apiparams.get('meta') or [])
         for entry in self._origin.iter_values(
             _path, requests_params, **apiparams
         ):
