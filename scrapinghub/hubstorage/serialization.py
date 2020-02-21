@@ -25,7 +25,7 @@ def jldecode(lineiterable):
 
 
 def mpdecode(iterable):
-    unpacker = Unpacker(encoding='utf8')
+    unpacker = Unpacker()
     for chunk in iterable:
         unpacker.feed(chunk)
         # Each chunk can have none or many objects,

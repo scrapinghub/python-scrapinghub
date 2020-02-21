@@ -11,7 +11,7 @@ with open(join(dirname(__file__), 'scrapinghub/VERSION'), 'rb') as f:
     version = f.read().decode('ascii').strip()
 
 is_pypy = '__pypy__' in sys.builtin_module_names
-mpack_required = 'msgpack-pypy>=0.0.2' if is_pypy else 'msgpack>=0.6.1'
+mpack_required = 'msgpack-pypy>=0.0.2' if is_pypy else 'msgpack>=1.0.0'
 
 setup(
     name='scrapinghub',
