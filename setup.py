@@ -11,7 +11,9 @@ with open(join(dirname(__file__), 'scrapinghub/VERSION'), 'rb') as f:
     version = f.read().decode('ascii').strip()
 
 is_pypy = '__pypy__' in sys.builtin_module_names
-mpack_required = 'msgpack-pypy>=0.0.2' if is_pypy else 'msgpack>=1.0.0'
+mpack_required = ['msgpack>=1.0.0']
+if is_pypy:
+    mpack_required.append('msgpack-pypy>=0.0.2')
 
 setup(
     name='scrapinghub',
@@ -25,7 +27,7 @@ setup(
     packages=['scrapinghub', 'scrapinghub.client', 'scrapinghub.hubstorage'],
     package_data={'scrapinghub': ['VERSION']},
     install_requires=['requests>=1.0', 'retrying>=1.3.3', 'six>=1.10.0'],
-    extras_require={'msgpack': [mpack_required]},
+    extras_require={'msgpack': mpack_required},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: BSD License',
