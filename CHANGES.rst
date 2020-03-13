@@ -1,6 +1,13 @@
 Release notes
 =============
 
+2.3.1 (2020-03-13)
+------------------
+
+- update msgpack dependency
+- drop official support for Python 3.4
+- improve documentation, address a few PEP8 complaints
+
 2.3.0 (2019-12-17)
 ------------------
 
