@@ -63,7 +63,7 @@ class Connection(object):
         assert not apikey.startswith('http://'), \
             "Instantiating scrapinghub.Connection with url as first argument is not supported"
         if password:
-            warnings.warn("A lot of endpoints support authentication only via apikey.")
+            warnings.warn("A lot of endpoints support authentication only via apikey.", stacklevel=2)
         self.apikey = apikey
         self.password = password or ''
         self.url = url or self.DEFAULT_ENDPOINT
