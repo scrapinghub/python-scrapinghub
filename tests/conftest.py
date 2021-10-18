@@ -6,7 +6,6 @@ import pytest
 import re
 import zlib
 
-from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
 from scrapinghub import HubstorageClient
 from scrapinghub.legacy import Connection
 
@@ -22,7 +21,6 @@ TEST_PROJECT_ID = os.getenv('HS_PROJECT_ID', DEFAULT_PROJECT_ID)
 TEST_SPIDER_NAME = 'hs-test-spider'
 TEST_FRONTIER_SLOT = 'site.com'
 TEST_BOTGROUP = 'python-hubstorage-test'
-TEST_COLLECTION_NAME = "test_collection_123"
 TEST_AUTH = os.getenv('HS_AUTH', DEFAULT_ADMIN_AUTH)
 TEST_ENDPOINT = os.getenv('HS_ENDPOINT', DEFAULT_ENDPOINT)
 TEST_COLLECTION_NAME = "test_collection_123"

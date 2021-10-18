@@ -1,5 +1,6 @@
 import types
-from collections import defaultdict, Iterator
+from collections import defaultdict
+from collections.abc import Iterator
 
 import pytest
 import responses
