@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import collections
+import collections.abc
 
 from six import string_types
 
@@ -130,9 +131,9 @@ class Collection(object):
         >>> for elem in foo_store.iter(count=1)):
         ...     print(elem)
         [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'}]
-        
+
     - get generator over item keys::
-    
+
         >>> keys = foo_store.iter(nodata=True, meta=["_key"]))
         >>> next(keys)
         {'_key': '002d050ee3ff6192dcbecc4e4b4457d7'}
@@ -160,7 +161,7 @@ class Collection(object):
         """Get item from collection by key.
 
         :param key: string item key.
-        :param \*\*params: (optional) additional query params for the request.
+        :param **params: (optional) additional query params for the request.
         :return: an item dictionary if exists.
         :rtype: :class:`dict`
         """
@@ -185,7 +186,7 @@ class Collection(object):
         The method returns ``None`` (original method returns an empty generator).
         """
         if (not isinstance(keys, string_types) and
-                not isinstance(keys, collections.Iterable)):
+                not isinstance(keys, collections.abc.Iterable)):
             raise ValueError("You should provide string key or iterable "
                              "object providing string keys")
         self._origin.delete(keys)
@@ -217,7 +218,7 @@ class Collection(object):
         :param startts: UNIX timestamp at which to begin results.
         :param endts: UNIX timestamp at which to end results.
         :param requests_params: (optional) a dict with optional requests params.
-        :param \*\*params: (optional) additional query params for the request.
+        :param **params: (optional) additional query params for the request.
         :return: an iterator over items list.
         :rtype: :class:`collections.Iterable[dict]`
         """
@@ -243,7 +244,7 @@ class Collection(object):
         :param startts: UNIX timestamp at which to begin results.
         :param endts: UNIX timestamp at which to end results.
         :param requests_params: (optional) a dict with optional requests params.
-        :param \*\*params: (optional) additional query params for the request.
+        :param **params: (optional) additional query params for the request.
         :return: a list of items where each item is represented with a dict.
         :rtype: :class:`list[dict]`
         """
