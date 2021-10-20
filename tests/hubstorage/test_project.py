@@ -26,6 +26,7 @@ def test_projectid(hsclient):
         hsclient.get_project('111/3')
 
 
+@pytest.mark.skip(reason='Servers not running')
 def test_get_job_from_key(hsclient, hsproject, hsspiderid):
     job = hsproject.push_job(TEST_SPIDER_NAME)
     parts = tuple(job.key.split('/'))
@@ -131,6 +132,7 @@ def test_auth(hsclient, json_and_msgpack):
     assert samejob.key == job.key
 
 
+@pytest.mark.skip(reason='Servers not running')
 def test_broad(hsproject, hsspiderid, json_and_msgpack):
     # populate project with at least one job
     job = hsproject.push_job(TEST_SPIDER_NAME)
