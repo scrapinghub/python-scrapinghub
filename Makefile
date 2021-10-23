@@ -17,8 +17,9 @@ upload: clean
 	python setup.py sdist bdist_wheel upload
 
 requirements:
-	pip-compile setup.py
-	pip-compile requirements-test.in
+	pip-compile --quiet setup.py
+	pip-compile --quiet requirements-test.in
+	pip-compile --quiet requirements-docs.in
 
 test:
 	py.test tests/legacy
