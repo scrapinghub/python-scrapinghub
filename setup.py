@@ -10,10 +10,8 @@ except ImportError:
 with open(join(dirname(__file__), 'scrapinghub/VERSION'), 'rb') as f:
     version = f.read().decode('ascii').strip()
 
+# keeping this as it might be useful at some point
 is_pypy = '__pypy__' in sys.builtin_module_names
-mpack_required = ['msgpack>=1.0.0']
-# if is_pypy:
-#    mpack_required.append('msgpack-pypy>=0.0.2')
 
 setup(
     name='scrapinghub',
@@ -26,7 +24,8 @@ setup(
     platforms=['Any'],
     packages=['scrapinghub', 'scrapinghub.client', 'scrapinghub.hubstorage'],
     package_data={'scrapinghub': ['VERSION']},
-    install_requires= mpack_required + [
+    install_requires= [
+        'msgpack>=1.0.0',
         'requests>=1.0',
         'retrying>=1.3.3',
         'six>=1.10.0'
