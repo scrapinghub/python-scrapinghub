@@ -16,6 +16,10 @@ release-major:
 upload: clean
 	python setup.py sdist bdist_wheel upload
 
+requirements:
+	pip-compile setup.py
+	pip-compile requirements-test.in
+
 test:
 	py.test tests/legacy
 

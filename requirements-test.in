@@ -1,0 +1,7 @@
+-r requirements.txt
+mock
+vcrpy
+pytest
+pytest-cov
+responses
+tox
