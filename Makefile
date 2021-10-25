@@ -16,9 +16,15 @@ release-major:
 upload: clean
 	python setup.py sdist bdist_wheel upload
 
-requirements:
-	pip-compile --quiet setup.py
+requirements: requirements-test.txt requirements-docs.txt
+
+requirements-test.txt: requirements-test.in requirements.txt
 	pip-compile --quiet requirements-test.in
+
+requirements.txt: setup.py
+	pip-compile --quiet setup.py
+
+requirements-docs.txt: requirements.txt
 	pip-compile --quiet requirements-docs.in
 
 test:
