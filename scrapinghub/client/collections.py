@@ -82,7 +82,7 @@ class Collections(_Proxy):
 
         :return: an iterator over collections list where each collection is
             represented by a dictionary with ('name','type') fields.
-        :rtype: :class:`collections.Iterable[dict]`
+        :rtype: :class:`collections.abc.Iterable[dict]`
         """
         return self._origin.apiget('list')
 
@@ -185,7 +185,7 @@ class Collection(object):
         The method returns ``None`` (original method returns an empty generator).
         """
         if (not isinstance(keys, string_types) and
-                not isinstance(keys, collections.Iterable)):
+                not isinstance(keys, collections.abc.Iterable)):
             raise ValueError("You should provide string key or iterable "
                              "object providing string keys")
         self._origin.delete(keys)

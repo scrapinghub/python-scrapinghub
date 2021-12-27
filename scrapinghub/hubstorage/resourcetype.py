@@ -2,7 +2,7 @@ import time
 import json
 import socket
 import logging
-from collections import MutableMapping
+from collections.abc import MutableMapping
 
 import six
 from six.moves import range

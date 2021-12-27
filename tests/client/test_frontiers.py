@@ -1,6 +1,6 @@
 import time
 from types import GeneratorType
-from collections import Iterable
+from collections.abc import Iterable
 
 from six import string_types
 
