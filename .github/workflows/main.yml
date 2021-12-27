@@ -13,6 +13,19 @@ jobs:
       fail-fast: false
       matrix:
         include: 
+          - python-version: "2.7"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "2.7"
+            env:
+              TOXENV: "json"
+          - python-version: "pypy3"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "pypy3"
+            env:
+              TOXENV: "json"
+
           - python-version: "3.6"
             env:
               TOXENV: "msgpack"
