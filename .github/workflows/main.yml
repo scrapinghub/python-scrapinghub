@@ -50,6 +50,12 @@ jobs:
           - python-version: "3.9"
             env:
               TOXENV: "json"
+          - python-version: "3.10.1"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "3.10.1"
+            env:
+              TOXENV: "json"
   
     steps:
     - uses: actions/checkout@v2
