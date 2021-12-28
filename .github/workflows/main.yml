@@ -64,5 +64,5 @@ jobs:
         pip install -U tox
         tox
 
-    - name: Upload coverage report
-      run: bash <(curl -s https://codecov.io/bash)
+    - name: Upload to codecov
+      uses: codecov/codecov-action@v2
