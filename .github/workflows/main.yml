@@ -1,0 +1,68 @@
+name: Tests
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: 
+          - python-version: "2.7"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "2.7"
+            env:
+              TOXENV: "json"
+          - python-version: "pypy3"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "pypy3"
+            env:
+              TOXENV: "json"
+
+          - python-version: "3.6"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "3.6"
+            env:
+              TOXENV: "json"
+          - python-version: "3.7"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "3.7"
+            env:
+              TOXENV: "json"
+          - python-version: "3.8"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "3.8"
+            env:
+              TOXENV: "json"
+          - python-version: "3.9"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "3.9"
+            env:
+              TOXENV: "json"
+  
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Run tests
+      env: ${{ matrix.env }}
+      run: |
+        pip install -U tox
+        tox
+
+    - name: Upload to codecov
+      uses: codecov/codecov-action@v2
