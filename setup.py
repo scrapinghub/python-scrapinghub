@@ -30,6 +30,10 @@ setup(
         'retrying>=1.3.3',
         'six>=1.10.0'
     ],
+    extras_require={
+        # Kept for backward compatibility, msgpack is not a direct dependency.
+        'msgpack': [],
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'License :: OSI Approved :: BSD License',
