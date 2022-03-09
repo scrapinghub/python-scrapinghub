@@ -1,12 +1,15 @@
-import time
 import json
-import socket
 import logging
-from collections import MutableMapping
+import socket
+import time
+try:
+    from collections.abc import MutableMapping
+except ImportError:
+    from collections import MutableMapping
 
 import six
-from six.moves import range
 import requests.exceptions as rexc
+from six.moves import range
 
 from .utils import urlpathjoin, xauth
 from .serialization import jlencode, jldecode, mpdecode
