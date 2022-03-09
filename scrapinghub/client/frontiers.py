@@ -99,7 +99,7 @@ class Frontiers(_Proxy):
         """Iterate through frontiers.
 
         :return: an iterator over frontiers names.
-        :rtype: :class:`collections.Iterable[str]`
+        :rtype: :class:`collections.abc.Iterable[str]`
         """
         return iter(self.list())
 
@@ -174,7 +174,7 @@ class Frontier(object):
         """Iterate through slots.
 
         :return: an iterator over frontier slots names.
-        :rtype: :class:`collections.Iterable[str]`
+        :rtype: :class:`collections.abc.Iterable[str]`
         """
         return iter(self.list())
 
@@ -321,7 +321,7 @@ class FrontierSlotFingerprints(object):
 
         :param \*\*params: (optional) additional query params for the request.
         :return: an iterator over fingerprints.
-        :rtype: :class:`collections.Iterable[str]`
+        :rtype: :class:`collections.abc.Iterable[str]`
         """
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'f')
@@ -358,7 +358,7 @@ class FrontierSlotQueue(object):
         :param \*\*params: (optional) additional query params for the request.
         :return: an iterator over request batches in the queue where each
             batch is represented with a dict with ('id', 'requests') field.
-        :rtype: :class:`collections.Iterable[dict]`
+        :rtype: :class:`collections.abc.Iterable[dict]`
         """
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'q')

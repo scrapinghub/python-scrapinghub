@@ -63,7 +63,7 @@ class Projects(object):
         Provided for the sake of API consistency.
 
         :return: an iterator over project ids list.
-        :rtype: :class:`collections.Iterable[int]`
+        :rtype: :class:`collections.abc.Iterable[int]`
         """
         return iter(self.list())
 
