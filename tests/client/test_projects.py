@@ -1,10 +1,10 @@
 import types
-from collections import defaultdict, Iterator
+from collections import defaultdict
 
 import pytest
 import responses
-from six.moves import range
 from requests.compat import urljoin
+from six.moves import range, collections_abc
 
 from scrapinghub import ScrapinghubClient
 from scrapinghub.client.activity import Activity
@@ -288,7 +288,7 @@ def test_settings_delete(project):
 def test_settings_iter_list(project):
     project.settings.set('job_runtime_limit', 24)
     settings_iter = project.settings.iter()
-    assert isinstance(settings_iter, Iterator)
+    assert isinstance(settings_iter, collections_abc.Iterator)
     settings_list = project.settings.list()
     assert ('job_runtime_limit', 24) in settings_list
     assert settings_list == list(settings_iter)
