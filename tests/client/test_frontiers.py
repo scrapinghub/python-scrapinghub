@@ -1,8 +1,8 @@
 import time
 from types import GeneratorType
-from collections import Iterable
 
 from six import string_types
+from six.moves import collections_abc
 
 from scrapinghub.client.frontiers import Frontiers, Frontier, FrontierSlot
 from ..conftest import TEST_FRONTIER_SLOT
@@ -36,7 +36,7 @@ def test_frontiers(project, frontier, frontier_name):
 
     # test for iter() method
     frontiers_names = frontiers.iter()
-    assert isinstance(frontiers_names, Iterable)
+    assert isinstance(frontiers_names, collections_abc.Iterable)
     assert frontier_name in list(frontiers_names)
 
     # test for list() method
@@ -58,7 +58,7 @@ def test_frontier(project, frontier):
     _add_test_requests_to_frontier(frontier)
 
     slots = frontier.iter()
-    assert isinstance(slots, Iterable)
+    assert isinstance(slots, collections_abc.Iterable)
     assert TEST_FRONTIER_SLOT in list(slots)
 
     slots = frontier.list()

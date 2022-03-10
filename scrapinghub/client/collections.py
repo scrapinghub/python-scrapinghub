@@ -1,7 +1,7 @@
 from __future__ import absolute_import
-import collections
 
 from six import string_types
+from six.moves import collections_abc
 
 from ..hubstorage.collectionsrt import Collection as _Collection
 
@@ -82,7 +82,7 @@ class Collections(_Proxy):
 
         :return: an iterator over collections list where each collection is
             represented by a dictionary with ('name','type') fields.
-        :rtype: :class:`collections.Iterable[dict]`
+        :rtype: :class:`collections.abc.Iterable[dict]`
         """
         return self._origin.apiget('list')
 
@@ -130,9 +130,9 @@ class Collection(object):
         >>> for elem in foo_store.iter(count=1)):
         ...     print(elem)
         [{'_key': '002d050ee3ff6192dcbecc4e4b4457d7', 'value': '1447221694537'}]
-        
+
     - get generator over item keys::
-    
+
         >>> keys = foo_store.iter(nodata=True, meta=["_key"]))
         >>> next(keys)
         {'_key': '002d050ee3ff6192dcbecc4e4b4457d7'}
@@ -185,7 +185,7 @@ class Collection(object):
         The method returns ``None`` (original method returns an empty generator).
         """
         if (not isinstance(keys, string_types) and
-                not isinstance(keys, collections.Iterable)):
+                not isinstance(keys, collections_abc.Iterable)):
             raise ValueError("You should provide string key or iterable "
                              "object providing string keys")
         self._origin.delete(keys)
@@ -219,7 +219,7 @@ class Collection(object):
         :param requests_params: (optional) a dict with optional requests params.
         :param \*\*params: (optional) additional query params for the request.
         :return: an iterator over items list.
-        :rtype: :class:`collections.Iterable[dict]`
+        :rtype: :class:`collections.abc.Iterable[dict]`
         """
         update_kwargs(params, key=key, prefix=prefix, prefixcount=prefixcount,
                       startts=startts, endts=endts,
