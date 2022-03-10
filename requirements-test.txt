@@ -1,6 +1,5 @@
 mock
 vcrpy
-# FIXME vcrpy cassette fails after this version
 pytest
 pytest-cov
 responses
