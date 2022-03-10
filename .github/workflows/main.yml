@@ -20,6 +20,18 @@ jobs:
             env:
               TOXENV: "json"
 
+          - python-version: "2.7"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "2.7"
+            env:
+              TOXENV: "json"
+          - python-version: "3.5"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "3.5"
+            env:
+              TOXENV: "json"
           - python-version: "3.6"
             env:
               TOXENV: "msgpack"
