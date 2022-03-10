@@ -2,8 +2,17 @@
 Client interface for Scrapinghub API
 ====================================
 
+.. image:: https://img.shields.io/pypi/v/scrapinghub.svg
+   :target: https://pypi.org/project/scrapinghub
+
+.. image:: https://img.shields.io/pypi/pyversions/scrapinghub.svg
+   :target: https://pypi.org/project/scrapinghub
+
 .. image:: https://github.com/scrapinghub/python-scrapinghub/actions/workflows/main.yml/badge.svg
    :target: https://github.com/scrapinghub/python-scrapinghub/actions/workflows/main.yml
+
+.. image:: https://codecov.io/gh/scrapinghub/python-scrapinghub/branch/master/graph/badge.svg
+   :target: https://app.codecov.io/gh/scrapinghub/python-scrapinghub
 
 The ``scrapinghub`` is a Python library for communicating with the `Scrapinghub API`_.
 
