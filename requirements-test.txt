@@ -1,7 +1,6 @@
 mock
 vcrpy
 # FIXME vcrpy cassette fails after this version
-pytest<=3.7.0; python_version < '3.10'
-pytest; python_version >= '3.10'
+pytest
 pytest-cov
 responses
