@@ -20,7 +20,7 @@ The ``scrapinghub`` is a Python library for communicating with the `Scrapinghub 
 Requirements
 ============
 
-* Python 2.7 or above
+* Python 3.6 or above
 
 
 Installation
