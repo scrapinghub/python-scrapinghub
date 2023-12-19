@@ -2,9 +2,6 @@
 Client interface for Scrapinghub API
 ====================================
 
-.. image:: https://secure.travis-ci.org/scrapinghub/python-scrapinghub.svg?branch=master
-   :target: https://travis-ci.org/scrapinghub/python-scrapinghub
-
 The ``scrapinghub`` is a Python library for communicating with the `Scrapinghub API`_.
 
 .. _Scrapinghub API: https://doc.scrapinghub.com/scrapy-cloud.html#scrapycloud
