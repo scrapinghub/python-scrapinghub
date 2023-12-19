@@ -39,7 +39,8 @@ def upgrade_cassette(cassette):
         contentType = headers.get('content-encoding') or headers.get('Content-Encoding')
         compressed_string = response['body']['string']
         if contentType and contentType[0] == 'gzip':
-            response['body']['string'] = zlib.decompress(compressed_string, zlib.MAX_WBITS | 16).decode('utf-8')
+            response['body']['string'] = zlib.decompress(compressed_string, zlib.MAX_WBITS | 16)
+
 
 
 class VCRGzipSerializer(object):
