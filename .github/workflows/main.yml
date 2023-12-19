@@ -37,6 +37,12 @@ jobs:
           - python-version: "3.11"
             env:
               TOXENV: "json"
+          - python-version: "3.12"
+            env:
+              TOXENV: "msgpack"
+          - python-version: "3.12"
+            env:
+              TOXENV: "json"
 
           - python-version: "pypy3.10-v7.3.13"
             env:
