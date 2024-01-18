@@ -1,4 +1,3 @@
-import six
 import json
 
 from ..hubstorage import ValueTooLarge as _ValueTooLarge
@@ -165,7 +164,7 @@ class _MappingProxy(_Proxy):
         :return: an iterator over key/value pairs.
         :rtype: :class:`collections.abc.Iterable`
         """
-        return next(self._origin.apiget()).items()
+        return iter(next(self._origin.apiget()).items())
 
 
 def _format_iter_filters(params):

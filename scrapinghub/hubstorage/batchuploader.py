@@ -3,7 +3,6 @@ import socket
 import random
 import logging
 import warnings
-import six
 from queue import Queue
 from io import BytesIO
 from gzip import GzipFile

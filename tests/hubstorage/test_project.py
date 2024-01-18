@@ -1,7 +1,6 @@
 """
 Test Project
 """
-import six
 import json
 import pytest
 from requests.exceptions import HTTPError

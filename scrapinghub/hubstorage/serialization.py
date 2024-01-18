@@ -1,4 +1,3 @@
-import six
 from json import dumps, loads
 from datetime import datetime
 

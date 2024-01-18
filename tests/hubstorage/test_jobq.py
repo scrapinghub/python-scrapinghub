@@ -2,7 +2,6 @@
 Test JobQ
 """
 import os
-import six
 import pytest
 
 from scrapinghub.hubstorage.jobq import DuplicateJobError

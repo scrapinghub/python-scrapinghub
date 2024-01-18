@@ -1,5 +1,5 @@
 import pytest
-from six.moves import collections_abc
+from collections.abc import Iterator
 
 from scrapinghub.client.items import Items
 from scrapinghub.client.jobs import Job
@@ -223,7 +223,7 @@ def test_metadata_delete(spider):
 def test_metadata_iter_list(spider):
     job = spider.jobs.run(meta={'meta1': 'data1', 'meta2': 'data2'})
     meta_iter = job.metadata.iter()
-    assert isinstance(meta_iter, collections_abc.Iterator)
+    assert isinstance(meta_iter, Iterator)
     meta_list = job.metadata.list()
     assert ('meta1', 'data1') in meta_list
     assert ('meta2', 'data2') in meta_list

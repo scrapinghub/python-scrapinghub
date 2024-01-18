@@ -2,7 +2,6 @@ import types
 from collections import defaultdict
 
 import pytest
-from six import string_types
 
 from scrapinghub.client.exceptions import DuplicateJobError
 from scrapinghub.client.exceptions import BadRequest

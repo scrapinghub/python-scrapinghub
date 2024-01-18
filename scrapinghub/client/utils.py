@@ -5,8 +5,6 @@ import binascii
 import warnings
 from codecs import decode
 
-import six
-
 
 class LogLevel:
     DEBUG = logging.DEBUG

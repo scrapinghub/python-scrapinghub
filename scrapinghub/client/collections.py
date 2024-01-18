@@ -1,5 +1,4 @@
-from six import string_types
-from six.moves import collections_abc
+from collections.abc import Iterable
 
 from ..hubstorage.collectionsrt import Collection as _Collection
 
@@ -183,7 +182,7 @@ class Collection:
         The method returns ``None`` (original method returns an empty generator).
         """
         if (not isinstance(keys, str) and
-                not isinstance(keys, collections_abc.Iterable)):
+                not isinstance(keys, Iterable)):
             raise ValueError("You should provide string key or iterable "
                              "object providing string keys")
         self._origin.delete(keys)

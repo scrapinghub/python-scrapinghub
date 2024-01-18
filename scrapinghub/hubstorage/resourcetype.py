@@ -3,9 +3,8 @@ import logging
 import socket
 import time
 
-import six
 import requests.exceptions as rexc
-from six.moves import collections_abc
+from collections.abc import MutableMapping
 
 from .utils import urlpathjoin, xauth
 from .serialization import jlencode, jldecode, mpdecode
@@ -226,7 +225,7 @@ class ItemsResourceType(ResourceType):
         return next(self.apiget('stats', chunk_size=STATS_CHUNK_SIZE))
 
 
-class MappingResourceType(ResourceType, collections_abc.MutableMapping):
+class MappingResourceType(ResourceType, MutableMapping):
 
     _cached = None
     ignore_fields = ()

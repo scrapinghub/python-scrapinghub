@@ -1,4 +1,3 @@
-import six
 import time
 from queue import Empty
 
@@ -80,7 +79,7 @@ class iterqueue:
 
     it exposes an attribute "count" with the number of messages read
 
-    >>> from six.moves.queue import Queue
+    >>> from queue import Queue
     >>> q = Queue()
     >>> for x in range(10):
     ...     q.put(x)

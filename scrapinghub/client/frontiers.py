@@ -1,8 +1,6 @@
 from functools import partial
 from collections import defaultdict
 
-from six import string_types
-
 from ..hubstorage.frontier import Frontier as _Frontier
 from ..hubstorage.utils import urlpathjoin
 
