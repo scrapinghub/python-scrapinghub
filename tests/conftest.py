@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 import base64
 import os
 import pickle
 import pytest
 import re
+import sys
 import zlib
 
 from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
@@ -31,6 +31,18 @@ TEST_USER_AUTH = os.getenv('USER_AUTH', DEFAULT_USER_AUTH)
 TEST_DASH_ENDPOINT = os.getenv('DASH_ENDPOINT', DEFAULT_DASH_ENDPOINT)
 
 
+# https://github.com/kevin1024/vcrpy/issues/719#issuecomment-1811544263
+def upgrade_cassette(cassette):
+    for interaction in cassette['interactions']:
+        response = interaction.get('response', {})
+        headers = response.get('headers', {})
+        contentType = headers.get('content-encoding') or headers.get('Content-Encoding')
+        compressed_string = response['body']['string']
+        if contentType and contentType[0] == 'gzip':
+            response['body']['string'] = zlib.decompress(compressed_string, zlib.MAX_WBITS | 16)
+
+
+
 class VCRGzipSerializer(object):
     """Custom ZIP serializer for VCR.py."""
 
@@ -45,7 +57,10 @@ class VCRGzipSerializer(object):
     def deserialize(self, cassette_string):
         # receives a string, must return a dict
         decoded = base64.b64decode(cassette_string.encode('utf8'))
-        return pickle.loads(zlib.decompress(decoded))
+        cassette = pickle.loads(zlib.decompress(decoded))
+        if sys.version_info >= (3, 10):
+            upgrade_cassette(cassette)
+        return cassette
 
 
 def normalize_endpoint(uri, endpoint, default_endpoint):
