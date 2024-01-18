@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # python-scrapinghub documentation build configuration file, created by
 # sphinx-quickstart on Fri Mar 24 12:28:40 2017.
@@ -58,9 +57,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'scrapinghub'
-copyright = u'2010-{}, Scrapinghub'.format(YEAR)
-author = u'Scrapinghub'
+project = 'scrapinghub'
+copyright = f'2010-{YEAR}, Scrapinghub'
+author = 'Scrapinghub'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -140,8 +139,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'python-scrapinghub.tex', u'python-scrapinghub Documentation',
-     u'Pablo Hoffman, Daniel Graña', 'manual'),
+    (master_doc, 'python-scrapinghub.tex', 'python-scrapinghub Documentation',
+     'Pablo Hoffman, Daniel Graña', 'manual'),
 ]
 
 
@@ -150,7 +149,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'python-scrapinghub', u'python-scrapinghub Documentation',
+    (master_doc, 'python-scrapinghub', 'python-scrapinghub Documentation',
      [author], 1)
 ]
 
@@ -161,7 +160,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'python-scrapinghub', u'python-scrapinghub Documentation',
+    (master_doc, 'python-scrapinghub', 'python-scrapinghub Documentation',
      author, 'python-scrapinghub', 'One line description of project.',
      'Miscellaneous'),
 ]
@@ -189,7 +188,7 @@ def patched_make_field(self, types, domain, items, env=None):
             # inconsistencies later when references are resolved
             fieldtype = types.pop(fieldarg)
             if len(fieldtype) == 1 and isinstance(fieldtype[0], nodes.Text):
-                typename = u''.join(n.astext() for n in fieldtype)
+                typename = ''.join(n.astext() for n in fieldtype)
                 par.extend(self.make_xrefs(self.typerolename, domain, typename,
                                            addnodes.literal_emphasis))
             else:

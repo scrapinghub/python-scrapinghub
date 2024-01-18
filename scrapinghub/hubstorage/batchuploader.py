@@ -3,9 +3,7 @@ import socket
 import random
 import logging
 import warnings
-import six
-from six.moves import range
-from six.moves.queue import Queue
+from queue import Queue
 from io import BytesIO
 from gzip import GzipFile
 from itertools import count
@@ -18,7 +16,7 @@ from .serialization import jsonencode
 logger = logging.getLogger('hubstorage.batchuploader')
 
 
-class BatchUploader(object):
+class BatchUploader:
 
     # Wait time between all batches status checks
     worker_loop_delay = 1.0
@@ -167,9 +165,9 @@ class BatchUploader(object):
                                    '[HTTP error %s] %s\n%s', url, offset,
                                    r.status_code, r.reason, r.text.rstrip())
                 return r
-            except (socket.error, requests.RequestException) as e:
+            except (OSError, requests.RequestException) as e:
                 if isinstance(e, requests.HTTPError):
-                    emsg = "[HTTP error {0}] {1}".format(e.response.status_code,
+                    emsg = "[HTTP error {}] {}".format(e.response.status_code,
                                                          e.response.text.rstrip())
                 else:
                     emsg = str(e)
@@ -201,7 +199,7 @@ class ValueTooLarge(ValueError):
     """Raised when a serialized item is greater than 1MB"""
 
 
-class _BatchWriter(object):
+class _BatchWriter:
     #: Truncate overly big items to that many bytes for the error message.
     ERRMSG_DATA_TRUNCATION_LEN = 1024
 
@@ -257,7 +255,7 @@ class _BatchWriter(object):
 def _encode_identity(iterable):
     data = BytesIO()
     for item in iterable:
-        if isinstance(item, six.text_type):
+        if isinstance(item, str):
             item = item.encode('utf8')
         data.write(item)
         data.write(b'\n')
@@ -268,7 +266,7 @@ def _encode_gzip(iterable):
     data = BytesIO()
     with GzipFile(fileobj=data, mode='w') as gzo:
         for item in iterable:
-            if isinstance(item, six.text_type):
+            if isinstance(item, str):
                 item = item.encode('utf8')
             gzo.write(item)
             gzo.write(b'\n')

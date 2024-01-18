@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import os
 import json
 import logging
@@ -7,10 +5,8 @@ import binascii
 import warnings
 from codecs import decode
 
-import six
 
-
-class LogLevel(object):
+class LogLevel:
     DEBUG = logging.DEBUG
     INFO = logging.INFO
     WARNING = logging.WARNING
@@ -19,7 +15,7 @@ class LogLevel(object):
     SILENT = CRITICAL + 1
 
 
-class JobKey(object):
+class JobKey:
 
     def __init__(self, project_id, spider_id, job_id):
         self.project_id = project_id
@@ -27,7 +23,7 @@ class JobKey(object):
         self.job_id = job_id
 
     def __str__(self):
-        return '{}/{}/{}'.format(self.project_id, self.spider_id, self.job_id)
+        return f'{self.project_id}/{self.spider_id}/{self.job_id}'
 
 
 def parse_project_id(project_id):
@@ -53,7 +49,7 @@ def parse_job_key(job_key):
     """
     if isinstance(job_key, tuple):
         parts = job_key
-    elif isinstance(job_key, six.string_types):
+    elif isinstance(job_key, str):
         parts = job_key.split('/')
     else:
         raise ValueError("Job key should be a string or a tuple, got {}: {}"
@@ -118,12 +114,12 @@ def parse_auth(auth):
                            "nor SHUB_JOBAUTH environment variables is set")
 
     if isinstance(auth, tuple):
-        all_strings = all(isinstance(k, six.string_types) for k in auth)
+        all_strings = all(isinstance(k, str) for k in auth)
         if len(auth) != 2 or not all_strings:
             raise ValueError("Wrong authentication credentials")
         return auth
 
-    if not isinstance(auth, six.string_types):
+    if not isinstance(auth, str):
         raise ValueError("Wrong authentication credentials")
 
     jwt_auth = _search_for_jwt_credentials(auth)
@@ -140,7 +136,7 @@ def _search_for_jwt_credentials(auth):
     except (binascii.Error, TypeError):
         return
     try:
-        if not isinstance(decoded_auth, six.string_types):
+        if not isinstance(decoded_auth, str):
             decoded_auth = decoded_auth.decode('ascii')
         login, _, password = decoded_auth.partition(':')
         if password and parse_job_key(login):

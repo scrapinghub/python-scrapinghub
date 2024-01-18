@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-
-from six import string_types
-from six.moves import collections_abc
+from collections.abc import Iterable
 
 from ..hubstorage.collectionsrt import Collection as _Collection
 
@@ -96,7 +93,7 @@ class Collections(_Proxy):
         return list(self.iter())
 
 
-class Collection(object):
+class Collection:
     """Representation of a project collection object.
 
     Not a public constructor: use :class:`Collections` instance to get a
@@ -157,7 +154,7 @@ class Collection(object):
         self._origin = _Collection(type_, name, collections._origin)
 
     def get(self, key, **params):
-        """Get item from collection by key.
+        r"""Get item from collection by key.
 
         :param key: string item key.
         :param \*\*params: (optional) additional query params for the request.
@@ -184,8 +181,8 @@ class Collection(object):
 
         The method returns ``None`` (original method returns an empty generator).
         """
-        if (not isinstance(keys, string_types) and
-                not isinstance(keys, collections_abc.Iterable)):
+        if (not isinstance(keys, str) and
+                not isinstance(keys, Iterable)):
             raise ValueError("You should provide string key or iterable "
                              "object providing string keys")
         self._origin.delete(keys)
@@ -209,7 +206,7 @@ class Collection(object):
 
     def iter(self, key=None, prefix=None, prefixcount=None, startts=None,
              endts=None, requests_params=None, **params):
-        """A method to iterate through collection items.
+        r"""A method to iterate through collection items.
 
         :param key: a string key or a list of keys to filter with.
         :param prefix: a string prefix to filter items.
@@ -230,7 +227,7 @@ class Collection(object):
 
     def list(self, key=None, prefix=None, prefixcount=None, startts=None,
              endts=None, requests_params=None, **params):
-        """Convenient shortcut to list iter results.
+        r"""Convenient shortcut to list iter results.
 
         Please note that :meth:`list` method can use a lot of memory and for a
         large amount of logs it's recommended to iterate through it

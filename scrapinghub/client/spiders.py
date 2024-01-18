@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from requests.compat import urljoin
 
 from .exceptions import NotFound, _wrap_http_errors
@@ -7,7 +5,7 @@ from .jobs import Jobs
 from .utils import get_tags_for_update
 
 
-class Spiders(object):
+class Spiders:
     """Class to work with a collection of project spiders.
 
     Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
@@ -45,7 +43,7 @@ class Spiders(object):
         project = self._client._hsclient.get_project(self.project_id)
         spider_id = project.ids.spider(spider, **params)
         if spider_id is None:
-            raise NotFound("Spider {} doesn't exist.".format(spider))
+            raise NotFound(f"Spider {spider} doesn't exist.")
         return Spider(self._client, self.project_id, spider_id, spider)
 
     def list(self):
@@ -75,7 +73,7 @@ class Spiders(object):
         return iter(self.list())
 
 
-class Spider(object):
+class Spider:
     """Class representing a Spider object.
 
     Not a public constructor: use :class:`Spiders` instance to get
@@ -97,7 +95,7 @@ class Spider(object):
 
     def __init__(self, client, project_id, spider_id, spider):
         self.project_id = project_id
-        self.key = '{}/{}'.format(str(project_id), str(spider_id))
+        self.key = f'{str(project_id)}/{str(spider_id)}'
         self._id = str(spider_id)
         self.name = spider
         self.jobs = Jobs(client, project_id, self)
@@ -124,7 +122,7 @@ class Spider(object):
         :return: a list of spider tags.
         :rtype: :class:`list[str]`
         """
-        path = 'v2/projects/{}/spiders/{}'.format(self.project_id, self._id)
+        path = f'v2/projects/{self.project_id}/spiders/{self._id}'
         url = urljoin(self._client._connection.url, path)
         response = self._client._connection._session.get(url)
         response.raise_for_status()

@@ -43,7 +43,7 @@ def _get_package_version():
     return __version__
 
 
-class HubstorageClient(object):
+class HubstorageClient:
 
     DEFAULT_ENDPOINT = 'https://storage.scrapinghub.com/'
     DEFAULT_USER_AGENT = 'python-scrapinghub/{version}'.format(

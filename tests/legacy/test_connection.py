@@ -1,6 +1,6 @@
 import os
 import json
-import mock
+from unittest import mock
 import pytest
 import requests
 
@@ -66,7 +66,7 @@ def test_connection_create_session(connection):
     assert isinstance(session, requests.Session)
     assert session.auth == ('testkey', '')
     assert (session.headers.get('User-Agent') ==
-            'python-scrapinghub/{}'.format(__version__))
+            f'python-scrapinghub/{__version__}')
     assert session.stream
     assert not session.prefetch
 

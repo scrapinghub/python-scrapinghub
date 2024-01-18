@@ -1,12 +1,11 @@
 """
 Test Activity
 """
-from six.moves import range
 
 
 def test_post_and_reverse_get(hsproject):
     # make some sample data
-    orig_data = [{u'foo': 42, u'counter': i} for i in range(20)]
+    orig_data = [{'foo': 42, 'counter': i} for i in range(20)]
     data1 = orig_data[:10]
     data2 = orig_data[10:]
 
