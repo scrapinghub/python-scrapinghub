@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 
 def test_requestproxymixin_add_params(proxy_mixin):

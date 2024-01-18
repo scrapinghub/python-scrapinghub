@@ -1,6 +1,6 @@
 import six
 import time
-from six.moves.queue import Empty
+from queue import Empty
 
 
 def urlpathjoin(*parts):
@@ -36,10 +36,10 @@ def urlpathjoin(*parts):
             continue
         elif isinstance(p, tuple):
             p = urlpathjoin(*p)
-        elif not isinstance(p, six.text_type):
-            p = six.text_type(p)
+        elif not isinstance(p, str):
+            p = str(p)
 
-        url = p if url is None else u'{0}/{1}'.format(url.rstrip(u'/'), p)
+        url = p if url is None else '{}/{}'.format(url.rstrip('/'), p)
 
     return url
 
@@ -75,7 +75,7 @@ def millitime(*a, **kw):
     return int(ts * 1000)
 
 
-class iterqueue(object):
+class iterqueue:
     """Iterate a queue til a maximum number of messages are read or the queue is empty
 
     it exposes an attribute "count" with the number of messages read
@@ -146,6 +146,6 @@ def sizeof_fmt(num):
     """
     for unit in ['B', 'KiB', 'MiB']:
         if abs(num) < 1024.0:
-            return "%.0f %s" % (num, unit)
+            return f"{num:.0f} {unit}"
         num /= 1024.0
-    return "%.0f %s" % (num, 'GiB')
+    return "{:.0f} {}".format(num, 'GiB')

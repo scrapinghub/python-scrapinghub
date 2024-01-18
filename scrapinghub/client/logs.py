@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import json
 import logging
 
@@ -50,7 +48,7 @@ class Logs(_DownloadableProxyMixin, _ItemsResourceProxy):
         }]
     """
     def log(self, message, level=logging.INFO, ts=None, **other):
-        """Base method to write a log entry.
+        r"""Base method to write a log entry.
 
         :param message: a string message.
         :param level: (optional) logging level, default to INFO.
@@ -90,15 +88,15 @@ class Logs(_DownloadableProxyMixin, _ItemsResourceProxy):
         :return: a modified dictionary with params.
         :rtype: :class:`dict`
         """
-        params = super(Logs, self)._modify_iter_params(params)
+        params = super()._modify_iter_params(params)
         offset = params.pop('offset', None)
         if offset:
-            params['start'] = '{}/{}'.format(self.key, offset)
+            params['start'] = f'{self.key}/{offset}'
         level = params.pop('level', None)
         if level:
             minlevel = getattr(LogLevel, level, None)
             if minlevel is None:
-                raise ValueError("Unknown log level: {}".format(level))
+                raise ValueError(f"Unknown log level: {level}")
             level_filter = json.dumps(['level', '>=', [minlevel]])
             # there can already be some filters handled by super class method
             params['filter'] = params.get('filter', []) + [level_filter]

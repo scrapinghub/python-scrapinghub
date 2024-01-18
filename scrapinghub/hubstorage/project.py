@@ -9,7 +9,7 @@ from .resourcetype import ResourceType, MappingResourceType
 from .utils import urlpathjoin, xauth
 
 
-class Project(object):
+class Project:
 
     def __init__(self, client, projectid, auth=None):
         self.client = client

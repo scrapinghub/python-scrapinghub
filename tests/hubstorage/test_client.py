@@ -28,15 +28,15 @@ def test_push_job(hsclient, hsproject):
     )
     job = start_job(hsproject)
     meta = job.metadata
-    assert meta.get('state') == u'running', hsclient.auth
-    assert meta.get('foo') == u'baz'
+    assert meta.get('state') == 'running', hsclient.auth
+    assert meta.get('foo') == 'baz'
     hsproject.jobq.finish(job)
     hsproject.jobq.delete(job)
 
     # job auth token is valid only while job is running
     meta = hsclient.get_job(job.key).metadata
-    assert meta.get('state') == u'deleted'
-    assert meta.get('foo') == u'baz'
+    assert meta.get('state') == 'deleted'
+    assert meta.get('foo') == 'baz'
 
 
 def test_jobsummaries(hsclient):
@@ -45,7 +45,7 @@ def test_jobsummaries(hsclient):
 
     def _get_summary():
         jss = hsclient.projects.jobsummaries()
-        mjss = dict((str(js['project']), js) for js in jss)
+        mjss = {str(js['project']): js for js in jss}
         return mjss.get(TEST_PROJECT_ID)
 
     summary = apipoll(_get_summary)

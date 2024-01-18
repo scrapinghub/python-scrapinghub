@@ -4,7 +4,7 @@ from collections import defaultdict
 import pytest
 import responses
 from requests.compat import urljoin
-from six.moves import range, collections_abc
+from six.moves import collections_abc
 
 from scrapinghub import ScrapinghubClient
 from scrapinghub.client.activity import Activity

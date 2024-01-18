@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import six
 import json
 
@@ -8,7 +6,7 @@ from .utils import update_kwargs
 from .exceptions import ValueTooLarge
 
 
-class _Proxy(object):
+class _Proxy:
     """A helper to create a class instance and proxy its methods to origin.
 
     The internal proxy class is useful to link class attributes from its
@@ -99,7 +97,7 @@ class _ItemsResourceProxy(_Proxy):
         self._origin.close(block)
 
 
-class _DownloadableProxyMixin(object):
+class _DownloadableProxyMixin:
 
     def iter(self, _path=None, count=None, requests_params=None, **apiparams):
         """A general method to iterate through elements.
@@ -150,7 +148,7 @@ class _MappingProxy(_Proxy):
             raise TypeError("values should be a dict")
         data = next(self._origin.apiget())
         data.update(values)
-        self._origin.apipost(jl={k: v for k, v in six.iteritems(data)
+        self._origin.apipost(jl={k: v for k, v in data.items()
                                  if k not in self._origin.ignore_fields},
                              is_idempotent=True)
 
@@ -167,7 +165,7 @@ class _MappingProxy(_Proxy):
         :return: an iterator over key/value pairs.
         :rtype: :class:`collections.abc.Iterable`
         """
-        return six.iteritems(next(self._origin.apiget()))
+        return next(self._origin.apiget()).items()
 
 
 def _format_iter_filters(params):
@@ -179,7 +177,7 @@ def _format_iter_filters(params):
     if filters and isinstance(filters, list):
         filter_data = []
         for elem in params.pop('filter'):
-            if isinstance(elem, six.string_types):
+            if isinstance(elem, str):
                 filter_data.append(elem)
             elif isinstance(elem, (list, tuple)):
                 filter_data.append(json.dumps(elem))

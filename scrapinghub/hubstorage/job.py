@@ -5,7 +5,7 @@ from .utils import millitime, urlpathjoin
 from .jobq import JobQ
 
 
-class Job(object):
+class Job:
 
     def __init__(self, client, key, auth=None, jobauth=None, metadata=None):
         self.key = urlpathjoin(key)
@@ -45,7 +45,7 @@ class Job(object):
 class JobMeta(MappingResourceType):
 
     resource_type = 'jobs'
-    ignore_fields = set(('auth', '_key', 'state'))
+    ignore_fields = {'auth', '_key', 'state'}
 
     def authtoken(self):
         return self.liveget('auth')

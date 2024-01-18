@@ -4,7 +4,6 @@ Test JobQ
 import os
 import six
 import pytest
-from six.moves import range
 
 from scrapinghub.hubstorage.jobq import DuplicateJobError
 from scrapinghub.hubstorage.utils import apipoll
@@ -24,28 +23,28 @@ def test_push(hsclient, hsproject):
     assert 'auth' in qjob, qjob
 
     job = hsclient.get_job(qjob['key'])
-    assert job.metadata.get('state') == u'pending'
+    assert job.metadata.get('state') == 'pending'
     assert job.metadata.get('spider') == TEST_SPIDER_NAME
     assert job.metadata.get('auth') == qjob['auth']
 
     jobq.start(job)
     job.metadata.expire()
-    assert job.metadata.get('state') == u'running'
+    assert job.metadata.get('state') == 'running'
 
     jobq.finish(job)
     job.metadata.expire()
-    assert job.metadata.get('state') == u'finished'
+    assert job.metadata.get('state') == 'finished'
 
     jobq.delete(job)
     job.metadata.expire()
-    assert job.metadata.get('state') == u'deleted'
+    assert job.metadata.get('state') == 'deleted'
 
 
 def test_push_with_extras(hsclient, hsproject):
     qjob = hsproject.jobq.push(TEST_SPIDER_NAME, foo='bar', baz='fuu')
     job = hsclient.get_job(qjob['key'])
-    assert job.metadata.get('foo') == u'bar'
-    assert job.metadata.get('baz') == u'fuu'
+    assert job.metadata.get('foo') == 'bar'
+    assert job.metadata.get('baz') == 'fuu'
 
 
 def test_push_with_priority(hsclient, hsproject):
@@ -60,7 +59,7 @@ def test_push_with_state(hsclient, hsproject):
     assert 'key' in qjob, qjob
     assert 'auth' in qjob, qjob
     job = hsclient.get_job(qjob['key'])
-    assert job.metadata.get('state') == u'running'
+    assert job.metadata.get('state') == 'running'
 
 
 def test_push_with_unique(hsproject):
@@ -89,10 +88,10 @@ def test_startjob(hsproject):
     assert nj.pop('pending_time', None), nj
     assert nj.pop('running_time', None), nj
     assert nj.pop('auth', None), nj
-    assert nj[u'key'] == qj['key']
-    assert nj[u'spider'] == TEST_SPIDER_NAME
-    assert nj[u'state'] == u'running'
-    assert nj[u'priority'] == jobq.PRIO_NORMAL
+    assert nj['key'] == qj['key']
+    assert nj['spider'] == TEST_SPIDER_NAME
+    assert nj['state'] == 'running'
+    assert nj['priority'] == jobq.PRIO_NORMAL
 
 
 def test_startjob_with_extras(hsproject):
@@ -110,10 +109,10 @@ def test_startjob_with_extras(hsproject):
         'nil': None,
     }
     qj = jobq.push(TEST_SPIDER_NAME, **pushextras)
-    startextras = dict(('s_' + k, v) for k, v in six.iteritems(pushextras))
+    startextras = {'s_' + k: v for k, v in pushextras.items()}
     nj = jobq.start(**startextras)
     assert qj['key'] == nj['key']
-    for k, v in six.iteritems(dict(pushextras, **startextras)):
+    for k, v in dict(pushextras, **startextras).items():
         if type(v) is float:
             assert abs(nj.get(k) - v) < 0.0001
         else:
@@ -136,8 +135,8 @@ def test_summary(hsproject):
     jobq.push(TEST_SPIDER_NAME)
     jobq.push(TEST_SPIDER_NAME, state='running')
     jobq.push(TEST_SPIDER_NAME, state='finished')
-    summaries = dict((s['name'], s) for s in jobq.summary())
-    assert set(summaries), set(['pending', 'running', 'finished'])
+    summaries = {s['name']: s for s in jobq.summary()}
+    assert set(summaries), {'pending', 'running', 'finished'}
     assert jobq.summary('pending')
     assert jobq.summary('running')
     assert jobq.summary('finished')
@@ -271,11 +270,10 @@ def test_list_with_startts_endts(hsproject):
 
 def test_spider_updates(hsproject, hsspiderid):
     jobq = hsproject.jobq
-    spiderkey = '%s/%s' % (TEST_PROJECT_ID, hsspiderid)
+    spiderkey = f'{TEST_PROJECT_ID}/{hsspiderid}'
 
     def finish_and_delete_jobs():
-        for job in jobq.finish(spiderkey):
-            yield job
+        yield from jobq.finish(spiderkey)
         jobq.delete(spiderkey)
 
     q1 = jobq.push(TEST_SPIDER_NAME)
@@ -283,7 +281,7 @@ def test_spider_updates(hsproject, hsspiderid):
     q3 = jobq.push(TEST_SPIDER_NAME, state='finished')
     q4 = jobq.push(TEST_SPIDER_NAME, state='deleted')
 
-    r = dict((x['key'], x['prevstate']) for x in finish_and_delete_jobs())
+    r = {x['key']: x['prevstate'] for x in finish_and_delete_jobs()}
     assert r.get(q1['key']) == 'pending', r
     assert r.get(q2['key']) == 'running', r
     assert r.get(q3['key']) == 'finished', r

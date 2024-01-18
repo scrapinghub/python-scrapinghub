@@ -84,7 +84,7 @@ def test_frontier_slot(project, frontier):
     assert len(batches) == 1
     assert isinstance(batches[0], dict)
     assert sorted(batches[0].keys()) == ['id', 'requests']
-    assert isinstance(batches[0]['id'], string_types)
+    assert isinstance(batches[0]['id'], str)
     requests = batches[0]['requests']
     assert len(requests) == 2
     assert requests == [['/some/path.html', None],

@@ -2,7 +2,7 @@ import os
 import pytest
 from codecs import encode
 
-import mock
+from unittest import mock
 
 from scrapinghub.client.utils import parse_auth, parse_job_key
 

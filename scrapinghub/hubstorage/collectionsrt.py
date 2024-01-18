@@ -104,7 +104,7 @@ class Collections(DownloadableResource):
 
     def _validate_collection(self, coltype, colname):
         if coltype not in {'s', 'cs', 'vs', 'vcs'}:
-            raise ValueError('Invalid collection type: {}'.format(coltype))
+            raise ValueError(f'Invalid collection type: {coltype}')
 
         if not re.match(r'^\w+$', colname):
             raise ValueError('Invalid collection name {!r}, only alphanumeric '
@@ -134,7 +134,7 @@ class Collections(DownloadableResource):
                 raise
 
 
-class Collection(object):
+class Collection:
 
     def __init__(self, coltype, colname, collections):
         self.coltype = coltype

@@ -14,9 +14,9 @@ except ImportError:
 
 
 def jlencode(iterable):
-    if isinstance(iterable, (dict, six.string_types)):
+    if isinstance(iterable, (dict, (str,))):
         iterable = [iterable]
-    return u'\n'.join(jsonencode(o) for o in iterable)
+    return '\n'.join(jsonencode(o) for o in iterable)
 
 
 def jldecode(lineiterable):
@@ -30,8 +30,7 @@ def mpdecode(iterable):
         unpacker.feed(chunk)
         # Each chunk can have none or many objects,
         # so here we dispatch any object ready
-        for obj in unpacker:
-            yield obj
+        yield from unpacker
 
 
 def jsonencode(o):
@@ -49,4 +48,4 @@ def jsondefault(o):
         d = delta.days
         return (u + (s + d * ADAYINSECONDS) * 1e6) // 1000
     else:
-        return six.text_type(o)
+        return str(o)

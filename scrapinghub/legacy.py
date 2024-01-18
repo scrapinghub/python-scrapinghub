@@ -2,7 +2,6 @@
 Scrapinghub API Client Library
 """
 
-from __future__ import division, print_function, absolute_import
 import os
 import sys
 import json
@@ -26,7 +25,7 @@ else:
 logger = logging.getLogger('scrapinghub')
 
 
-class Connection(object):
+class Connection:
     """Main class to access Scrapinghub API.
     """
 
@@ -85,7 +84,7 @@ class Connection(object):
         s = session()
         s.auth = (self.apikey, self.password)
         s.headers.update({
-            'User-Agent': 'python-scrapinghub/{0}'.format(__version__),
+            'User-Agent': f'python-scrapinghub/{__version__}',
         })
         # For python-requests >= 1.x
         s.stream = True
@@ -100,10 +99,10 @@ class Connection(object):
         try:
             base_path = self.API_METHODS[method]
         except KeyError:
-            raise APIError("Unknown method: {0}".format(method),
+            raise APIError(f"Unknown method: {method}",
                            _type=APIError.ERR_VALUE_ERROR)
         else:
-            path = "{0}.{1}".format(base_path, format)
+            path = f"{base_path}.{format}"
             return urljoin(self.url, path)
 
     def _get(self, method, format, params=None, headers=None, raw=False):
@@ -111,7 +110,7 @@ class Connection(object):
         from requests.compat import urlencode
         url = self._build_url(method, format)
         if params:
-            url = "{0}?{1}".format(url, urlencode(params, True))
+            url = f"{url}?{urlencode(params, True)}"
         return self._request(url, None, headers, format, raw)
 
     def _post(self, method, format, params=None, headers=None, raw=False, files=None):
@@ -194,7 +193,7 @@ class Connection(object):
         return self.project_ids()
 
 
-class RequestProxyMixin(object):
+class RequestProxyMixin:
 
     def _add_params(self, params):
         return params
@@ -271,8 +270,8 @@ class JobSet(RequestProxyMixin):
         self._jobs = None
 
     def __repr__(self):
-        params = ', '.join("{0}={1}".format(*i) for i in self.params.items())
-        return "JobSet({0.project!r}, {1})".format(self, params)
+        params = ', '.join("{}={}".format(*i) for i in self.params.items())
+        return f"JobSet({self.project!r}, {params})"
 
     def __iter__(self):
         self._load_jobs()
@@ -311,7 +310,7 @@ class JobSet(RequestProxyMixin):
                 # jl status expected is only "ok"
                 status = status_line.get('status', '')
                 if status != 'ok':
-                    raise APIError("Unknown response status: {0}".format(status))
+                    raise APIError(f"Unknown response status: {status}")
 
                 self._jobs = result
 
@@ -360,7 +359,7 @@ class Job(RequestProxyMixin):
                     yield item
                     retrieved += 1
                 break
-            except (ValueError, socket.error, requests.RequestException, httplib.HTTPException) as exc:
+            except (ValueError, OSError, requests.RequestException, httplib.HTTPException) as exc:
                 lastexc = exc
                 params['offset'] += retrieved
                 if 'count' in params:
@@ -420,5 +419,5 @@ class APIError(Exception):
     ERR_SERVER_ERROR = "err_server_error"
 
     def __init__(self, message, _type=None):
-        super(APIError, self).__init__(message)
+        super().__init__(message)
         self._type = _type or self.ERR_DEFAULT

@@ -1,5 +1,4 @@
 import pytest
-from six.moves import range
 
 from .utils import normalize_job_for_tests
 

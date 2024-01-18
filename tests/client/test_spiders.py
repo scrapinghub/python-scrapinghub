@@ -3,7 +3,6 @@ from collections import defaultdict
 
 import pytest
 from six import string_types
-from six.moves import range
 
 from scrapinghub.client.exceptions import DuplicateJobError
 from scrapinghub.client.exceptions import BadRequest
@@ -32,8 +31,8 @@ def test_spiders_list(project):
 
 
 def test_spider_base(project, spider):
-    assert isinstance(spider._id, string_types)
-    assert isinstance(spider.key, string_types)
+    assert isinstance(spider._id, str)
+    assert isinstance(spider.key, str)
     assert spider.key == spider.project_id + '/' + spider._id
     assert spider.name == TEST_SPIDER_NAME
     assert spider.project_id == TEST_PROJECT_ID

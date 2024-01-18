@@ -5,7 +5,7 @@ import time
 
 import six
 import requests.exceptions as rexc
-from six.moves import range, collections_abc
+from six.moves import collections_abc
 
 from .utils import urlpathjoin, xauth
 from .serialization import jlencode, jldecode, mpdecode
@@ -16,7 +16,7 @@ CHUNK_SIZE = 512
 STATS_CHUNK_SIZE = 512 * 1024
 
 
-class ResourceType(object):
+class ResourceType:
 
     resource_type = None
     key_suffix = None
@@ -68,8 +68,7 @@ class ResourceType(object):
         r = self.client.request(**kwargs)
 
         lines = r.iter_lines(chunk_size=chunk_size)
-        if six.PY3:
-            return (l.decode(r.encoding or 'utf8') for l in lines)
+        return (l.decode(r.encoding or 'utf8') for l in lines)
         return lines
 
     def apirequest(self, _path=None, **kwargs):
@@ -136,7 +135,7 @@ class DownloadableResource(ResourceType):
                     yield chunk
                     offset += 1
                 break
-            except (ValueError, socket.error, rexc.RequestException) as exc:
+            except (ValueError, OSError, rexc.RequestException) as exc:
                 # catch requests exceptions other than HTTPError
                 if isinstance(exc, rexc.HTTPError):
                     raise
@@ -159,9 +158,8 @@ class DownloadableResource(ResourceType):
         requests_params.setdefault('stream', True)
         requests_params.setdefault('is_idempotent', True)
         requests_params = self._enforce_msgpack(**requests_params)
-        for chunk in self._retry(self._iter_content, False, _path,
-                                 requests_params, **apiparams):
-            yield chunk
+        yield from self._retry(self._iter_content, False, _path,
+                                 requests_params, **apiparams)
 
     def iter_json(self, _path=None, requests_params=None, **apiparams):
         """Reliably iterate through all data as json strings"""
@@ -169,9 +167,8 @@ class DownloadableResource(ResourceType):
         requests_params.setdefault('method', 'GET')
         requests_params.setdefault('stream', True)
         requests_params.setdefault('is_idempotent', True)
-        for line in self._retry(self._iter_lines, True, _path, requests_params,
-                                **apiparams):
-            yield line
+        yield from self._retry(self._iter_lines, True, _path, requests_params,
+                                **apiparams)
 
 
 class ItemsResourceType(ResourceType):
@@ -237,13 +234,13 @@ class MappingResourceType(ResourceType, collections_abc.MutableMapping):
     def __init__(self, *a, **kw):
         self._cached = kw.pop('cached', None)
         self._deleted = set()
-        super(MappingResourceType, self).__init__(*a, **kw)
+        super().__init__(*a, **kw)
 
     def __str__(self):
         return str(self._data)
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, repr(self._data))
+        return f'{self.__class__.__name__}({repr(self._data)})'
 
     @property
     def _data(self):
@@ -267,7 +264,7 @@ class MappingResourceType(ResourceType, collections_abc.MutableMapping):
             if not self.ignore_fields:
                 self.apipost(jl=self._data, is_idempotent=True)
             else:
-                self.apipost(jl={k: v for k, v in six.iteritems(self._data)
+                self.apipost(jl={k: v for k, v in self._data.items()
                                  if k not in self.ignore_fields},
                              is_idempotent=True)
 

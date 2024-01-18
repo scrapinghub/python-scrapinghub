@@ -6,10 +6,10 @@ import re
 
 import pytest
 import responses
-from mock import patch
+from unittest.mock import patch
 from requests import HTTPError, ConnectionError
 from scrapinghub import HubstorageClient
-from six.moves.http_client import BadStatusLine
+from http.client import BadStatusLine
 
 from ..conftest import TEST_AUTH, TEST_ENDPOINT
 from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
@@ -122,7 +122,7 @@ def test_retrier_does_not_catch_unwanted_exception(hsspiderid):
     # Act
     job, metadata, err = None, None, None
     try:
-        job = client.get_job('%s/%s/%s' % (TEST_PROJECT_ID, hsspiderid, 42))
+        job = client.get_job(f'{TEST_PROJECT_ID}/{hsspiderid}/{42}')
         metadata = dict(job.metadata)
     except HTTPError as e:
         err = e
@@ -154,7 +154,7 @@ def test_retrier_catches_badstatusline_and_selected_http_errors(hsspiderid, err_
         if attempts_count[0] <= 2:
             raise ConnectionError("Connection aborted.", BadStatusLine("''"))
         if attempts_count[0] == 3:
-            return err_code, {}, u''
+            return err_code, {}, ''
         else:
             resp_body = dict(job_metadata)
             return 200, {}, json.dumps(resp_body)
@@ -162,7 +162,7 @@ def test_retrier_catches_badstatusline_and_selected_http_errors(hsspiderid, err_
     mock_api(callback=request_callback)
 
     # Act
-    job = client.get_job('%s/%s/%s' % (TEST_PROJECT_ID, hsspiderid, 42))
+    job = client.get_job(f'{TEST_PROJECT_ID}/{hsspiderid}/{42}')
 
     # Assert
     assert dict(job_metadata) == dict(job.metadata)
@@ -184,7 +184,7 @@ def test_api_delete_can_be_set_to_non_idempotent(hsspiderid):
     mock_api(method=DELETE, callback=callback_delete)
 
     # Act
-    job = client.get_job('%s/%s/%s' % (TEST_PROJECT_ID, hsspiderid, 42))
+    job = client.get_job(f'{TEST_PROJECT_ID}/{hsspiderid}/{42}')
 
     err = None
     try:
@@ -237,7 +237,7 @@ def test_delete_requests_are_retried(hsspiderid):
     mock_api(method=DELETE, callback=callback_delete)
 
     # Act
-    job = client.get_job('%s/%s/%s' % (TEST_PROJECT_ID, hsspiderid, 42))
+    job = client.get_job(f'{TEST_PROJECT_ID}/{hsspiderid}/{42}')
     job.metadata['foo'] = 'bar'
     del job.metadata['foo']
     job.metadata.save()
@@ -262,7 +262,7 @@ def test_metadata_save_does_retry(hsspiderid):
     mock_api(method=POST, callback=callback_post)
 
     # Act
-    job = client.get_job('%s/%s/%s' % (TEST_PROJECT_ID, hsspiderid, 42))
+    job = client.get_job(f'{TEST_PROJECT_ID}/{hsspiderid}/{42}')
     job.metadata['foo'] = 'bar'
     job.metadata.save()
 
@@ -306,7 +306,7 @@ def test_get_job_does_retry(hsspiderid):
     mock_api(callback=callback)
 
     # Act
-    job = client.get_job('%s/%s/%s' % (TEST_PROJECT_ID, hsspiderid, 42))
+    job = client.get_job(f'{TEST_PROJECT_ID}/{hsspiderid}/{42}')
 
     # Assert
     assert dict(job_metadata) == dict(job.metadata)
@@ -329,7 +329,7 @@ def test_get_job_does_fails_if_no_retries(hsspiderid):
     # Act
     job, metadata, err = None, None, None
     try:
-        job = client.get_job('%s/%s/%s' % (TEST_PROJECT_ID, hsspiderid, 42))
+        job = client.get_job(f'{TEST_PROJECT_ID}/{hsspiderid}/{42}')
         metadata = dict(job.metadata)
     except HTTPError as e:
         err = e
@@ -357,7 +357,7 @@ def test_get_job_does_fails_on_too_many_retries(hsspiderid):
     # Act
     job, metadata, err = None, None, None
     try:
-        job = client.get_job('%s/%s/%s' % (TEST_PROJECT_ID, hsspiderid, 42))
+        job = client.get_job(f'{TEST_PROJECT_ID}/{hsspiderid}/{42}')
         metadata = dict(job.metadata)
     except HTTPError as e:
         err = e

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import json
 
 from ..hubstorage.job import JobMeta as _JobMeta
@@ -17,7 +15,7 @@ from .proxy import _MappingProxy
 from .utils import get_tags_for_update, parse_job_key, update_kwargs
 
 
-class Jobs(object):
+class Jobs:
     """Class representing a collection of jobs for a project/spider.
 
     Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
@@ -45,7 +43,7 @@ class Jobs(object):
 
     def count(self, spider=None, state=None, has_tag=None, lacks_tag=None,
               startts=None, endts=None, **params):
-        """Count jobs with a given set of filters.
+        r"""Count jobs with a given set of filters.
 
         :param spider: (optional) filter by spider name.
         :param state: (optional) a job state, a string or a list of strings.
@@ -140,7 +138,7 @@ class Jobs(object):
     def iter(self, count=None, start=None, spider=None, state=None,
              has_tag=None, lacks_tag=None, startts=None, endts=None,
              meta=None, **params):
-        """Iterate over jobs collection for a given set of params.
+        r"""Iterate over jobs collection for a given set of params.
 
         :param count: (optional) limit amount of returned jobs.
         :param start: (optional) number of jobs to skip in the beginning.
@@ -211,7 +209,7 @@ class Jobs(object):
     def list(self, count=None, start=None, spider=None, state=None,
              has_tag=None, lacks_tag=None, startts=None, endts=None,
              meta=None, **params):
-        """Convenient shortcut to list iter results.
+        r"""Convenient shortcut to list iter results.
 
         :param count: (optional) limit amount of returned jobs.
         :param start: (optional) number of jobs to skip in the beginning.
@@ -250,7 +248,7 @@ class Jobs(object):
     def run(self, spider=None, units=None, priority=None, meta=None,
             add_tag=None, job_args=None, job_settings=None, cmd_args=None,
             environment=None, **params):
-        """Schedule a new job and returns its job key.
+        r"""Schedule a new job and returns its job key.
 
         :param spider: a spider name string
             (not needed if job is scheduled via :attr:`Spider.jobs`).
@@ -329,7 +327,7 @@ class Jobs(object):
         return Job(self._client, str(job_key))
 
     def summary(self, state=None, spider=None, **params):
-        """Get jobs summary (optionally by state).
+        r"""Get jobs summary (optionally by state).
 
         :param state: (optional) a string state to filter jobs.
         :param spider: (optional) a spider name (not needed if instantiated
@@ -355,7 +353,7 @@ class Jobs(object):
 
     def iter_last(self, start=None, start_after=None, count=None,
                   spider=None, **params):
-        """Iterate through last jobs for each spider.
+        r"""Iterate through last jobs for each spider.
 
         :param start: (optional)
         :param start_after: (optional)
@@ -445,7 +443,7 @@ class Jobs(object):
         return result['count']
 
 
-class Job(object):
+class Job:
     """Class representing a job object.
 
     Not a public constructor: use :class:`~scrapinghub.client.ScrapinghubClient`
@@ -510,7 +508,7 @@ class Job(object):
         self._job.close_writers()
 
     def start(self, **params):
-        """Move job to running state.
+        r"""Move job to running state.
 
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
@@ -524,7 +522,7 @@ class Job(object):
         return self.update(state='running', **params)
 
     def finish(self, **params):
-        """Move running job to finished state.
+        r"""Move running job to finished state.
 
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
@@ -538,7 +536,7 @@ class Job(object):
         return self.update(state='finished', **params)
 
     def delete(self, **params):
-        """Mark finished job for deletion.
+        r"""Mark finished job for deletion.
 
         :param \*\*params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
@@ -552,7 +550,7 @@ class Job(object):
         return self.update(state='deleted', **params)
 
     def update(self, state, **params):
-        """Update job state.
+        r"""Update job state.
 
         :param state: a new job state.
         :param \*\*params: (optional) keyword meta parameters to update.
@@ -568,7 +566,7 @@ class Job(object):
             job = next(self._project.jobq.update(self, state=state, **params))
             return job['prevstate']
         except StopIteration:
-            raise NotFound("Job {} doesn't exist".format(self.key))
+            raise NotFound(f"Job {self.key} doesn't exist")
 
     def cancel(self):
         """Schedule a running job for cancellation.

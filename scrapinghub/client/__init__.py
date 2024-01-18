@@ -16,18 +16,18 @@ class Connection(_Connection):
 
     @_wrap_http_errors
     def _request(self, *args, **kwargs):
-        return super(Connection, self)._request(*args, **kwargs)
+        return super()._request(*args, **kwargs)
 
 
 class HubstorageClient(_HubstorageClient):
 
     @_wrap_http_errors
     def request(self, *args, **kwargs):
-        return super(HubstorageClient, self).request(*args, **kwargs)
+        return super().request(*args, **kwargs)
 
 
-class ScrapinghubClient(object):
-    """Main class to work with Scrapinghub API.
+class ScrapinghubClient:
+    r"""Main class to work with Scrapinghub API.
 
     :param auth: (optional) Scrapinghub APIKEY or other SH auth credentials.
         If not provided, it will read, respectively, from 
