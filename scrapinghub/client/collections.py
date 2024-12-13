@@ -160,7 +160,7 @@ class Collection(object):
         """Get item from collection by key.
 
         :param key: string item key.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: an item dictionary if exists.
         :rtype: :class:`dict`
         """
@@ -217,7 +217,7 @@ class Collection(object):
         :param startts: UNIX timestamp at which to begin results.
         :param endts: UNIX timestamp at which to end results.
         :param requests_params: (optional) a dict with optional requests params.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: an iterator over items list.
         :rtype: :class:`collections.abc.Iterable[dict]`
         """
@@ -243,7 +243,7 @@ class Collection(object):
         :param startts: UNIX timestamp at which to begin results.
         :param endts: UNIX timestamp at which to end results.
         :param requests_params: (optional) a dict with optional requests params.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: a list of items where each item is represented with a dict.
         :rtype: :class:`list[dict]`
         """

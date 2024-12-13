@@ -38,7 +38,7 @@ class ScrapinghubClient(object):
         If you need full access to *Scrapy Cloud* features, you'll need to
         provide a Scrapinghub APIKEY through this argument or deploying ``SH_APIKEY``.
     :param dash_endpoint: (optional) Scrapinghub Dash panel url.
-    :param \*\*kwargs: (optional) Additional arguments for
+    :param kwargs: (optional) Additional arguments for
         :class:`~scrapinghub.hubstorage.HubstorageClient` constructor.
 
     :ivar projects: projects collection,

@@ -319,7 +319,7 @@ class FrontierSlotFingerprints(object):
     def iter(self, **params):
         """Iterate through fingerprints in the slot.
 
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: an iterator over fingerprints.
         :rtype: :class:`collections.abc.Iterable[str]`
         """
@@ -331,7 +331,7 @@ class FrontierSlotFingerprints(object):
     def list(self, **params):
         """List fingerprints in the slot.
 
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: a list of fingerprints.
         :rtype: :class:`list[str]`
         """
@@ -355,7 +355,7 @@ class FrontierSlotQueue(object):
         """Iterate through batches in the queue.
 
         :param mincount: (optional) limit results with min amount of requests.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: an iterator over request batches in the queue where each
             batch is represented with a dict with ('id', 'requests') field.
         :rtype: :class:`collections.abc.Iterable[dict]`
@@ -369,7 +369,7 @@ class FrontierSlotQueue(object):
         """List request batches in the queue.
 
         :param mincount: (optional) limit results with min amount of requests.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: a list of request batches in the queue where each batch
             is represented with a dict with ('id', 'requests') field.
         :rtype: :class:`list[dict]`
