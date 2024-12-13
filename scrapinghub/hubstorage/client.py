@@ -73,7 +73,7 @@ class HubstorageClient(object):
 
         Args:
             auth (str): The client authentication token
-            endpoint (str): The API root address
+            endpoint (str, optional): The API root address. If not provided, it will be read from the ``SHUB_STORAGE`` environment variable, or fall back to ``"https://storage.scrapinghub.com/"``.
             connection_timeout (int): The connection timeout for a _single request_
             max_retries (int): The number of time idempotent requests may be retried
             max_retry_time (int): The time, in seconds, during which the client can retry a request

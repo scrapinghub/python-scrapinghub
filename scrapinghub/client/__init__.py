@@ -41,9 +41,6 @@ class ScrapinghubClient(object):
     :param dash_endpoint: (optional) Scrapy Cloud API URL.
         If not provided, it will be read from the ``SHUB_APIURL`` environment
         variable, or fall back to ``"https://app.zyte.com/api/"``.
-    :param endpoint: (optional) Scrapy Cloud storage API URL.
-        If not provided, it will be read from the ``SHUB_STORAGE`` environment
-        variable, or fall back to ``"https://storage.scrapinghub.com/"``.
     :param \*\*kwargs: (optional) Additional arguments for
         :class:`~scrapinghub.hubstorage.HubstorageClient` constructor.
 
