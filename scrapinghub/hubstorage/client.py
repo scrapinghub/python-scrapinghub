@@ -2,6 +2,8 @@
 High level Hubstorage client
 """
 import logging
+import os
+
 from requests import session, HTTPError, ConnectionError, Timeout
 from retrying import Retrying
 from .utils import xauth, urlpathjoin
@@ -78,7 +80,7 @@ class HubstorageClient(object):
             use_msgpack (bool): Flag to enable/disable msgpack use for serialization
         """
         self.auth = xauth(auth)
-        self.endpoint = endpoint or self.DEFAULT_ENDPOINT
+        self.endpoint = endpoint or os.getenv("SHUB_STORAGE", self.DEFAULT_ENDPOINT)
         self.connection_timeout = connection_timeout or self.DEFAULT_CONNECTION_TIMEOUT_S
         self.user_agent = user_agent or self.DEFAULT_USER_AGENT
         self.session = self._create_session()

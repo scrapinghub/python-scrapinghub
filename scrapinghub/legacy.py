@@ -30,7 +30,7 @@ class Connection(object):
     """Main class to access Scrapinghub API.
     """
 
-    DEFAULT_ENDPOINT = 'https://app.scrapinghub.com/api/'
+    DEFAULT_ENDPOINT = 'https://app.zyte.com/api/'
 
     API_METHODS = {
         'addversion': 'scrapyd/addversion',
@@ -66,7 +66,7 @@ class Connection(object):
             warnings.warn("A lot of endpoints support authentication only via apikey.", stacklevel=2)
         self.apikey = apikey
         self.password = password or ''
-        self.url = url or self.DEFAULT_ENDPOINT
+        self.url = url or os.getenv("SHUB_APIURL", self.DEFAULT_ENDPOINT)
         self._session = self._create_session()
         self._connection_timeout = connection_timeout
 
