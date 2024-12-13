@@ -48,12 +48,12 @@ class Logs(_DownloadableProxyMixin, _ItemsResourceProxy):
         }]
     """
     def log(self, message, level=logging.INFO, ts=None, **other):
-        r"""Base method to write a log entry.
+        """Base method to write a log entry.
 
         :param message: a string message.
         :param level: (optional) logging level, default to INFO.
         :param ts: (optional) UNIX timestamp in milliseconds.
-        :param \*\*other: other optional kwargs.
+        :param other: other optional kwargs.
         """
         self._origin.log(message, level=level, ts=ts, **other)
 

@@ -43,7 +43,7 @@ class Jobs:
 
     def count(self, spider=None, state=None, has_tag=None, lacks_tag=None,
               startts=None, endts=None, **params):
-        r"""Count jobs with a given set of filters.
+        """Count jobs with a given set of filters.
 
         :param spider: (optional) filter by spider name.
         :param state: (optional) a job state, a string or a list of strings.
@@ -55,7 +55,7 @@ class Jobs:
             in milliseconds.
         :param endts: (optional) UNIX timestamp at which to end results,
             in milliseconds.
-        :param \*\*params: (optional) other filter params.
+        :param params: (optional) other filter params.
 
         :return: jobs count.
         :rtype: :class:`int`
@@ -138,7 +138,7 @@ class Jobs:
     def iter(self, count=None, start=None, spider=None, state=None,
              has_tag=None, lacks_tag=None, startts=None, endts=None,
              meta=None, **params):
-        r"""Iterate over jobs collection for a given set of params.
+        """Iterate over jobs collection for a given set of params.
 
         :param count: (optional) limit amount of returned jobs.
         :param start: (optional) number of jobs to skip in the beginning.
@@ -154,7 +154,7 @@ class Jobs:
             in millisecons.
         :param meta: (optional) request for additional fields, a single
             field name or a list of field names to return.
-        :param \*\*params: (optional) other filter params.
+        :param params: (optional) other filter params.
 
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.
@@ -209,7 +209,7 @@ class Jobs:
     def list(self, count=None, start=None, spider=None, state=None,
              has_tag=None, lacks_tag=None, startts=None, endts=None,
              meta=None, **params):
-        r"""Convenient shortcut to list iter results.
+        """Convenient shortcut to list iter results.
 
         :param count: (optional) limit amount of returned jobs.
         :param start: (optional) number of jobs to skip in the beginning.
@@ -225,7 +225,7 @@ class Jobs:
             in milliseconds.
         :param meta: (optional) request for additional fields, a single
             field name or a list of field names to return.
-        :param \*\*params: (optional) other filter params.
+        :param params: (optional) other filter params.
 
         :return: list of dictionaries of jobs summary for a given filter params.
         :rtype: :class:`list[dict]`
@@ -248,7 +248,7 @@ class Jobs:
     def run(self, spider=None, units=None, priority=None, meta=None,
             add_tag=None, job_args=None, job_settings=None, cmd_args=None,
             environment=None, **params):
-        r"""Schedule a new job and returns its job key.
+        """Schedule a new job and returns its job key.
 
         :param spider: a spider name string
             (not needed if job is scheduled via :attr:`Spider.jobs`).
@@ -260,7 +260,7 @@ class Jobs:
         :param job_settings: (optional) a dictionary with job settings.
         :param cmd_args: (optional) a string with script command args.
         :param environment: (option) a dictionary with custom environment
-        :param \*\*params: (optional) additional keyword args.
+        :param params: (optional) additional keyword args.
 
         :return: a job instance, representing the scheduled job.
         :rtype: :class:`Job`
@@ -327,12 +327,12 @@ class Jobs:
         return Job(self._client, str(job_key))
 
     def summary(self, state=None, spider=None, **params):
-        r"""Get jobs summary (optionally by state).
+        """Get jobs summary (optionally by state).
 
         :param state: (optional) a string state to filter jobs.
         :param spider: (optional) a spider name (not needed if instantiated
             with :class:`~scrapinghub.client.spiders.Spider`).
-        :param \*\*params: (optional) additional keyword args.
+        :param params: (optional) additional keyword args.
         :return: a list of dictionaries of jobs summary
             for a given filter params grouped by job state.
         :rtype: :class:`list[dict]`
@@ -353,14 +353,14 @@ class Jobs:
 
     def iter_last(self, start=None, start_after=None, count=None,
                   spider=None, **params):
-        r"""Iterate through last jobs for each spider.
+        """Iterate through last jobs for each spider.
 
         :param start: (optional)
         :param start_after: (optional)
         :param count: (optional)
         :param spider: (optional) a spider name (not needed if instantiated
             with :class:`~scrapinghub.client.spiders.Spider`).
-        :param \*\*params: (optional) additional keyword args.
+        :param params: (optional) additional keyword args.
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.
         :rtype: :class:`types.GeneratorType[dict]`
@@ -508,9 +508,9 @@ class Job:
         self._job.close_writers()
 
     def start(self, **params):
-        r"""Move job to running state.
+        """Move job to running state.
 
-        :param \*\*params: (optional) keyword meta parameters to update.
+        :param params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
         :rtype: :class:`str`
 
@@ -522,9 +522,9 @@ class Job:
         return self.update(state='running', **params)
 
     def finish(self, **params):
-        r"""Move running job to finished state.
+        """Move running job to finished state.
 
-        :param \*\*params: (optional) keyword meta parameters to update.
+        :param params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
         :rtype: :class:`str`
 
@@ -536,9 +536,9 @@ class Job:
         return self.update(state='finished', **params)
 
     def delete(self, **params):
-        r"""Mark finished job for deletion.
+        """Mark finished job for deletion.
 
-        :param \*\*params: (optional) keyword meta parameters to update.
+        :param params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
         :rtype: :class:`str`
 
@@ -550,10 +550,10 @@ class Job:
         return self.update(state='deleted', **params)
 
     def update(self, state, **params):
-        r"""Update job state.
+        """Update job state.
 
         :param state: a new job state.
-        :param \*\*params: (optional) keyword meta parameters to update.
+        :param params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
         :rtype: :class:`str`
 

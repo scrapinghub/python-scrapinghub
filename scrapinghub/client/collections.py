@@ -154,10 +154,10 @@ class Collection:
         self._origin = _Collection(type_, name, collections._origin)
 
     def get(self, key, **params):
-        r"""Get item from collection by key.
+        """Get item from collection by key.
 
         :param key: string item key.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: an item dictionary if exists.
         :rtype: :class:`dict`
         """
@@ -206,7 +206,7 @@ class Collection:
 
     def iter(self, key=None, prefix=None, prefixcount=None, startts=None,
              endts=None, requests_params=None, **params):
-        r"""A method to iterate through collection items.
+        """A method to iterate through collection items.
 
         :param key: a string key or a list of keys to filter with.
         :param prefix: a string prefix to filter items.
@@ -214,7 +214,7 @@ class Collection:
         :param startts: UNIX timestamp at which to begin results.
         :param endts: UNIX timestamp at which to end results.
         :param requests_params: (optional) a dict with optional requests params.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: an iterator over items list.
         :rtype: :class:`collections.abc.Iterable[dict]`
         """
@@ -227,7 +227,7 @@ class Collection:
 
     def list(self, key=None, prefix=None, prefixcount=None, startts=None,
              endts=None, requests_params=None, **params):
-        r"""Convenient shortcut to list iter results.
+        """Convenient shortcut to list iter results.
 
         Please note that :meth:`list` method can use a lot of memory and for a
         large amount of logs it's recommended to iterate through it
@@ -240,7 +240,7 @@ class Collection:
         :param startts: UNIX timestamp at which to begin results.
         :param endts: UNIX timestamp at which to end results.
         :param requests_params: (optional) a dict with optional requests params.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: a list of items where each item is represented with a dict.
         :rtype: :class:`list[dict]`
         """

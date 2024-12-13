@@ -314,9 +314,9 @@ class FrontierSlotFingerprints:
             writer.write({'fp': fp})
 
     def iter(self, **params):
-        r"""Iterate through fingerprints in the slot.
+        """Iterate through fingerprints in the slot.
 
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: an iterator over fingerprints.
         :rtype: :class:`collections.abc.Iterable[str]`
         """
@@ -326,9 +326,9 @@ class FrontierSlotFingerprints:
             yield fp.get('fp')
 
     def list(self, **params):
-        r"""List fingerprints in the slot.
+        """List fingerprints in the slot.
 
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: a list of fingerprints.
         :rtype: :class:`list[str]`
         """
@@ -349,10 +349,10 @@ class FrontierSlotQueue:
         return origin.add(self._frontier.key, self.key, fps)
 
     def iter(self, mincount=None, **params):
-        r"""Iterate through batches in the queue.
+        """Iterate through batches in the queue.
 
         :param mincount: (optional) limit results with min amount of requests.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: an iterator over request batches in the queue where each
             batch is represented with a dict with ('id', 'requests') field.
         :rtype: :class:`collections.abc.Iterable[dict]`
@@ -363,10 +363,10 @@ class FrontierSlotQueue:
         return origin.apiget(path, params=params)
 
     def list(self, mincount=None, **params):
-        r"""List request batches in the queue.
+        """List request batches in the queue.
 
         :param mincount: (optional) limit results with min amount of requests.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: a list of request batches in the queue where each batch
             is represented with a dict with ('id', 'requests') field.
         :rtype: :class:`list[dict]`
