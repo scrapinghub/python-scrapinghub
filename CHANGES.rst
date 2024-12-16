@@ -1,7 +1,7 @@
 Release notes
 =============
 
-2.5.0 (202Y-MM-DD)
+2.5.0 (2024-12-16)
 ------------------
 
 - remove official support for Python 2.7, 3.5, 3.6 and 3.7
