@@ -23,15 +23,14 @@ it provides better response time and improved bandwidth usage::
 Basic usage
 -----------
 
-Instantiate a new client with your Scrapinghub API key::
+Instantiate a new client with your Scrapy Cloud API key::
 
     >>> from scrapinghub import ScrapinghubClient
     >>> apikey = '84c87545607a4bc0****************' # your API key as a string
     >>> client = ScrapinghubClient(apikey)
 
-.. note::
-    Your Scrapinghub API key is available at https://app.scrapinghub.com/account/apikey
-    after you sign up with the service.
+.. note:: Your Scrapy Cloud API key is available at the bottom of
+    https://app.zyte.com/o/settings after you sign up.
 
 List your deployed projects::
 

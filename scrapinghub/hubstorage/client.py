@@ -2,6 +2,8 @@
 High level Hubstorage client
 """
 import logging
+import os
+
 from requests import session, HTTPError, ConnectionError, Timeout
 from retrying import Retrying
 from .utils import xauth, urlpathjoin
@@ -71,14 +73,14 @@ class HubstorageClient(object):
 
         Args:
             auth (str): The client authentication token
-            endpoint (str): The API root address
+            endpoint (str, optional): The API root address. If not provided, it will be read from the ``SHUB_STORAGE`` environment variable, or fall back to ``"https://storage.scrapinghub.com/"``.
             connection_timeout (int): The connection timeout for a _single request_
             max_retries (int): The number of time idempotent requests may be retried
             max_retry_time (int): The time, in seconds, during which the client can retry a request
             use_msgpack (bool): Flag to enable/disable msgpack use for serialization
         """
         self.auth = xauth(auth)
-        self.endpoint = endpoint or self.DEFAULT_ENDPOINT
+        self.endpoint = endpoint or os.getenv("SHUB_STORAGE", self.DEFAULT_ENDPOINT)
         self.connection_timeout = connection_timeout or self.DEFAULT_CONNECTION_TIMEOUT_S
         self.user_agent = user_agent or self.DEFAULT_USER_AGENT
         self.session = self._create_session()
