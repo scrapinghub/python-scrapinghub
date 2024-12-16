@@ -13,7 +13,7 @@ except ImportError:
 
 
 def jlencode(iterable):
-    if isinstance(iterable, (dict, (str,))):
+    if isinstance(iterable, (dict, str)):
         iterable = [iterable]
     return '\n'.join(jsonencode(o) for o in iterable)
 
