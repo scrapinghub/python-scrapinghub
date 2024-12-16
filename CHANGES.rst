@@ -1,6 +1,22 @@
 Release notes
 =============
 
+2.5.0 (2024-12-16)
+------------------
+
+- remove official support for Python 2.7, 3.5, 3.6 and 3.7
+- add official support for Python 3.11 and 3.12
+- use the ``SHUB_APIURL`` and ``SHUB_STORAGE`` environment variables as default
+  values when available
+- fix the warning when ``msgpack`` is not installed (used to say
+  ``msgpack-python``)
+
+2.4.0 (2022-03-10)
+------------------
+
+- add Python 3.10 support
+- improve ``iter()`` fallback in getting the ``meta`` argument
+
 2.3.1 (2020-03-13)
 ------------------
 
