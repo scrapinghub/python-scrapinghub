@@ -275,6 +275,9 @@ class FrontierSlot(object):
         """
         return self.queue
 
+    def count(self):
+        return self.q.count()
+
     def delete(self):
         """Delete the slot."""
         origin = self._frontier._frontiers._origin
@@ -380,3 +383,10 @@ class FrontierSlotQueue(object):
         """Delete request batches from the queue."""
         origin = self._frontier._frontiers._origin
         return origin.delete(self._frontier.key, self.key, ids)
+
+    def count(self):
+        """Counts the request queue"""
+        origin = self._frontier._frontiers._origin
+        path = (self._frontier.key, 's', self.key, 'q', 'count')
+        response = next(origin.apiget(path))
+        return response['count']
