@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from .proxy import _Proxy
 from .utils import parse_job_key, update_kwargs
 

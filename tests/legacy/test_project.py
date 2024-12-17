@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 from scrapinghub import Connection
 from scrapinghub import Job, JobSet

@@ -27,7 +27,7 @@ def test_add_read(hsproject, frontier_name):
 
     urls = [_get_urls(batch) for batch
             in frontier.read(frontier_name, TEST_FRONTIER_SLOT)]
-    expected_urls = [[u'/', u'/index.html', u'/index2.html']]
+    expected_urls = [['/', '/index.html', '/index2.html']]
     assert urls == expected_urls
 
 
@@ -121,7 +121,7 @@ def test_add_extra_params(hsproject, frontier_name):
     frontier.add(frontier_name, TEST_FRONTIER_SLOT, fps)
     frontier.flush()
 
-    expected_request = [[u'/', {u'a': 1, u'c': 3, u'b': 2}]]
+    expected_request = [['/', {'a': 1, 'c': 3, 'b': 2}]]
     batches = list(frontier.read(frontier_name, TEST_FRONTIER_SLOT))
     request = batches[0]['requests']
     assert request == expected_request

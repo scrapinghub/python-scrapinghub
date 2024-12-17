@@ -16,17 +16,17 @@ class Connection(_Connection):
 
     @_wrap_http_errors
     def _request(self, *args, **kwargs):
-        return super(Connection, self)._request(*args, **kwargs)
+        return super()._request(*args, **kwargs)
 
 
 class HubstorageClient(_HubstorageClient):
 
     @_wrap_http_errors
     def request(self, *args, **kwargs):
-        return super(HubstorageClient, self).request(*args, **kwargs)
+        return super().request(*args, **kwargs)
 
 
-class ScrapinghubClient(object):
+class ScrapinghubClient:
     """Main class to work with the Scrapy Cloud API.
 
     :param auth: (optional) Scrapy Cloud API key or other Scrapy Cloud auth

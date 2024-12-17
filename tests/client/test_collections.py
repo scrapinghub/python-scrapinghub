@@ -1,7 +1,6 @@
 from contextlib import closing
 
 import pytest
-from six.moves import range
 
 from scrapinghub.client.exceptions import BadRequest
 from scrapinghub.client.exceptions import NotFound

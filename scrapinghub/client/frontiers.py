@@ -1,8 +1,5 @@
-from __future__ import absolute_import
 from functools import partial
 from collections import defaultdict
-
-from six import string_types
 
 from ..hubstorage.frontier import Frontier as _Frontier
 from ..hubstorage.utils import urlpathjoin
@@ -15,7 +12,7 @@ class _HSFrontier(_Frontier):
     """Modified hubstorage Frontier with newcount per slot."""
 
     def __init__(self, *args, **kwargs):
-        super(_HSFrontier, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.newcount = defaultdict(int)
 
     def _get_writer(self, frontier, slot):
@@ -84,7 +81,7 @@ class Frontiers(_Proxy):
         >>> project.frontiers.close()
     """
     def __init__(self, *args, **kwargs):
-        super(Frontiers, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get(self, name):
         """Get a frontier by name.
@@ -125,7 +122,7 @@ class Frontiers(_Proxy):
         self._origin.close()
 
 
-class Frontier(object):
+class Frontier:
     """Representation of a frontier object.
 
     Not a public constructor: use :class:`Frontiers` instance to get a
@@ -201,7 +198,7 @@ class Frontier(object):
                    if frontier == self.key)
 
 
-class FrontierSlot(object):
+class FrontierSlot:
     """Representation of a frontier slot object.
 
     Not a public constructor: use :class:`Frontier` instance to get a
@@ -295,7 +292,7 @@ class FrontierSlot(object):
         return newcount_values.get((self._frontier.key, self.key), 0)
 
 
-class FrontierSlotFingerprints(object):
+class FrontierSlotFingerprints:
     """Representation of request fingerprints collection stored in slot."""
 
     def __init__(self, slot):
@@ -311,7 +308,7 @@ class FrontierSlotFingerprints(object):
         origin = self._frontier._frontiers._origin
         writer = origin._get_writer(self._frontier.key, self.key)
         fps = list(fps) if not isinstance(fps, list) else fps
-        if not all(isinstance(fp, string_types) for fp in fps):
+        if not all(isinstance(fp, str) for fp in fps):
             raise ValueError('Fingerprint should be of a string type')
         for fp in fps:
             writer.write({'fp': fp})
@@ -338,7 +335,7 @@ class FrontierSlotFingerprints(object):
         return list(self.iter(**params))
 
 
-class FrontierSlotQueue(object):
+class FrontierSlotQueue:
     """Representation of request batches queue stored in slot."""
 
     def __init__(self, slot):

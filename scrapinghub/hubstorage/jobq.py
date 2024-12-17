@@ -125,8 +125,7 @@ class JobQ(ResourceType):
     def _jobkeys(self, job):
         if isinstance(job, list):
             for x in job:
-                for k in self._jobkeys(x):
-                    yield k
+                yield from self._jobkeys(x)
         elif isinstance(job, dict):
             yield job['key']
         elif hasattr(job, 'key'):

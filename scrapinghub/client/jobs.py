@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import json
 
 from ..hubstorage.job import JobMeta as _JobMeta
@@ -17,7 +15,7 @@ from .proxy import _MappingProxy
 from .utils import get_tags_for_update, parse_job_key, update_kwargs
 
 
-class Jobs(object):
+class Jobs:
     """Class representing a collection of jobs for a project/spider.
 
     Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
@@ -445,7 +443,7 @@ class Jobs(object):
         return result['count']
 
 
-class Job(object):
+class Job:
     """Class representing a job object.
 
     Not a public constructor: use :class:`~scrapinghub.client.ScrapinghubClient`
@@ -568,7 +566,7 @@ class Job(object):
             job = next(self._project.jobq.update(self, state=state, **params))
             return job['prevstate']
         except StopIteration:
-            raise NotFound("Job {} doesn't exist".format(self.key))
+            raise NotFound(f"Job {self.key} doesn't exist")
 
     def cancel(self):
         """Schedule a running job for cancellation.

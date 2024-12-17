@@ -2,7 +2,6 @@ import random
 from contextlib import closing
 
 import pytest
-from six.moves import range
 
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import millitime
