@@ -43,7 +43,7 @@ def upgrade_cassette(cassette):
 
 
 
-class VCRGzipSerializer(object):
+class VCRGzipSerializer:
     """Custom ZIP serializer for VCR.py."""
 
     def serialize(self, cassette_dict):
@@ -93,7 +93,7 @@ def normalize_cassette(cassette_dict):
             interaction['request']['headers']['Authorization'] = (
                 'Basic {}'.format(
                     base64.b64encode(
-                        '{}:'.format(DEFAULT_ADMIN_AUTH).encode('utf-8')
+                        f'{DEFAULT_ADMIN_AUTH}:'.encode()
                     ).decode('utf-8')
                 )
             )

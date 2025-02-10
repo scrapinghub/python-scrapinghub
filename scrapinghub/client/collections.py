@@ -1,7 +1,4 @@
-from __future__ import absolute_import
-
-from six import string_types
-from six.moves import collections_abc
+from collections.abc import Iterable
 
 from ..hubstorage.collectionsrt import Collection as _Collection
 
@@ -96,7 +93,7 @@ class Collections(_Proxy):
         return list(self.iter())
 
 
-class Collection(object):
+class Collection:
     """Representation of a project collection object.
 
     Not a public constructor: use :class:`Collections` instance to get a
@@ -184,8 +181,8 @@ class Collection(object):
 
         The method returns ``None`` (original method returns an empty generator).
         """
-        if (not isinstance(keys, string_types) and
-                not isinstance(keys, collections_abc.Iterable)):
+        if (not isinstance(keys, str) and
+                not isinstance(keys, Iterable)):
             raise ValueError("You should provide string key or iterable "
                              "object providing string keys")
         self._origin.delete(keys)

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
 from functools import wraps
 
 from requests import HTTPError
@@ -29,7 +27,7 @@ class ScrapinghubAPIError(Exception):
         self.http_error = http_error
         if not message:
             message = _get_http_error_msg(http_error)
-        super(ScrapinghubAPIError, self).__init__(message)
+        super().__init__(message)
 
 
 class BadRequest(ScrapinghubAPIError):

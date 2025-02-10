@@ -6,7 +6,6 @@ from contextlib import closing
 
 import pytest
 from scrapinghub import HubstorageClient
-from six.moves import range
 
 from ..conftest import TEST_COLLECTION_NAME
 from .testutil import failing_downloader

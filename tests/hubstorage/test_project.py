@@ -1,10 +1,8 @@
 """
 Test Project
 """
-import six
 import json
 import pytest
-from six.moves import range
 from requests.exceptions import HTTPError
 
 from scrapinghub import HubstorageClient
@@ -20,8 +18,8 @@ def test_projectid(hsclient):
     p1 = hsclient.get_project(int(TEST_PROJECT_ID))
     p2 = hsclient.get_project(str(TEST_PROJECT_ID))
     assert p1.projectid == p2.projectid
-    assert isinstance(p1.projectid, six.text_type)
-    assert isinstance(p2.projectid, six.text_type)
+    assert isinstance(p1.projectid, str)
+    assert isinstance(p2.projectid, str)
     with pytest.raises(AssertionError):
         hsclient.get_project('111/3')
 
@@ -76,14 +74,14 @@ def test_get_jobs_with_legacy_filter(hsproject):
 def test_push_job(hsproject):
     job = hsproject.push_job(TEST_SPIDER_NAME, state='running',
                              priority=hsproject.jobq.PRIO_HIGH,
-                             foo=u'bar')
-    assert job.metadata.get('state') == u'running'
-    assert job.metadata.get('foo') == u'bar'
+                             foo='bar')
+    assert job.metadata.get('state') == 'running'
+    assert job.metadata.get('foo') == 'bar'
     hsproject.jobq.finish(job)
     hsproject.jobq.delete(job)
     job.metadata.expire()
-    assert job.metadata.get('state') == u'deleted'
-    assert job.metadata.get('foo') == u'bar'
+    assert job.metadata.get('state') == 'deleted'
+    assert job.metadata.get('foo') == 'bar'
 
 
 def test_auth(hsclient, json_and_msgpack):
@@ -197,20 +195,20 @@ def test_requests(hsproject):
     job.requests.close()
     rr = job.requests.list()
     assert next(rr) == {
-        u'status': 200, u'rs': 1337,
-        u'url': u'http://test.com/', u'time': ts,
-        u'duration': 5, u'method': u'GET',
+        'status': 200, 'rs': 1337,
+        'url': 'http://test.com/', 'time': ts,
+        'duration': 5, 'method': 'GET',
     }
     assert next(rr) == {
-        u'status': 400, u'parent': 0, u'rs': 0,
-        u'url': u'http://test.com/2', u'time': ts + 1,
-        u'duration': 1, u'method': u'POST',
+        'status': 400, 'parent': 0, 'rs': 0,
+        'url': 'http://test.com/2', 'time': ts + 1,
+        'duration': 1, 'method': 'POST',
     }
     assert next(rr) == {
-        u'status': 400, u'fp': u'1234', u'parent': 0,
-        u'rs': 0, u'url': u'http://test.com/3',
-        u'time': ts + 2, u'duration': 1,
-        u'method': u'PUT',
+        'status': 400, 'fp': '1234', 'parent': 0,
+        'rs': 0, 'url': 'http://test.com/3',
+        'time': ts + 2, 'duration': 1,
+        'method': 'PUT',
     }
     with pytest.raises(StopIteration):
         next(rr)

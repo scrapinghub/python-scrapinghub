@@ -3,7 +3,6 @@ Test Project
 """
 import time
 import pytest
-from six.moves import range
 from collections import defaultdict
 
 from scrapinghub.hubstorage import ValueTooLarge

@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from ..hubstorage.activity import Activity as _Activity
 from ..hubstorage.collectionsrt import Collections as _Collections
 from ..hubstorage.project import Settings as _Settings
@@ -13,7 +11,7 @@ from .spiders import Spiders
 from .utils import parse_project_id
 
 
-class Projects(object):
+class Projects:
     """Collection of projects available to current user.
 
     Not a public constructor: use :class:`~scrapinghub.client.ScrapinghubClient`
@@ -95,7 +93,7 @@ class Projects(object):
         return self._client._hsclient.projects.jobsummaries(**params)
 
 
-class Project(object):
+class Project:
     """Class representing a project object and its resources.
 
     Not a public constructor: use :class:`~scrapinghub.client.ScrapinghubClient`

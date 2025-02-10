@@ -9,7 +9,7 @@ from .conftest import start_job
 
 def _assertMetadata(meta1, meta2):
     def _clean(m):
-        return dict((k, v) for k, v in m.items() if k != 'updated_time')
+        return {k: v for k, v in m.items() if k != 'updated_time'}
 
     meta1 = _clean(meta1)
     meta2 = _clean(meta2)

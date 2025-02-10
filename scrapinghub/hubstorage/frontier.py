@@ -1,4 +1,3 @@
-
 from .resourcetype import ResourceType
 from .utils import urlpathjoin
 
@@ -17,7 +16,7 @@ class Frontier(ResourceType):
     def __init__(self, *a, **kw):
         self._writers = {}  # dict of writers indexed by (frontier, slot)
         self.newcount = 0
-        super(Frontier, self).__init__(*a, **kw)
+        super().__init__(*a, **kw)
 
     def _get_writer(self, frontier, slot):
         key = (frontier, slot)

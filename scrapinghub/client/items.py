@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 import sys
 
 from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
@@ -84,10 +82,10 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
         :return: a dict with updated set of params.
         :rtype: :class:`dict`
         """
-        params = super(Items, self)._modify_iter_params(params)
+        params = super()._modify_iter_params(params)
         offset = params.pop('offset', None)
         if offset:
-            params['start'] = '{}/{}'.format(self.key, offset)
+            params['start'] = f'{self.key}/{offset}'
         return params
 
     def list_iter(self, chunksize=1000, *args, **kwargs):
