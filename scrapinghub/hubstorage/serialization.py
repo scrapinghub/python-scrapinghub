@@ -1,9 +1,9 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from json import dumps, loads
 
 import six
 
-EPOCH = datetime.fromtimestamp(0, timezone.utc)
+EPOCH = datetime(1970, 1, 1, 0, 0)
 ADAYINSECONDS = 24 * 3600
 
 
