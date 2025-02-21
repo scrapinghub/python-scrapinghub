@@ -1,5 +1,6 @@
 mock
-vcrpy
+vcrpy; implementation_name != 'pypy'
+vcrpy < 6; implementation_name == 'pypy'
 pytest
 pytest-cov
 responses
