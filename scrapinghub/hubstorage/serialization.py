@@ -1,13 +1,15 @@
-import six
+from datetime import UTC, datetime
 from json import dumps, loads
-from datetime import datetime
 
-EPOCH = datetime.utcfromtimestamp(0)
+import six
+
+EPOCH = datetime.fromtimestamp(0, UTC)
 ADAYINSECONDS = 24 * 3600
 
 
 try:
     from msgpack import Unpacker
+
     MSGPACK_AVAILABLE = True
 except ImportError:
     MSGPACK_AVAILABLE = False
