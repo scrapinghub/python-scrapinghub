@@ -1,0 +1,2 @@
+msgpack>=1.0.0; implementation_name != 'pypy'
+msgpack-pypy>=0.0.2; implementation_name == 'pypy'

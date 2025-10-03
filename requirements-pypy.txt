@@ -1,3 +1,0 @@
--r requirements-base.txt
-
-msgpack-pypy>=0.0.2

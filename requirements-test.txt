@@ -1,7 +1,0 @@
-mock
-urllib3==1.26.20; implementation_name == 'pypy'
-vcrpy; implementation_name != 'pypy'
-vcrpy < 6; implementation_name == 'pypy'
-pytest
-pytest-cov
-responses

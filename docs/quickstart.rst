@@ -4,7 +4,7 @@ Quickstart
 Requirements
 ------------
 
-* Python 2.7 or above
+* Python 3.8+
 
 
 Installation
