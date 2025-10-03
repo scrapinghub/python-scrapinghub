@@ -16,3 +16,4 @@ docs/_build
 pytestdebug.log
 .idea
 coverage.xml
+.python-version

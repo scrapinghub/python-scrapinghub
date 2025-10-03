@@ -1,5 +1,0 @@
-mock
-vcrpy<6  # https://github.com/kevin1024/vcrpy/issues/885
-pytest
-pytest-cov
-responses
