@@ -1,6 +1,13 @@
 Release notes
 =============
 
+2.6.0 (unreleased)
+------------------
+
+- remove official support for Python 3.8
+- add official support for Python 3.13
+- fix the deprecation warning caused by ``datetime.utcfromtimestamp()``
+
 2.5.0 (2024-12-16)
 ------------------
 
