@@ -1,7 +1,7 @@
 Release notes
 =============
 
-2.6.0 (unreleased)
+2.6.0 (2026-03-20)
 ------------------
 
 - remove official support for Python 3.8

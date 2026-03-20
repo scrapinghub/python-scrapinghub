@@ -3,7 +3,7 @@
 VERSION?=minor
 
 release:
-	bumpversion $(VERSION)
+	bumpversion --config-file .bumpversion.toml $(VERSION)
 
 release-minor: release
 
