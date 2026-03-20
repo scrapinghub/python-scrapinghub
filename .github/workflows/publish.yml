@@ -26,6 +26,7 @@ jobs:
           if-no-files-found: error
           compression-level: 0
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
