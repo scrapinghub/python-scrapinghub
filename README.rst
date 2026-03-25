@@ -14,7 +14,7 @@ Client interface for Scrapinghub API
 .. image:: https://codecov.io/gh/scrapinghub/python-scrapinghub/branch/master/graph/badge.svg
    :target: https://app.codecov.io/gh/scrapinghub/python-scrapinghub
 
-The ``scrapinghub`` is a Python 3.9+ library for communicating with the
+The ``scrapinghub`` is a Python 3.10+ library for communicating with the
 `Scrapinghub API`_.
 
 
