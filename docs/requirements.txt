@@ -49,7 +49,7 @@ sphinx-markdown-builder @ git+https://github.com/zytedata/sphinx-markdown-builde
     # via sphinx-scrapy
 sphinx-rtd-theme==3.1.0
     # via -r requirements.in
-sphinx-scrapy @ git+https://github.com/scrapy/sphinx-scrapy.git@46c52fc3a6d5ee632a8ef6bccf4daa1ff53e96fd
+sphinx-scrapy @ git+https://github.com/scrapy/sphinx-scrapy.git@2b5f6c7de64c8317cb771fdeb2e5020d1c9c9dcf
     # via -r requirements.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
