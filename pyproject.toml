@@ -1,0 +1,3 @@
+[tool.sphinx-scrapy]
+# Keep in sync with .github/workflows/main.yml
+python-version = "3.14"
