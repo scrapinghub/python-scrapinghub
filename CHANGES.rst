@@ -1,7 +1,7 @@
 Release notes
 =============
 
-2.7.0 (unreleased)
+2.7.0 (2026-04-07)
 -------------------
 
 - drop official support for Python 3.9; require Python 3.10+
