@@ -45,6 +45,15 @@ def _get_package_version():
     return __version__
 
 
+class _JobQClientProxy:
+
+    def __init__(self, client, endpoint):
+        self.auth = client.auth
+        self.endpoint = endpoint
+        self.use_msgpack = False
+        self.request = client.request
+
+
 class HubstorageClient(object):
 
     DEFAULT_ENDPOINT = 'https://storage.scrapinghub.com/'
@@ -60,7 +69,7 @@ class HubstorageClient(object):
 
     def __init__(self, auth=None, endpoint=None, connection_timeout=None,
                  max_retries=None, max_retry_time=None, user_agent=None,
-                 use_msgpack=True):
+                 use_msgpack=True, *, jobq_endpoint=None):
         """
         Note:
             max_retries and max_retry_time change how the client attempt to retry failing requests that are
@@ -78,14 +87,24 @@ class HubstorageClient(object):
             max_retries (int): The number of time idempotent requests may be retried
             max_retry_time (int): The time, in seconds, during which the client can retry a request
             use_msgpack (bool): Flag to enable/disable msgpack use for serialization
+            jobq_endpoint (str, optional): The JobQ API root address.
+                Keyword-only argument. If not provided, it will be read from
+                the ``SHUB_JOBQ`` environment variable, or fall back to the
+                value of ``endpoint``.
         """
         self.auth = xauth(auth)
         self.endpoint = endpoint or os.getenv("SHUB_STORAGE", self.DEFAULT_ENDPOINT)
+        self._jobq_endpoint = (
+            jobq_endpoint or
+            os.getenv("SHUB_JOBQ") or
+            self.endpoint
+        )
         self.connection_timeout = connection_timeout or self.DEFAULT_CONNECTION_TIMEOUT_S
         self.user_agent = user_agent or self.DEFAULT_USER_AGENT
         self.session = self._create_session()
         self.retrier = self._create_retrier(max_retries, max_retry_time)
-        self.jobq = JobQ(self, None)
+        self._jobq_client = _JobQClientProxy(self, self._jobq_endpoint)
+        self.jobq = JobQ(self._jobq_client, None)
         self.projects = Projects(self, None)
         self.root = ResourceType(self, None)
         self._batchuploader = None

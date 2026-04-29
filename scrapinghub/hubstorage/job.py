@@ -18,7 +18,8 @@ class Job(object):
         self.logs = Logs(client, self.key, self.auth)
         self.samples = Samples(client, self.key, self.auth)
         self.requests = Requests(client, self.key, self.auth)
-        self.jobq = JobQ(client, self.key.split('/')[0], auth)
+        jobq_client = getattr(client, '_jobq_client', client)
+        self.jobq = JobQ(jobq_client, self.key.split('/')[0], auth)
 
     def close_writers(self):
         wl = [self.items, self.logs, self.samples, self.requests]
