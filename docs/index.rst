@@ -34,4 +34,5 @@ The ``scrapinghub`` is a Python library for communicating with the `Scrapinghub 
    :caption: All the rest
    :maxdepth: 1
 
+   contributing
    changes
