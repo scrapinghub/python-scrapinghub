@@ -7,10 +7,31 @@ The ``scrapinghub`` is a Python library for communicating with the `Scrapinghub 
 .. _Scrapinghub API: https://doc.scrapinghub.com/scrapy-cloud.html#scrapycloud
 
 .. toctree::
+   :caption: Getting started
    :maxdepth: 1
 
    quickstart
+
+.. toctree::
+   :caption: Usage
+   :maxdepth: 1
+
    client/overview
+
+.. toctree::
+   :caption: Reference
+   :maxdepth: 1
+
    client/apidocs
+
+.. toctree::
+   :caption: Legacy
+   :maxdepth: 1
+
    legacy/clients
+
+.. toctree::
+   :caption: All the rest
+   :maxdepth: 1
+
    changes
