@@ -32,6 +32,27 @@ Instantiate a new client with your Scrapy Cloud API key::
 .. note:: Your Scrapy Cloud API key is available at the bottom of
     https://app.zyte.com/o/settings after you sign up.
 
+If you instantiate the client without an explicit API key, it reads the
+``SH_APIKEY`` (or its ``SHUB_APIKEY`` alias, or ``SHUB_JOBAUTH``) environment
+variable instead::
+
+    >>> client = ScrapinghubClient()  # reads SH_APIKEY from the environment
+
+Instead of exporting the variable yourself, you can store it in a ``.env``
+file and let the client load it::
+
+    SH_APIKEY=84c87545607a4bc0****************
+
+By default the client reads the nearest ``.env`` file, looking in the current
+directory and then walking up through its parent directories. Use the
+``dotenv_path`` argument to point it at a different file::
+
+    >>> client = ScrapinghubClient(dotenv_path='/path/to/myenv')
+
+Only the ``SH_APIKEY``, ``SHUB_APIKEY`` and ``SHUB_JOBAUTH`` variables are read
+from the file; any other variables it contains are ignored. A variable already
+set in the environment takes precedence over the value in the file.
+
 List your deployed projects::
 
     >>> client.projects.list()

@@ -8,6 +8,29 @@ import warnings
 from codecs import decode
 
 import six
+from dotenv import dotenv_values, find_dotenv
+
+
+#: API key environment variables read by :func:`parse_auth`, in priority order.
+_APIKEY_VARS = ('SH_APIKEY', 'SHUB_APIKEY')
+
+#: Authentication environment variables read by :func:`parse_auth`.
+_DOTENV_AUTH_VARS = _APIKEY_VARS + ('SHUB_JOBAUTH',)
+
+
+def _read_dotenv_auth(dotenv_path=None):
+    """Read Scrapy Cloud auth credentials from a ``.env`` file.
+
+    Only the ``SH_APIKEY``, ``SHUB_APIKEY`` and ``SHUB_JOBAUTH`` variables are
+    read from the file; any other variables it contains are ignored. Returns a
+    ``{var: value}`` dict with the variables found in the file. The process
+    environment is left untouched -- callers are expected to let real
+    environment variables take precedence over the returned values. When
+    ``dotenv_path`` is None, the nearest ``.env`` file in the current directory
+    or its parents is used.
+    """
+    values = dotenv_values(dotenv_path or find_dotenv(usecwd=True))
+    return {var: values[var] for var in _DOTENV_AUTH_VARS if values.get(var)}
 
 
 class LogLevel(object):
@@ -88,8 +111,16 @@ def update_kwargs(kwargs, **params):
                    for k, v in params.items() if v is not None})
 
 
-def parse_auth(auth):
+def parse_auth(auth, dotenv_path=None):
     """Parse authentication token.
+
+    When ``auth`` is None, the credentials are read from the ``SH_APIKEY`` (or
+    its ``SHUB_APIKEY`` alias) or ``SHUB_JOBAUTH`` environment variables. If none
+    of them is set in the environment, they are read from a ``.env`` file
+    instead (see :func:`_read_dotenv_auth`); ``dotenv_path`` points at a file
+    other than the default ``.env``. Environment variables always take
+    precedence over the file, and the file is only read when needed -- the
+    environment is never modified.
 
     >>> os.environ['SH_APIKEY'] = 'apikey'
     >>> parse_auth(None)
@@ -104,18 +135,29 @@ def parse_auth(auth):
     ('1/2/3', 'some.jwt.token')
     """
     if auth is None:
-        apikey = os.environ.get('SH_APIKEY')
+        apikey = next((os.environ[var] for var in _APIKEY_VARS
+                       if os.environ.get(var)), None)
+        jobauth = os.environ.get('SHUB_JOBAUTH')
+
+        # Fall back to the .env file only when the environment has no usable
+        # credentials, so an exported key never triggers a file lookup.
+        if not apikey and not jobauth:
+            dotenv = _read_dotenv_auth(dotenv_path)
+            apikey = next((dotenv[var] for var in _APIKEY_VARS
+                           if dotenv.get(var)), None)
+            jobauth = dotenv.get('SHUB_JOBAUTH')
+
         if apikey:
             return apikey, ''
 
-        jobauth = os.environ.get('SHUB_JOBAUTH')
         if jobauth:
-            warnings.warn("You are using the SHUB_JOBAUTH environment "
-                          "variable which may not work for some API endpoints")
+            warnings.warn("You are using the SHUB_JOBAUTH credentials which "
+                          "may not work for some API endpoints")
             return _search_for_jwt_credentials(jobauth)
 
-        raise RuntimeError("No API key provided and neither SH_APIKEY "
-                           "nor SHUB_JOBAUTH environment variables is set")
+        raise RuntimeError("No API key provided and neither SH_APIKEY, "
+                           "SHUB_APIKEY nor SHUB_JOBAUTH environment variables "
+                           "is set")
 
     if isinstance(auth, tuple):
         all_strings = all(isinstance(k, six.string_types) for k in auth)
