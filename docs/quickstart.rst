@@ -41,6 +41,9 @@ variable instead::
 Instead of exporting the variable yourself, you can store it in a ``.env``
 file and let the client load it::
 
+.. code-block:: bash
+    :caption: :file:`.env`
+
     SH_APIKEY=84c87545607a4bc0****************
 
 By default the client reads the nearest ``.env`` file, looking in the current
