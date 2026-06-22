@@ -39,7 +39,7 @@ variable instead::
     >>> client = ScrapinghubClient()  # reads SH_APIKEY from the environment
 
 Instead of exporting the variable yourself, you can store it in a ``.env``
-file and let the client load it::
+file and let the client load it:
 
 .. code-block:: bash
     :caption: :file:`.env`
