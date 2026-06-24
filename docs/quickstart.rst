@@ -64,32 +64,4 @@ Checkout all the other features in :doc:`client/overview` or in the more
 detailed :doc:`client/apidocs`.
 
 
-Tests
------
-
-The package is covered with integration tests based on `VCR.py`_ library: there
-are recorded cassettes files in ``tests/*/cassettes`` used instead of HTTP
-requests to real services, it helps to simplify and speed up development.
-
-By default, tests use VCR.py ``once`` mode to:
-
-- replay previously recorded interactions.
-- record new interactions if there is no cassette file.
-- cause an error to be raised for new requests if there is a cassette file.
-
-It means that if you add new integration tests and run all tests as usual,
-only new cassettes will be created, all existing cassettes will stay unmodified.
-
-To ignore existing cassettes and use real services, please provide a flag::
-
-    py.test --ignore-cassettes
-
-If you want to update/recreate all the cassettes from scratch, please use::
-
-    py.test --update-cassettes
-
-Note that internally the above command erases the whole folder with cassettes.
-
-
 .. _MessagePack: https://en.wikipedia.org/wiki/MessagePack
-.. _VCR.py: https://pypi.python.org/pypi/vcrpy
