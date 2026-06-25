@@ -16,13 +16,13 @@ The ``scrapinghub`` is a Python library for communicating with the `Scrapinghub 
    :caption: Usage
    :maxdepth: 1
 
-   client/overview
+   use/overview
 
 .. toctree::
    :caption: Reference
    :maxdepth: 1
 
-   client/apidocs
+   ref/apidocs
 
 .. toctree::
    :caption: Legacy

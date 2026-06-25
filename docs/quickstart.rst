@@ -60,8 +60,8 @@ Access your job's output data::
     }
     ...
 
-Checkout all the other features in :doc:`client/overview` or in the more
-detailed :doc:`client/apidocs`.
+Checkout all the other features in :ref:`overview` or in the more
+detailed :ref:`api-reference`.
 
 
 .. _MessagePack: https://en.wikipedia.org/wiki/MessagePack
