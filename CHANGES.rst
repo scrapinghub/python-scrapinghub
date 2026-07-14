@@ -1,6 +1,16 @@
 Release notes
 =============
 
+2.8.0 (unreleased)
+-------------------
+
+- accept ``SHUB_APIKEY`` as an alias for the ``SH_APIKEY`` environment variable
+- load the ``SH_APIKEY`` (or ``SHUB_APIKEY``) and ``SHUB_JOBAUTH`` environment
+  variables from a ``.env`` file via `python-dotenv`; use the new
+  ``dotenv_path`` argument of
+  :class:`~scrapinghub.client.ScrapinghubClient` to read a file other than the
+  default ``.env``
+
 2.7.0 (2026-04-07)
 -------------------
 

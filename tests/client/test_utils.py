@@ -4,7 +4,19 @@ from codecs import encode
 
 import mock
 
-from scrapinghub.client.utils import parse_auth, parse_job_key
+from scrapinghub.client.utils import (
+    parse_auth, parse_job_key, _read_dotenv_auth,
+)
+
+
+@pytest.fixture(autouse=True)
+def isolated_auth_env(tmp_path, monkeypatch):
+    """Keep auth resolution hermetic: drop any ambient auth env vars and run
+    from an empty directory so ``find_dotenv()`` can't pick up a stray ``.env``
+    from the developer's working tree."""
+    for var in ('SH_APIKEY', 'SHUB_APIKEY', 'SHUB_JOBAUTH'):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.chdir(tmp_path)
 
 
 def test_parse_auth_none():
@@ -20,6 +32,16 @@ def test_parse_auth_none_with_env():
 @mock.patch.dict(os.environ, {'SH_APIKEY': 'testkey', 'SHUB_JOBAUTH': 'jwt'})
 def test_parse_auth_none_with_multiple_env():
     assert parse_auth(None) == ('testkey', '')
+
+
+@mock.patch.dict(os.environ, {'SHUB_APIKEY': 'aliaskey'})
+def test_parse_auth_none_with_shub_apikey_alias():
+    assert parse_auth(None) == ('aliaskey', '')
+
+
+@mock.patch.dict(os.environ, {'SH_APIKEY': 'primary', 'SHUB_APIKEY': 'alias'})
+def test_parse_auth_sh_apikey_takes_precedence_over_alias():
+    assert parse_auth(None) == ('primary', '')
 
 
 def test_parse_auth_tuple():
@@ -77,6 +99,86 @@ def test_parse_auth_none_with_jwt_token_env():
 
     with mock.patch.dict(os.environ, {'SHUB_JOBAUTH': encoded_token}):
         assert parse_auth(None) == (test_job, test_token)
+
+
+def test_read_dotenv_auth_default_path(tmp_path):
+    (tmp_path / '.env').write_text('SH_APIKEY=FROMDOTENV\n')
+
+    assert _read_dotenv_auth() == {'SH_APIKEY': 'FROMDOTENV'}
+    assert 'SH_APIKEY' not in os.environ  # reading the file must not touch env
+
+
+def test_read_dotenv_auth_parent_dir(tmp_path, monkeypatch):
+    (tmp_path / '.env').write_text('SHUB_APIKEY=FROMPARENT\n')
+    subdir = tmp_path / 'project' / 'subdir'
+    subdir.mkdir(parents=True)
+    monkeypatch.chdir(subdir)
+
+    assert _read_dotenv_auth() == {'SHUB_APIKEY': 'FROMPARENT'}
+
+
+def test_read_dotenv_auth_custom_path(tmp_path):
+    env_file = tmp_path / 'custom.env'
+    env_file.write_text('SH_APIKEY=CUSTOMKEY\nSHUB_JOBAUTH=CUSTOMJWT\n')
+
+    assert _read_dotenv_auth(str(env_file)) == {
+        'SH_APIKEY': 'CUSTOMKEY', 'SHUB_JOBAUTH': 'CUSTOMJWT',
+    }
+
+
+def test_read_dotenv_auth_only_reads_auth_vars(tmp_path):
+    env_file = tmp_path / 'custom.env'
+    env_file.write_text('SH_APIKEY=ONLYTHIS\nOTHER_VAR=ignored\n')
+
+    assert _read_dotenv_auth(str(env_file)) == {'SH_APIKEY': 'ONLYTHIS'}
+    assert 'OTHER_VAR' not in os.environ
+
+
+def test_read_dotenv_auth_missing_file(tmp_path):
+    assert _read_dotenv_auth(str(tmp_path / 'does-not-exist.env')) == {}
+
+
+def test_parse_auth_none_reads_dotenv(tmp_path):
+    env_file = tmp_path / 'custom.env'
+    env_file.write_text('SH_APIKEY=DOTENVKEY\n')
+
+    assert parse_auth(None, dotenv_path=str(env_file)) == ('DOTENVKEY', '')
+
+
+def test_parse_auth_none_reads_shub_apikey_alias_from_dotenv(tmp_path):
+    env_file = tmp_path / 'custom.env'
+    env_file.write_text('SHUB_APIKEY=ALIASFROMFILE\n')
+
+    assert parse_auth(None, dotenv_path=str(env_file)) == ('ALIASFROMFILE', '')
+
+
+def test_parse_auth_none_reads_jobauth_from_dotenv(tmp_path):
+    test_job, test_token = '1/2/3', 'some.jwt.token'
+    raw_token = (test_job + ':' + test_token).encode('utf8')
+    encoded_token = encode(raw_token, 'hex_codec').decode('ascii')
+    env_file = tmp_path / 'custom.env'
+    env_file.write_text('SHUB_JOBAUTH={}\n'.format(encoded_token))
+
+    with pytest.warns(UserWarning):
+        assert parse_auth(None, dotenv_path=str(env_file)) == (test_job, test_token)
+
+
+def test_parse_auth_env_takes_precedence_over_dotenv(tmp_path, monkeypatch):
+    monkeypatch.setenv('SH_APIKEY', 'FROMENV')
+    env_file = tmp_path / 'custom.env'
+    env_file.write_text('SH_APIKEY=FROMDOTENV\n')
+
+    assert parse_auth(None, dotenv_path=str(env_file)) == ('FROMENV', '')
+
+
+def test_parse_auth_none_does_not_mutate_environ(tmp_path):
+    env_file = tmp_path / 'custom.env'
+    env_file.write_text('SH_APIKEY=DOTENVKEY\nSHUB_JOBAUTH=JWT\n')
+
+    parse_auth(None, dotenv_path=str(env_file))
+
+    assert 'SH_APIKEY' not in os.environ
+    assert 'SHUB_JOBAUTH' not in os.environ
 
 
 def test_parse_job_key():
