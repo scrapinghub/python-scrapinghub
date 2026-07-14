@@ -1,7 +1,7 @@
 Release notes
 =============
 
-2.8.0 (unreleased)
+2.8.0 (2026-07-14)
 -------------------
 
 - accept ``SHUB_APIKEY`` as an alias for the ``SH_APIKEY`` environment variable
