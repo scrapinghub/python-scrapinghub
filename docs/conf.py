@@ -42,6 +42,7 @@ VERSION = __version__.rsplit('.', 2)[0]
 extensions = ['sphinx_scrapy', 'sphinx_reredirects']
 
 redirects = {
+    "quickstart": "intro/install.html",
     "client/overview": "../use/overview.html",
     "client/apidocs": "../ref/apidocs.html",
 }

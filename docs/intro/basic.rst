@@ -1,27 +1,5 @@
-Quickstart
-==========
-
-Requirements
-------------
-
-* Python 3.10+
-
-
-Installation
-------------
-
-The quick way::
-
-    pip install scrapinghub
-
-It is recommended to install the library with `MessagePack`_ support,
-it provides better response time and improved bandwidth usage::
-
-    pip install scrapinghub[msgpack]
-
-
 Basic usage
------------
+===========
 
 Instantiate a new client with your Scrapy Cloud API key::
 
@@ -86,6 +64,3 @@ Access your job's output data::
 
 Checkout all the other features in :ref:`overview` or in the more
 detailed :ref:`api-reference`.
-
-
-.. _MessagePack: https://en.wikipedia.org/wiki/MessagePack
