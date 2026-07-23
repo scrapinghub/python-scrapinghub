@@ -10,7 +10,8 @@ The ``scrapinghub`` is a Python library for communicating with the `Scrapinghub 
    :caption: Getting started
    :maxdepth: 1
 
-   quickstart
+   intro/install
+   intro/basic
 
 .. toctree::
    :caption: Usage
