@@ -138,3 +138,12 @@ def test_frontier_newcount(project, frontier):
     assert first_slot.newcount == 2
 
     frontier._frontiers.close()
+
+
+def test_slot_count(project, frontier):
+    _clean_project_frontiers(project)
+    first_slot = frontier.get(TEST_FRONTIER_SLOT)
+
+    _count = first_slot.q.count()
+    fps = [fp for fp in first_slot.q.iter()]
+    assert _count == len(fps)
