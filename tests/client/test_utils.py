@@ -5,7 +5,8 @@ from codecs import encode
 import mock
 
 from scrapinghub.client.utils import (
-    parse_auth, parse_job_key, _read_dotenv_auth,
+    get_tags_for_update, parse_auth, parse_job_key, parse_project_id,
+    _read_dotenv_auth,
 )
 
 
@@ -196,3 +197,33 @@ def test_parse_job_key_non_numeric():
 def test_parse_job_key_incorrect_length():
     with pytest.raises(ValueError):
         parse_job_key('123/1')
+
+
+def test_parse_project_id():
+    assert parse_project_id(123) == '123'
+    assert parse_project_id('123') == '123'
+
+
+def test_parse_project_id_non_numeric():
+    with pytest.raises(ValueError):
+        parse_project_id('some-project')
+
+
+def test_parse_job_key_tuple():
+    assert str(parse_job_key((123, 10, 11))) == '123/10/11'
+
+
+def test_parse_job_key_unsupported_type():
+    with pytest.raises(ValueError):
+        parse_job_key(123)
+
+
+def test_get_tags_for_update():
+    assert get_tags_for_update(add_tag=['foo'], remove_tag=None) == {
+        'add_tag': ['foo'],
+    }
+
+
+def test_get_tags_for_update_non_list():
+    with pytest.raises(ValueError):
+        get_tags_for_update(add_tag='foo')
