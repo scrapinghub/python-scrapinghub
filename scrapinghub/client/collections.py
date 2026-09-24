@@ -198,12 +198,10 @@ class Collection(object):
         self._origin.truncate()
 
     def count(self, *args, **kwargs):
-        """Count collection items with a given filters.
+        """Return the number of items in the collection.
 
-        :return: amount of elements in collection.
-        :rtype: :class:`int`
+        Keyword arguments are sent to the API as query parameters.
         """
-        # TODO describe allowable params
         return self._origin._collections.count(
             self._origin.coltype, self._origin.colname, *args, **kwargs)
 

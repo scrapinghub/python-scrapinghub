@@ -61,7 +61,7 @@ class ResourceType(object):
         kwargs.setdefault('auth', self.auth)
         chunk_size = kwargs.pop('chunk_size', CHUNK_SIZE)
         if 'jl' in kwargs:
-            # XXX explicitly encode data to overcome shazow/urllib3#717
+            # Explicitly encode data to overcome urllib3/urllib3#717
             # when dealing with large POST requests with enabled TLS
             kwargs['data'] = jlencode(kwargs.pop('jl')).encode('utf-8')
 
@@ -184,9 +184,6 @@ class ItemsResourceType(ResourceType):
 
     # batch writer reference in case of used
     _writer = None
-
-    # TODO override _add_resume_param - can avoid requestomg _key by
-    # deriving from project, spider, job and offset
 
     def batch_write_start(self):
         """Override to set a start parameter when commencing writing"""
