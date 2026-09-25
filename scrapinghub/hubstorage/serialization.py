@@ -8,7 +8,7 @@ ADAYINSECONDS = 24 * 3600
 
 
 try:
-    from msgpack import Unpacker
+    from msgpack import Unpacker, packb
 
     MSGPACK_AVAILABLE = True
 except ImportError:
@@ -34,6 +34,10 @@ def mpdecode(iterable):
         # so here we dispatch any object ready
         for obj in unpacker:
             yield obj
+
+
+def mpencode(o):
+    return packb(o)
 
 
 def jsonencode(o):

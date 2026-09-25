@@ -2,13 +2,14 @@ import json
 import logging
 import socket
 import time
+from operator import itemgetter
 
 import six
 import requests.exceptions as rexc
 from six.moves import range, collections_abc
 
 from .utils import urlpathjoin, xauth
-from .serialization import jlencode, jldecode, mpdecode
+from .serialization import jlencode, jldecode, mpdecode, mpencode
 
 
 logger = logging.getLogger('hubstorage.resourcetype')
@@ -104,32 +105,34 @@ class DownloadableResource(ResourceType):
             params['meta'] = meta
         return params
 
-    def _add_resume_param(self, lastline, offset, params):
-        """Adds a startafter=LASTKEY parameter if there was a lastvalue"""
-        if lastline is not None:
-            lastvalue = json.loads(lastline)
-            params['startafter'] = lastvalue['_key']
-            if 'start' in params:
-                del params['start']
-
     def iter_values(self, *args, **kwargs):
         """Reliably iterate through all data as python objects
 
         calls either iter_json or iter_msgpack, decoding the results
         """
         if self._allows_mpack():
-            return mpdecode(self.iter_msgpack(*args, **kwargs))
+            return self._iter_msgpack_values(*args, **kwargs)
         return jldecode(self.iter_json(*args, **kwargs))
 
-    def _retry(self, iter_callback, resume=False, _path=None, requests_params=None, **apiparams):
-        """Reliable iterate through all data calling iter_callback"""
+    def _retry(self, iter_callback, get_key=None, _path=None, requests_params=None, **apiparams):
+        """Reliable iterate through all data calling iter_callback
+
+        If *get_key* is given, retries resume after the last entry yielded
+        by *iter_callback*, using *get_key* to get the ``_key`` of that entry.
+        """
         self._add_key_meta(apiparams)
+        count = apiparams.get('count')
         lastexc = None
         chunk = None
         offset = 0
         for attempt in range(self.MAX_RETRIES):
-            if resume:
-                self._add_resume_param(chunk, offset, apiparams)
+            if get_key is not None and offset:
+                if count is not None:
+                    if offset >= int(count):
+                        break
+                    apiparams['count'] = int(count) - offset
+                apiparams['startafter'] = get_key(chunk)
+                apiparams.pop('start', None)
             try:
                 for chunk in iter_callback(_path=_path, params=apiparams,
                                            **requests_params):
@@ -152,26 +155,40 @@ class DownloadableResource(ResourceType):
                          "last error was: %s", self.MAX_RETRIES, url,
                          apiparams, lastexc)
 
-    def iter_msgpack(self, _path=None, requests_params=None, **apiparams):
-        """Reliably iterate through all data as msgpack"""
+    @staticmethod
+    def _stream_params(requests_params):
         requests_params = dict(requests_params or {})
         requests_params.setdefault('method', 'GET')
         requests_params.setdefault('stream', True)
         requests_params.setdefault('is_idempotent', True)
-        requests_params = self._enforce_msgpack(**requests_params)
-        for chunk in self._retry(self._iter_content, False, _path,
-                                 requests_params, **apiparams):
-            yield chunk
+        return requests_params
+
+    def _iter_mpdecoded(self, _path, **kwargs):
+        return mpdecode(self._iter_content(_path, **kwargs))
+
+    def _iter_msgpack_values(self, _path=None, requests_params=None, **apiparams):
+        requests_params = self._enforce_msgpack(
+            **self._stream_params(requests_params))
+        return self._retry(self._iter_mpdecoded, itemgetter('_key'), _path,
+                           requests_params, **apiparams)
+
+    def iter_msgpack(self, _path=None, requests_params=None, **apiparams):
+        """Reliably iterate through all data as msgpack"""
+        values = DownloadableResource._iter_msgpack_values(
+            self, _path, requests_params, **apiparams)
+        for obj in values:
+            yield mpencode(obj)
 
     def iter_json(self, _path=None, requests_params=None, **apiparams):
         """Reliably iterate through all data as json strings"""
-        requests_params = dict(requests_params or {})
-        requests_params.setdefault('method', 'GET')
-        requests_params.setdefault('stream', True)
-        requests_params.setdefault('is_idempotent', True)
-        for line in self._retry(self._iter_lines, True, _path, requests_params,
+        for line in self._retry(self._iter_lines, _json_key, _path,
+                                self._stream_params(requests_params),
                                 **apiparams):
             yield line
+
+
+def _json_key(line):
+    return json.loads(line)['_key']
 
 
 class ItemsResourceType(ResourceType):
