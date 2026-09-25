@@ -337,6 +337,28 @@ Note that there's a limit on amount of job keys you can cancel with a single cal
 please contact support if the amount is more than 1k.
 
 
+Periodic jobs
+-------------
+
+To run spiders or scripts on a schedule, use the
+:class:`periodic_jobs <~scrapinghub.client.periodicjobs.PeriodicJobs>`
+attribute of a :class:`~scrapinghub.client.projects.Project` instance::
+
+    >>> periodic_job = project.periodic_jobs.create(
+    ...     cron='0 9 * * 1',
+    ...     tasks=[{'name': 'spider1', 'spider_args': {'arg1': 'val1'}}],
+    ...     addtags=['weekly'],
+    ... )
+    >>> project.periodic_jobs.update(periodic_job['id'], disabled=True)
+    >>> project.periodic_jobs.list()
+    [{'id': 6619, 'disabled': True, 'cron': '0 9 * * 1', ...}]
+    >>> project.periodic_jobs.delete(periodic_job['id'])
+
+*cron* is in UTC, and each of its fields must be either a single value or
+``*``. See the :ref:`zyte:api-periodicjobs` reference for all periodic job
+fields.
+
+
 .. _job:
 
 
