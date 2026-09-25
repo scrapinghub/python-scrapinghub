@@ -373,7 +373,7 @@ associated data, using the following attributes:
 - ``items``: the data items that the job produced;
 - ``logs``: log entries that the job produced;
 - ``requests``: HTTP requests that the job issued;
-- ``samples``: runtime stats that the job uploaded;
+- ``samples``: timestamped numeric values that the job uploaded while running;
 
 
 .. _job-metadata:
