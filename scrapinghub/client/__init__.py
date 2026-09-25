@@ -1,7 +1,9 @@
+from requests import ConnectionError, Timeout
+
 from scrapinghub import Connection as _Connection
 from scrapinghub import HubstorageClient as _HubstorageClient
 
-from .exceptions import _wrap_http_errors
+from .exceptions import ServerError, _wrap_http_errors
 from .projects import Projects
 from .utils import parse_auth
 from .utils import parse_project_id, parse_job_key
@@ -24,6 +26,10 @@ class HubstorageClient(_HubstorageClient):
     @_wrap_http_errors
     def request(self, *args, **kwargs):
         return super(HubstorageClient, self).request(*args, **kwargs)
+
+
+def _retry_on_exception(exc):
+    return isinstance(exc, (ServerError, ConnectionError, Timeout))
 
 
 class ScrapinghubClient(object):
@@ -74,6 +80,9 @@ class ScrapinghubClient(object):
                                       connection_timeout=timeout)
         self._hsclient = HubstorageClient(auth=(login, password),
                                           connection_timeout=timeout, **kwargs)
+        self._idempotent_retrier = self._hsclient._create_retrier(
+            kwargs.get('max_retries'), kwargs.get('max_retry_time'),
+            retry_on_exception=_retry_on_exception)
 
     def get_project(self, project_id):
         """Get :class:`scrapinghub.client.projects.Project` instance with

@@ -136,7 +136,8 @@ class HubstorageClient(object):
         else:
             return invoke_request()
 
-    def _create_retrier(self, max_retries, max_retry_time):
+    def _create_retrier(self, max_retries, max_retry_time,
+                        retry_on_exception=_hc_retry_on_exception):
         """
         Create the Retrier object used to process idempotent client requests.
 
@@ -165,7 +166,7 @@ class HubstorageClient(object):
 
         return Retrying(stop_max_attempt_number=stop_max_attempt_number,
                         stop_max_delay=stop_max_delay,
-                        retry_on_exception=_hc_retry_on_exception,
+                        retry_on_exception=retry_on_exception,
                         wait_exponential_multiplier=wait_exponential_multiplier,
                         wait_jitter_max=self.RETRY_DEFAULT_JITTER_MS)
 
