@@ -8,12 +8,14 @@ from scrapinghub.client.logs import Logs
 from scrapinghub.client.requests import Requests
 from scrapinghub.client.samples import Samples
 from scrapinghub.client.exceptions import BadRequest
+from scrapinghub import ScrapinghubClient
+from scrapinghub.client.spiders import Spider
 
 from ..conftest import TEST_PROJECT_ID
 from ..conftest import TEST_SPIDER_NAME
 
 
-def test_job_base(client, spider):
+def test_job_base(client: ScrapinghubClient, spider: Spider) -> None:
     job = spider.jobs.run()
     assert isinstance(job, Job)
     assert job.project_id == TEST_PROJECT_ID
@@ -26,7 +28,7 @@ def test_job_base(client, spider):
     assert isinstance(job.metadata, JobMeta)
 
 
-def test_job_update_tags(spider):
+def test_job_update_tags(spider: Spider) -> None:
     job1 = spider.jobs.run(job_args={'subid': 'tags-1'},
                            add_tag=['tag1'])
     job2 = spider.jobs.run(job_args={'subid': 'tags-2'},
@@ -44,7 +46,7 @@ def test_job_update_tags(spider):
     assert job2.metadata.get('tags') == ['tag2']
 
 
-def test_cancel_jobs_validation(spider):
+def test_cancel_jobs_validation(spider: Spider) -> None:
     with pytest.raises(ValueError) as err:
         spider.jobs.cancel()
 
@@ -56,12 +58,12 @@ def test_cancel_jobs_validation(spider):
     assert "keys and count can't be defined simultaneously" in str(err)
 
     with pytest.raises(ValueError) as err:
-        spider.jobs.cancel(keys="testing")
+        spider.jobs.cancel(keys="testing")  # type: ignore[arg-type]
 
     assert 'keys should be a list' in str(err)
 
     with pytest.raises(ValueError) as err:
-        spider.jobs.cancel(count=[1, 2])
+        spider.jobs.cancel(count=[1, 2])  # type: ignore[arg-type]
 
     assert 'count should be an int' in str(err)
 
@@ -71,7 +73,7 @@ def test_cancel_jobs_validation(spider):
     assert 'all keys should belong to project' in str(err)
 
 
-def test_cancel_jobs(spider):
+def test_cancel_jobs(spider: Spider) -> None:
     job1 = spider.jobs.run(job_args={'subid': 'tags-1'}, add_tag=['tag1'])
     job2 = spider.jobs.run(job_args={'subid': 'tags-2'}, add_tag=['tag2'])
     assert job1.metadata.get('state') == 'pending'
@@ -84,7 +86,7 @@ def test_cancel_jobs(spider):
     assert output == {'count': 2}
 
 
-def test_cancel_jobs_non_existent(spider):
+def test_cancel_jobs_non_existent(spider: Spider) -> None:
     job1 = spider.jobs.run(job_args={'subid': 'tags-1'}, add_tag=['tag1'])
     assert job1.metadata.get('state') == 'pending'
 
@@ -94,7 +96,7 @@ def test_cancel_jobs_non_existent(spider):
     assert job1.metadata.get('state') == 'pending'
 
 
-def test_job_start(spider):
+def test_job_start(spider: Spider) -> None:
     job = spider.jobs.run()
     assert job.metadata.get('state') == 'pending'
     job.start()
@@ -105,15 +107,15 @@ def test_job_start(spider):
     assert job.metadata.get('priority') == 2
 
 
-def test_job_start_with_environment(spider):
+def test_job_start_with_environment(spider: Spider) -> None:
     with pytest.raises(ValueError):
-        spider.jobs.run(environment='wrong-env')
+        spider.jobs.run(environment='wrong-env')  # type: ignore[arg-type]
     env = {'VAR1': 'VAL1', 'VAR2': 'VAL2'}
     job = spider.jobs.run(environment=env)
     assert job.metadata.get('environment') == env
 
 
-def test_job_start_extras(spider):
+def test_job_start_extras(spider: Spider) -> None:
     job = spider.jobs.run()
     extras = {
         'string': 'foo',
@@ -135,7 +137,7 @@ def test_job_start_extras(spider):
             assert job.metadata.get(k) == v
 
 
-def test_job_update(spider):
+def test_job_update(spider: Spider) -> None:
     job = spider.jobs.run()
     assert job.metadata.get('state') == 'pending'
     job.update(state='running', foo='bar')
@@ -145,14 +147,14 @@ def test_job_update(spider):
     assert job.metadata.get('foo') == 'bar'
 
 
-def test_job_cancel_pending(spider):
+def test_job_cancel_pending(spider: Spider) -> None:
     job = spider.jobs.run()
     assert job.metadata.get('state') == 'pending'
     job.cancel()
     assert job.metadata.get('state') == 'finished'
 
 
-def test_job_cancel_running(spider):
+def test_job_cancel_running(spider: Spider) -> None:
     job = spider.jobs.run()
     job.start()
     assert job.metadata.get('state') == 'running'
@@ -161,14 +163,14 @@ def test_job_cancel_running(spider):
     assert job.metadata.get('state') == 'running'
 
 
-def test_job_finish(spider):
+def test_job_finish(spider: Spider) -> None:
     job = spider.jobs.run()
     assert job.metadata.get('state') == 'pending'
     job.finish()
     assert job.metadata.get('state') == 'finished'
 
 
-def test_job_finish_with_metadata(spider):
+def test_job_finish_with_metadata(spider: Spider) -> None:
     job = spider.jobs.run(meta={'meta1': 'val1', 'meta2': 'val3'})
     assert job.metadata.get('state') == 'pending'
     job.finish(meta2='val2', meta3='val3')
@@ -178,14 +180,14 @@ def test_job_finish_with_metadata(spider):
     assert job.metadata.get('meta3') == 'val3'
 
 
-def test_job_delete(spider):
+def test_job_delete(spider: Spider) -> None:
     job = spider.jobs.run(meta={'state': 'finished'})
     assert job.metadata.get('state') == 'finished'
     job.delete()
     assert job.metadata.get('state') == 'deleted'
 
 
-def test_job_delete_with_metadata(spider):
+def test_job_delete_with_metadata(spider: Spider) -> None:
     meta = {'state': 'finished', 'meta1': 'val1', 'meta2': 'val3'}
     job = spider.jobs.run(meta=meta)
     assert job.metadata.get('state') == 'finished'
@@ -196,7 +198,7 @@ def test_job_delete_with_metadata(spider):
     assert job.metadata.get('meta3') == 'val3'
 
 
-def test_metadata_update(spider):
+def test_metadata_update(spider: Spider) -> None:
     job = spider.jobs.run(meta={'meta1': 'data1'})
     assert job.metadata.get('meta1') == 'data1'
     job.metadata.update({'meta1': 'data2', 'meta2': 'data3'})
@@ -204,7 +206,7 @@ def test_metadata_update(spider):
     assert job.metadata.get('meta2') == 'data3'
 
 
-def test_metadata_set(spider):
+def test_metadata_set(spider: Spider) -> None:
     job = spider.jobs.run(meta={'meta1': 'data1'})
     assert job.metadata.get('meta1') == 'data1'
     job.metadata.set('meta1', 'data2')
@@ -213,14 +215,14 @@ def test_metadata_set(spider):
     assert job.metadata.get('meta2') == 123
 
 
-def test_metadata_delete(spider):
+def test_metadata_delete(spider: Spider) -> None:
     job = spider.jobs.run(meta={'meta1': 'data1', 'meta2': 'data2'})
     job.metadata.delete('meta1')
     assert job.metadata.get('meta1') is None
     assert job.metadata.get('meta2') == 'data2'
 
 
-def test_metadata_iter_list(spider):
+def test_metadata_iter_list(spider: Spider) -> None:
     job = spider.jobs.run(meta={'meta1': 'data1', 'meta2': 'data2'})
     meta_iter = job.metadata.iter()
     assert isinstance(meta_iter, collections_abc.Iterator)

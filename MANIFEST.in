@@ -2,3 +2,4 @@ include README.rst
 include LICENSE
 include MANIFEST.in
 include scrapinghub/VERSION
+include scrapinghub/py.typed

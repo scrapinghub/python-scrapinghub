@@ -5,16 +5,17 @@ from six import string_types
 from six.moves import collections_abc
 
 from scrapinghub.client.frontiers import Frontiers, Frontier, FrontierSlot
+from scrapinghub.client.projects import Project
 from ..conftest import TEST_FRONTIER_SLOT
 
 
-def _add_test_requests_to_frontier(frontier):
+def _add_test_requests_to_frontier(frontier: Frontier) -> None:
     slot = frontier.get(TEST_FRONTIER_SLOT)
     slot.q.add([{'fp': '/some/path.html'}, {'fp': '/other/path.html'}])
     slot.flush()
 
 
-def _clean_project_frontiers(project):
+def _clean_project_frontiers(project: Project) -> None:
     """Helper to clean slots of all frontiers for a project.
 
     frontier fixture cleans a test slot before each test, but for some tests
@@ -26,7 +27,9 @@ def _clean_project_frontiers(project):
             frontier.get(slot_name).delete()
 
 
-def test_frontiers(project, frontier, frontier_name):
+def test_frontiers(
+    project: Project, frontier: Frontier, frontier_name: str,
+) -> None:
     # reset a test slot and add some requests to init it
     frontier.get(TEST_FRONTIER_SLOT).delete()
     _add_test_requests_to_frontier(frontier)
@@ -52,7 +55,7 @@ def test_frontiers(project, frontier, frontier_name):
     assert isinstance(frontiers.newcount, int)
 
 
-def test_frontier(project, frontier):
+def test_frontier(project: Project, frontier: Frontier) -> None:
     # add some requests to test frontier to init a test slot
     frontier.get(TEST_FRONTIER_SLOT).delete()
     _add_test_requests_to_frontier(frontier)
@@ -70,7 +73,7 @@ def test_frontier(project, frontier):
     frontier.flush()
 
 
-def test_frontier_slot(project, frontier):
+def test_frontier_slot(project: Project, frontier: Frontier) -> None:
     # add some requests to test frontier to init a test slot
     frontier.get(TEST_FRONTIER_SLOT).delete()
     _add_test_requests_to_frontier(frontier)
@@ -110,7 +113,7 @@ def test_frontier_slot(project, frontier):
     assert TEST_FRONTIER_SLOT not in frontier.list()
 
 
-def test_frontier_newcount(project, frontier):
+def test_frontier_newcount(project: Project, frontier: Frontier) -> None:
     _clean_project_frontiers(project)
     first_slot = frontier.get(TEST_FRONTIER_SLOT)
 

@@ -1,12 +1,15 @@
 """
 High level Hubstorage client
 """
+from __future__ import annotations
+
 import logging
 import os
+from typing import Any
 
-from requests import session, HTTPError, ConnectionError, Timeout
+from requests import session, HTTPError, ConnectionError, Response, Session, Timeout
 from retrying import Retrying
-from .utils import xauth, urlpathjoin
+from .utils import _Auth, _Part, xauth, urlpathjoin
 from .project import Project
 from .job import Job
 from .jobq import JobQ
@@ -22,9 +25,10 @@ logger = logging.getLogger('HubstorageClient')
 _HTTP_ERROR_CODES_TO_RETRY = (408, 429, 502, 503, 504)
 
 
-def _hc_retry_on_exception(err):
+def _hc_retry_on_exception(err: BaseException) -> bool:
     """Callback used by the client to restrict the retry to acceptable errors"""
-    if isinstance(err, HTTPError) and err.response.status_code in _HTTP_ERROR_CODES_TO_RETRY:
+    if (isinstance(err, HTTPError) and err.response is not None
+            and err.response.status_code in _HTTP_ERROR_CODES_TO_RETRY):
         logger.warning("Server failed with %d status code, retrying (maybe)", err.response.status_code)
         return True
 
@@ -39,7 +43,7 @@ def _hc_retry_on_exception(err):
     return False
 
 
-def _get_package_version():
+def _get_package_version() -> str:
     """Small helper to avoid circular imports"""
     from scrapinghub import __version__
     return __version__
@@ -47,7 +51,7 @@ def _get_package_version():
 
 class _JobQClientProxy:
 
-    def __init__(self, client, endpoint):
+    def __init__(self, client: HubstorageClient, endpoint: str) -> None:
         self.auth = client.auth
         self.endpoint = endpoint
         self.use_msgpack = False
@@ -67,9 +71,12 @@ class HubstorageClient(object):
     RETRY_DEFAULT_JITTER_MS = 500
     RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS = 500
 
-    def __init__(self, auth=None, endpoint=None, connection_timeout=None,
-                 max_retries=None, max_retry_time=None, user_agent=None,
-                 use_msgpack=True, *, jobq_endpoint=None):
+    def __init__(self, auth: _Auth = None, endpoint: str | None = None,
+                 connection_timeout: float | None = None,
+                 max_retries: int | None = None,
+                 max_retry_time: float | None = None,
+                 user_agent: str | None = None, use_msgpack: bool = True, *,
+                 jobq_endpoint: str | None = None) -> None:
         """
         Note:
             max_retries and max_retry_time change how the client attempt to retry failing requests that are
@@ -93,7 +100,7 @@ class HubstorageClient(object):
                 value of ``endpoint``.
         """
         self.auth = xauth(auth)
-        self.endpoint = endpoint or os.getenv("SHUB_STORAGE", self.DEFAULT_ENDPOINT)
+        self.endpoint = endpoint or os.environ.get("SHUB_STORAGE", self.DEFAULT_ENDPOINT)
         self._jobq_endpoint = (
             jobq_endpoint or
             os.getenv("SHUB_JOBQ") or
@@ -106,14 +113,14 @@ class HubstorageClient(object):
         self._jobq_client = _JobQClientProxy(self, self._jobq_endpoint)
         self.jobq = JobQ(self._jobq_client, None)
         self.projects = Projects(self, None)
-        self.root = ResourceType(self, None)
-        self._batchuploader = None
-        self.use_msgpack = MSGPACK_AVAILABLE and use_msgpack
+        self.root: ResourceType = ResourceType(self, None)
+        self._batchuploader: BatchUploader | None = None
+        self.use_msgpack: bool = MSGPACK_AVAILABLE and use_msgpack
         if use_msgpack != self.use_msgpack:
             logger.warning('Messagepack is not available, please ensure that '
                            'msgpack library is properly installed.')
 
-    def request(self, is_idempotent=False, **kwargs):
+    def request(self, is_idempotent: bool = False, **kwargs: Any) -> Response:
         """
         Execute an HTTP request with the current client session.
 
@@ -121,7 +128,7 @@ class HubstorageClient(object):
         """
         kwargs.setdefault('timeout', self.connection_timeout)
 
-        def invoke_request():
+        def invoke_request() -> Response:
             r = self.session.request(**kwargs)
 
             try:
@@ -132,11 +139,13 @@ class HubstorageClient(object):
                 raise
 
         if is_idempotent:
-            return self.retrier.call(invoke_request)
+            response: Response = self.retrier.call(invoke_request)
+            return response
         else:
             return invoke_request()
 
-    def _create_retrier(self, max_retries, max_retry_time):
+    def _create_retrier(self, max_retries: int | None,
+                        max_retry_time: float | None) -> Retrying:
         """
         Create the Retrier object used to process idempotent client requests.
 
@@ -151,9 +160,9 @@ class HubstorageClient(object):
 
         # Client sets max_retries only
         if max_retries is not None and max_retry_time is None:
-            stop_max_delay = None
+            stop_max_delay: float | None = None
             stop_max_attempt_number = max_retries + 1
-            wait_exponential_multiplier = self.RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS
+            wait_exponential_multiplier: float = self.RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS
         else:
             stop_max_delay = (max_retry_time or self.RETRY_DEFAUT_MAX_RETRY_TIME_S) * 1000.0
             stop_max_attempt_number = (max_retries or self.RETRY_DEFAULT_MAX_RETRIES) + 1
@@ -169,32 +178,33 @@ class HubstorageClient(object):
                         wait_exponential_multiplier=wait_exponential_multiplier,
                         wait_jitter_max=self.RETRY_DEFAULT_JITTER_MS)
 
-    def _create_session(self):
+    def _create_session(self) -> Session:
         s = session()
         s.headers.update({'User-Agent': self.user_agent})
         return s
 
     @property
-    def batchuploader(self):
+    def batchuploader(self) -> BatchUploader:
         if self._batchuploader is None:
             self._batchuploader = BatchUploader(self)
         return self._batchuploader
 
-    def get_job(self, *args, **kwargs):
+    def get_job(self, *args: Any, **kwargs: Any) -> Job:
         return Job(self, *args, **kwargs)
 
-    def push_job(self, projectid, spidername, auth=None, **jobparams):
+    def push_job(self, projectid: _Part, spidername: str, auth: _Auth = None,
+                 **jobparams: Any) -> Job:
         project = self.projects.get(projectid, auth=auth)
         return project.push_job(spidername, **jobparams)
 
-    def get_project(self, *args, **kwargs):
+    def get_project(self, *args: Any, **kwargs: Any) -> Project:
         return self.projects.get(*args, **kwargs)
 
-    def server_timestamp(self):
+    def server_timestamp(self) -> Any:
         tsurl = urlpathjoin(self.endpoint, 'system/ts')
         return self.session.get(tsurl).json()
 
-    def close(self, timeout=None):
+    def close(self, timeout: float | None = None) -> None:
         if self._batchuploader is not None:
             self.batchuploader.close(timeout)
 
@@ -203,9 +213,11 @@ class Projects(ResourceType):
 
     resource_type = 'projects'
 
-    def get(self, *args, **kwargs):
+    client: HubstorageClient
+
+    def get(self, *args: Any, **kwargs: Any) -> Project:
         return Project(self.client, *args, **kwargs)
 
-    def jobsummaries(self, auth=None, **params):
+    def jobsummaries(self, auth: _Auth = None, **params: Any) -> Any:
         auth = xauth(auth) or self.auth
         return next(self.apiget('jobsummaries', params=params, auth=auth))

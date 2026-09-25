@@ -1,4 +1,6 @@
 from contextlib import closing
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 from six.moves import range
@@ -6,16 +8,18 @@ from six.moves import range
 from scrapinghub.client.exceptions import BadRequest
 from scrapinghub.client.exceptions import NotFound
 from scrapinghub.client.exceptions import ValueTooLarge
+from scrapinghub.client.collections import Collection
+from scrapinghub.client.projects import Project
 
 from ..conftest import TEST_COLLECTION_NAME
 
 
-def _mkitem():
+def _mkitem() -> dict[str, Any]:
     return dict(field1='value1', field2=['value2a', 'value2b'],
                 field3=3, field4={'v4k': 'v4v'})
 
 
-def test_collections_list(project):
+def test_collections_list(project: Project) -> None:
     # create/check test collections
     project.collections.get_store(TEST_COLLECTION_NAME),
     project.collections.get_cached_store(TEST_COLLECTION_NAME),
@@ -28,7 +32,7 @@ def test_collections_list(project):
         assert {'name': TEST_COLLECTION_NAME, 'type': coltype} in collections
 
 
-def test_simple_count(project, collection):
+def test_simple_count(project: Project, collection: Collection) -> None:
     test_item = dict(_mkitem())
     test_item['_key'] = 'a'
 
@@ -36,7 +40,7 @@ def test_simple_count(project, collection):
     assert collection.count() == 1
 
 
-def test_post_get_delete(project, json_and_msgpack):
+def test_post_get_delete(project: Project, json_and_msgpack: str) -> None:
     test_item = _mkitem()
     item_to_send = dict(test_item)
     item_to_send['_key'] = test_key = 'insert_test_key'
@@ -61,10 +65,12 @@ def test_post_get_delete(project, json_and_msgpack):
             col.get(test_key)
 
 
-def test_post_scan(project, collection, json_and_msgpack):
+def test_post_scan(
+    project: Project, collection: Collection, json_and_msgpack: str,
+) -> None:
     # populate with 20 items
     test_item = _mkitem()
-    last_key = None
+    last_key = ''
     with closing(collection.create_writer()) as writer:
         for i in range(20):
             test_item['_key'] = last_key = "post_scan_test%d" % i
@@ -78,7 +84,7 @@ def test_post_scan(project, collection, json_and_msgpack):
 
     # get requires key field
     with pytest.raises(TypeError):
-        collection.get()
+        collection.get()  # type: ignore[call-arg]
 
     result = collection.get('post_scan_test2')
     assert isinstance(result, dict)
@@ -105,7 +111,7 @@ def test_post_scan(project, collection, json_and_msgpack):
         collection.get(last_key)
 
 
-def test_errors_bad_key(collection, json_and_msgpack):
+def test_errors_bad_key(collection: Collection, json_and_msgpack: str) -> None:
     with pytest.raises(NotFound):
         collection.get('does_not_exist')
 
@@ -114,17 +120,17 @@ def test_errors_bad_key(collection, json_and_msgpack):
         {'foo': 42},
         {'_key': []},
 ])
-def test_errors(collection, testarg):
+def test_errors(collection: Collection, testarg: dict[str, Any]) -> None:
     with pytest.raises(BadRequest):
         collection.set(testarg)
 
 
-def test_entity_too_large(collection):
+def test_entity_too_large(collection: Collection) -> None:
     with pytest.raises(ValueTooLarge):
         collection.set({'_key': 'large_test', 'value': 'x' * 1024 ** 2})
 
 
-def test_data_download(project, collection):
+def test_data_download(project: Project, collection: Collection) -> None:
     items = []
     with closing(collection.create_writer()) as writer:
         for i in range(20):
@@ -142,18 +148,19 @@ def test_data_download(project, collection):
     assert len(downloaded) == 19
 
 
-def test_invalid_collection_name(project):
+def test_invalid_collection_name(project: Project) -> None:
     cols = project.collections
-    for method, args in [
+    cases: list[tuple[Callable[..., Any], tuple[str, ...]]] = [
             (cols.get, ('invalidtype', 'n')),
             (cols.get_store, ('foo-bar',)),
             (cols.get_store, ('foo/bar',)),
-            (cols.get_store, ('/foo',))]:
+            (cols.get_store, ('/foo',))]
+    for method, args in cases:
         with pytest.raises(ValueError):
             method(*args)
 
 
-def test_truncate(collection):
+def test_truncate(collection: Collection) -> None:
     # populate with 20 items
     test_item = _mkitem()
     with closing(collection.create_writer()) as writer:

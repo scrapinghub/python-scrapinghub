@@ -1,9 +1,12 @@
 import pytest
 
+from scrapinghub.client.jobs import Job
+from scrapinghub.client.spiders import Spider
+
 from .conftest import TEST_TS
 
 
-def _add_test_requests(job):
+def _add_test_requests(job: Job) -> None:
     r1 = job.requests.add(
         url='http://test.com/', status=200, method='GET',
         rs=1337, duration=5, ts=TEST_TS)
@@ -16,7 +19,7 @@ def _add_test_requests(job):
     job.requests.flush()
 
 
-def test_requests_iter(spider):
+def test_requests_iter(spider: Spider) -> None:
     job = spider.jobs.run(meta={'state': 'running'})
     _add_test_requests(job)
     job.requests.close()

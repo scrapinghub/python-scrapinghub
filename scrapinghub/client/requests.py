@@ -1,9 +1,12 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
 
+from ..hubstorage.job import Requests as _Requests
 from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 
 
-class Requests(_DownloadableProxyMixin, _ItemsResourceProxy):
+class Requests(  # type: ignore[misc]
+    _DownloadableProxyMixin[_Requests], _ItemsResourceProxy[_Requests],
+):
     """Representation of collection of job requests.
 
     Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance
@@ -41,7 +44,8 @@ class Requests(_DownloadableProxyMixin, _ItemsResourceProxy):
             'url': 'https://example.com'
         }]
     """
-    def add(self, url, status, method, rs, duration, ts, parent=None, fp=None):
+    def add(self, url: str, status: int, method: str, rs: int, duration: int,
+            ts: int, parent: int | None = None, fp: str | None = None) -> int:
         """ Add a new requests.
 
         :param url: string url for the request.

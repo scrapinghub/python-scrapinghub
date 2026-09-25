@@ -1,3 +1,10 @@
 [tool.sphinx-scrapy]
 # Keep in sync with .github/workflows/main.yml
 python-version = "3.14"
+
+[tool.mypy]
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["msgpack", "retrying", "vcr"]
+ignore_missing_imports = true

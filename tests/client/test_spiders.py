@@ -11,12 +11,13 @@ from scrapinghub.client.exceptions import NotFound
 from scrapinghub.client.jobs import Jobs, Job
 from scrapinghub.client.spiders import Spider
 from scrapinghub.client.utils import JobKey
+from scrapinghub.client.projects import Project
 
 from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .utils import validate_default_meta
 
 
-def test_spiders_get(project):
+def test_spiders_get(project: Project) -> None:
     spider = project.spiders.get(TEST_SPIDER_NAME)
     assert isinstance(spider, Spider)
     assert isinstance(spider.jobs, Jobs)
@@ -25,13 +26,13 @@ def test_spiders_get(project):
         project.spiders.get('non-existing')
 
 
-def test_spiders_list(project):
+def test_spiders_list(project: Project) -> None:
     assert project.spiders.list() == [
         {'id': 'hs-test-spider', 'tags': [],
          'type': 'manual', 'version': None}]
 
 
-def test_spider_base(project, spider):
+def test_spider_base(project: Project, spider: Spider) -> None:
     assert isinstance(spider._id, string_types)
     assert isinstance(spider.key, string_types)
     assert spider.key == spider.project_id + '/' + spider._id
@@ -40,7 +41,7 @@ def test_spider_base(project, spider):
     assert isinstance(project.jobs, Jobs)
 
 
-def test_spider_list_update_tags(project, spider):
+def test_spider_list_update_tags(project: Project, spider: Spider) -> None:
     with pytest.raises(BadRequest):
         spider.update_tags()
 
@@ -52,13 +53,13 @@ def test_spider_list_update_tags(project, spider):
     assert spider.list_tags() == []
 
 
-def test_spider_jobs(spider):
+def test_spider_jobs(spider: Spider) -> None:
     jobs = spider.jobs
     assert jobs.project_id == TEST_PROJECT_ID
     assert jobs.spider is spider
 
 
-def test_spider_jobs_count(spider):
+def test_spider_jobs_count(spider: Spider) -> None:
     jobs = spider.jobs
     assert jobs.count() == 0
     assert jobs.count(state=['pending', 'running', 'finished']) == 0
@@ -83,7 +84,7 @@ def test_spider_jobs_count(spider):
     assert jobs.count() == 3
 
 
-def test_spider_jobs_iter(spider):
+def test_spider_jobs_iter(spider: Spider) -> None:
     spider.jobs.run(meta={'state': 'running'})
 
     # no finished jobs
@@ -102,14 +103,14 @@ def test_spider_jobs_iter(spider):
     assert isinstance(running_time, int) and running_time > 0
     elapsed = job.get('elapsed')
     assert isinstance(elapsed, int) and elapsed > 0
-    assert job.get('key').startswith(TEST_PROJECT_ID)
+    assert job['key'].startswith(TEST_PROJECT_ID)
     assert job.get('spider') == TEST_SPIDER_NAME
     assert job.get('state') == 'running'
     with pytest.raises(StopIteration):
         next(jobs1)
 
 
-def test_spider_jobs_list(spider):
+def test_spider_jobs_list(spider: Spider) -> None:
     spider.jobs.run(meta={'state': 'running'})
 
     # no finished jobs
@@ -128,12 +129,12 @@ def test_spider_jobs_list(spider):
     assert isinstance(running_time, int) and running_time > 0
     elapsed = job.get('elapsed')
     assert isinstance(elapsed, int) and elapsed > 0
-    assert job.get('key').startswith(TEST_PROJECT_ID)
+    assert job['key'].startswith(TEST_PROJECT_ID)
     assert job.get('spider') == TEST_SPIDER_NAME
     assert job.get('state') == 'running'
 
 
-def test_spider_jobs_run(spider):
+def test_spider_jobs_run(spider: Spider) -> None:
     job0 = spider.jobs.run()
     assert isinstance(job0, Job)
     validate_default_meta(job0.metadata, state='pending')
@@ -159,7 +160,7 @@ def test_spider_jobs_run(spider):
     assert job1.metadata.get('started_by')
 
 
-def test_spider_jobs_get(spider):
+def test_spider_jobs_get(spider: Spider) -> None:
     # error on wrong jobkey format
     with pytest.raises(ValueError):
         spider.jobs.get('wrongg')
@@ -172,12 +173,12 @@ def test_spider_jobs_get(spider):
     with pytest.raises(ValueError):
         spider.jobs.get(TEST_PROJECT_ID + '/2/3')
 
-    fake_job_id = str(JobKey(spider.project_id, spider._id, 3))
+    fake_job_id = str(JobKey(spider.project_id, spider._id, '3'))
     fake_job = spider.jobs.get(fake_job_id)
     assert isinstance(fake_job, Job)
 
 
-def test_spider_jobs_summary(spider):
+def test_spider_jobs_summary(spider: Spider) -> None:
     summary = spider.jobs.summary()
     expected_summary = [{'count': 0, 'name': state, 'summary': []}
                         for state in ['pending', 'running', 'finished']]
@@ -215,7 +216,7 @@ def test_spider_jobs_summary(spider):
     assert summary4['summary'][0].get('units') == 1
 
 
-def test_spider_jobs_iter_last(spider):
+def test_spider_jobs_iter_last(spider: Spider) -> None:
     lastsumm0 = spider.jobs.iter_last()
     assert isinstance(lastsumm0, types.GeneratorType)
     assert list(lastsumm0) == []

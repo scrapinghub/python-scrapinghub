@@ -1,3 +1,6 @@
+
+from typing import Any
+
 import mock
 import pytest
 
@@ -5,12 +8,12 @@ from scrapinghub.client.proxy import _format_iter_filters
 from scrapinghub.client.proxy import _ItemsResourceProxy
 
 
-def test_format_iter_filters():
+def test_format_iter_filters() -> None:
     # work with empty params
     assert _format_iter_filters({}) == {}
 
     # doesn't affect other params
-    params = {'a': 123, 'b': 456}
+    params: dict[str, Any] = {'a': 123, 'b': 456}
     assert _format_iter_filters(params) == params
 
     # pass filter as-is if not list
@@ -40,23 +43,23 @@ def test_format_iter_filters():
         _format_iter_filters({'filter': ['test', 123]})
 
 
-def test_item_resource_iter_no_params():
+def test_item_resource_iter_no_params() -> None:
     class MockClient:
-        def __init__(self):
+        def __init__(self) -> None:
             self._hsclient = object()
 
-    items_proxy = _ItemsResourceProxy(mock.Mock, MockClient(), 'mocked_key')
+    items_proxy = _ItemsResourceProxy(mock.Mock, MockClient(), 'mocked_key')  # type: ignore[arg-type]
     items_proxy._origin = mock.Mock()
     items_proxy.iter(count=123)
     assert items_proxy._origin.list.call_args == mock.call(None, count=123)
 
 
-def test_item_resource_iter_with_params():
+def test_item_resource_iter_with_params() -> None:
     class MockClient:
-        def __init__(self):
+        def __init__(self) -> None:
             self._hsclient = object()
 
-    items_proxy = _ItemsResourceProxy(mock.Mock, MockClient(), 'mocked_key')
+    items_proxy = _ItemsResourceProxy(mock.Mock, MockClient(), 'mocked_key')  # type: ignore[arg-type]
     items_proxy._origin = mock.Mock()
     items_proxy.iter(count=123, startts=12345)
     assert (items_proxy._origin.list.call_args ==

@@ -1,9 +1,10 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
 
+from ..hubstorage.job import Samples as _Samples
 from .proxy import _ItemsResourceProxy
 
 
-class Samples(_ItemsResourceProxy):
+class Samples(_ItemsResourceProxy[_Samples]):
     """Representation of collection of job samples.
 
     Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance

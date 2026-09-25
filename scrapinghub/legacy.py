@@ -2,25 +2,18 @@
 Scrapinghub API Client Library
 """
 
-from __future__ import division, print_function, absolute_import
+from __future__ import annotations, division, print_function, absolute_import
 import os
-import sys
 import json
 import logging
 import socket
 import time
 import warnings
+import http.client as httplib
+from collections.abc import Iterable, Iterator, Sequence
+from typing import IO, TYPE_CHECKING, Any
 
-
-# Python 2/3 compatibility
-_IS_PYTHON2 = sys.version_info < (3,)
-if _IS_PYTHON2:
-    import httplib
-    _BINARY_TYPE = str
-    range = xrange
-else:
-    import http.client as httplib
-    _BINARY_TYPE = bytes
+import requests
 
 
 logger = logging.getLogger('scrapinghub')
@@ -53,8 +46,9 @@ class Connection(object):
         'reports_add': 'reports/add',
     }
 
-    def __init__(self, apikey=None, password='', _old_passwd='',
-                 url=None, connection_timeout=None):
+    def __init__(self, apikey: str | None = None, password: str = '',
+                 _old_passwd: str = '', url: str | None = None,
+                 connection_timeout: float | None = None) -> None:
         if apikey is None:
             apikey = os.environ.get('SH_APIKEY')
             if apikey is None:
@@ -66,20 +60,20 @@ class Connection(object):
             warnings.warn("A lot of endpoints support authentication only via apikey.", stacklevel=2)
         self.apikey = apikey
         self.password = password or ''
-        self.url = url or os.getenv("SHUB_APIURL", self.DEFAULT_ENDPOINT)
+        self.url = url or os.environ.get("SHUB_APIURL", self.DEFAULT_ENDPOINT)
         self._session = self._create_session()
         self._connection_timeout = connection_timeout
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Connection(%r)" % self.apikey
 
     @property
-    def auth(self):
+    def auth(self) -> tuple[str, str]:
         warnings.warn("'auth' connection attribute is deprecated, "
                       "use 'apikey' attribute instead", stacklevel=2)
         return self.apikey, self.password
 
-    def _create_session(self):
+    def _create_session(self) -> requests.Session:
         from requests import session
         from scrapinghub import __version__
         s = session()
@@ -90,10 +84,10 @@ class Connection(object):
         # For python-requests >= 1.x
         s.stream = True
         # For python-requests < 1.x
-        s.prefetch = False
+        s.prefetch = False  # type: ignore[attr-defined]
         return s
 
-    def _build_url(self, method, format):
+    def _build_url(self, method: str, format: str) -> str:
         """Returns full url for given method and format"""
         from requests.compat import urljoin
         # TODO: verify method's format support
@@ -106,7 +100,9 @@ class Connection(object):
             path = "{0}.{1}".format(base_path, format)
             return urljoin(self.url, path)
 
-    def _get(self, method, format, params=None, headers=None, raw=False):
+    def _get(self, method: str, format: str,
+             params: dict[str, Any] | Sequence[tuple[str, Any]] | None = None,
+             headers: dict[str, str] | None = None, raw: bool = False) -> Any:
         """Performs GET request"""
         from requests.compat import urlencode
         url = self._build_url(method, format)
@@ -114,12 +110,17 @@ class Connection(object):
             url = "{0}?{1}".format(url, urlencode(params, True))
         return self._request(url, None, headers, format, raw)
 
-    def _post(self, method, format, params=None, headers=None, raw=False, files=None):
+    def _post(self, method: str, format: str,
+              params: dict[str, Any] | None = None,
+              headers: dict[str, str] | None = None, raw: bool = False,
+              files: dict[str, Any] | None = None) -> Any:
         """Performs POST request"""
         url = self._build_url(method, format)
         return self._request(url, params, headers, format, raw, files)
 
-    def _request(self, url, data, headers, format, raw, files=None):
+    def _request(self, url: str, data: Any,
+                 headers: dict[str, str] | None, format: str, raw: bool,
+                 files: dict[str, Any] | None = None) -> Any:
         """Performs the request using and returns the content deserialized,
         based on given `format`.
 
@@ -142,7 +143,8 @@ class Connection(object):
                                           timeout=self._connection_timeout)
         return self._decode_response(response, format, raw)
 
-    def _decode_response(self, response, format, raw):
+    def _decode_response(self, response: requests.Response, format: str,
+                         raw: bool) -> Any:
         if response.status_code == 404:
             raise APIError("Not found", _type=APIError.ERR_NOT_FOUND)
         elif 500 <= response.status_code < 600:
@@ -169,93 +171,108 @@ class Connection(object):
                 raise APIError("JSON response does not contain status")
         else:  # jl
             return (json.loads(line.decode('utf-8')
-                               if isinstance(line, _BINARY_TYPE) else line)
+                               if isinstance(line, bytes) else line)
                     for line in response.iter_lines())
 
     ##
     ## public methods
     ##
-    def __getitem__(self, key):
+    def __getitem__(self, key: int | str) -> Project:
         """Returns `Project` instance for given key.
 
         Does not verify if project exists.
         """
         return Project(self, key)
 
-    def project_ids(self):
+    def project_ids(self) -> Any:
         """Returns a list of projects available for this connection and
         crendentials.
         """
         result = self._get('listprojects', 'json')
         return result['projects']
 
-    def project_names(self):
+    def project_names(self) -> Any:
         warnings.warn("scrapinghub.Connection.project_names() method is deprecated, use project_ids() method instead", stacklevel=2)
         return self.project_ids()
 
 
 class RequestProxyMixin(object):
 
-    def _add_params(self, params):
+    if TYPE_CHECKING:
+        @property
+        def _request_proxy(self) -> Connection | RequestProxyMixin: ...
+
+    def _add_params(self, params: dict[str, Any]) -> dict[str, Any]:
         return params
 
-    def _get(self, method, format, params=None, headers=None, raw=False):
+    def _get(self, method: str, format: str,
+             params: dict[str, Any] | None = None,
+             headers: dict[str, str] | None = None, raw: bool = False) -> Any:
         params = self._add_params(params or {})
         return self._request_proxy._get(method, format, params, headers, raw)
 
-    def _post(self, method, format, params=None, headers=None, raw=False, files=None):
+    def _post(self, method: str, format: str,
+              params: dict[str, Any] | None = None,
+              headers: dict[str, str] | None = None, raw: bool = False,
+              files: dict[str, Any] | None = None) -> Any:
         params = self._add_params(params or {})
         return self._request_proxy._post(method, format, params, headers, raw, files)
 
 
 class Project(RequestProxyMixin):
-    def __init__(self, connection, projectid):
+    def __init__(self, connection: Connection, projectid: int | str) -> None:
         self.connection = connection
         self.id = projectid
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Project({0.connection!r}, {0.id})".format(self)
 
     @property
-    def name(self):
+    def name(self) -> int | str:
         warnings.warn("Project.name is deprecated, use Project.id instead", stacklevel=2)
         return self.id
 
-    def schedule(self, spider, **params):
+    def schedule(self, spider: str, **params: Any) -> Any:
         params['spider'] = spider
         result = self._post('schedule', 'json', params)
         return result['jobid']
 
-    def jobs(self, **params):
+    def jobs(self, **params: Any) -> JobSet:
         return JobSet(self, **params)
 
-    def job(self, id):
+    def job(self, id: str) -> Job | None:
         for x in self.jobs(job=id, count=1):
             return x
+        return None
 
-    def spiders(self, **params):
+    def spiders(self, **params: Any) -> Any:
         result = self._get('spiders', 'json', params)
         return result['spiders']
 
     @property
-    def _request_proxy(self):
+    def _request_proxy(self) -> Connection:
         return self.connection
 
-    def _add_params(self, params):
+    def _add_params(self, params: dict[str, Any]) -> dict[str, Any]:
         # force project param
         params.update(project=self.id)
         return params
 
-    def autoscraping_project_slybot(self, spiders=(), outputfile=None):
+    def autoscraping_project_slybot(
+        self, spiders: Sequence[str] = (),
+        outputfile: IO[bytes] | None = None,
+    ) -> Any:
         from shutil import copyfileobj
-        params = {}
+        params: dict[str, Any] = {}
         if spiders:
             params['spider'] = spiders
         r = self._get('as_project_slybot', 'zip', params, raw=True)
         return r if outputfile is None else copyfileobj(r, outputfile)
 
-    def autoscraping_spider_properties(self, spider, start_urls=None):
-        params = {'spider': spider}
+    def autoscraping_spider_properties(
+        self, spider: str, start_urls: Sequence[str] | None = None,
+    ) -> Any:
+        params: dict[str, Any] = {'spider': spider}
         if start_urls:
             params['start_url'] = start_urls
             return self._post('as_spider_properties', 'json', params)
@@ -264,42 +281,43 @@ class Project(RequestProxyMixin):
 
 class JobSet(RequestProxyMixin):
 
-    def __init__(self, project, **params):
+    def __init__(self, project: Project, **params: Any) -> None:
         self.project = project
         self.params = params
         # jobs one-shot iterator
-        self._jobs = None
+        self._jobs: Iterable[Any] | None = None
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         params = ', '.join("{0}={1}".format(*i) for i in self.params.items())
         return "JobSet({0.project!r}, {1})".format(self, params)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Job]:
         self._load_jobs()
+        assert self._jobs is not None
         return (Job(self.project, info['id'], info) for info in self._jobs)
 
-    def count(self):
+    def count(self) -> Any:
         """Returns total results count of current filters.
         Does not inclue `count` neither `offset`.
         """
         result = self._get('jobs_count', 'json')
         return result['total']
 
-    def update(self, **modifiers):
+    def update(self, **modifiers: Any) -> Any:
         params = self.params.copy()
         params.update(modifiers)
         result = self._post('jobs_update', 'json', params)
         return result['count']
 
-    def stop(self):
+    def stop(self) -> None:
         for job in self:
             job.stop()
 
-    def delete(self):
+    def delete(self) -> None:
         for job in self:
             job.delete()
 
-    def _load_jobs(self):
+    def _load_jobs(self) -> None:
         # only load once
         if self._jobs is None:
             result = self._get('jobs_list', 'jl', self.params)
@@ -316,10 +334,10 @@ class JobSet(RequestProxyMixin):
                 self._jobs = result
 
     @property
-    def _request_proxy(self):
+    def _request_proxy(self) -> Project:
         return self.project
 
-    def _add_params(self, params):
+    def _add_params(self, params: dict[str, Any]) -> dict[str, Any]:
         # default to JobSet's params
         params2 = self.params.copy()
         # update with user params
@@ -332,21 +350,21 @@ class Job(RequestProxyMixin):
     MAX_RETRIES = 180
     RETRY_INTERVAL = 60
 
-    def __init__(self, project, id, info):
+    def __init__(self, project: Project, id: str, info: dict[str, Any]) -> None:
         self.project = project
         self._id = id
         self.info = info
 
     @property
-    def id(self):
+    def id(self) -> str:
         return self._id
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "Job({0.project!r}, {0.id})".format(self)
 
-    def items(self, offset=0, count=None, meta=None):
-        import requests
-        params = {'offset': offset}
+    def items(self, offset: int = 0, count: int | None = None,
+              meta: Sequence[str] | None = None) -> Iterator[Any]:
+        params: dict[str, Any] = {'offset': offset}
         if meta is not None:
             params['meta'] = meta
         if count is not None:
@@ -374,21 +392,23 @@ class Job(RequestProxyMixin):
             logger.error('Failed %d times reading items from %s, last error was: %s',
                          self.MAX_RETRIES, self._id, lastexc)
 
-    def update(self, **modifiers):
+    def update(self, **modifiers: Any) -> Any:
         # XXX: only allow add_tag/remove_tag
         result = self._post('jobs_update', 'json', modifiers)
         return result['count']
 
-    def stop(self):
+    def stop(self) -> bool:
         result = self._post('jobs_stop', 'json')
-        return result['status'] == 'ok'
+        status: str = result['status']
+        return status == 'ok'
 
-    def delete(self):
+    def delete(self) -> Any:
         result = self._post('jobs_delete', 'json')
         return result['count']
 
-    def add_report(self, key, content, content_type='text/plain'):
-        from requests.compat import StringIO
+    def add_report(self, key: str, content: str,
+                   content_type: str = 'text/plain') -> None:
+        from io import StringIO
         params = {
             'project': self.project.id,
             'job': self.id,
@@ -398,14 +418,14 @@ class Job(RequestProxyMixin):
         files = {'content': ('report', StringIO(content))}
         self._post('reports_add', 'json', params, files=files)
 
-    def log(self, **params):
+    def log(self, **params: Any) -> Any:
         return self._get('log', 'jl', params)
 
     @property
-    def _request_proxy(self):
+    def _request_proxy(self) -> Project:
         return self.project
 
-    def _add_params(self, params):
+    def _add_params(self, params: dict[str, Any]) -> dict[str, Any]:
         params['job'] = self.id
         return params
 
@@ -419,6 +439,6 @@ class APIError(Exception):
     ERR_AUTH_ERROR = "err_auth_error"
     ERR_SERVER_ERROR = "err_server_error"
 
-    def __init__(self, message, _type=None):
+    def __init__(self, message: str, _type: str | None = None) -> None:
         super(APIError, self).__init__(message)
         self._type = _type or self.ERR_DEFAULT

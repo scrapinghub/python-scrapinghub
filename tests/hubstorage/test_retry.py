@@ -3,11 +3,13 @@ Test Retry Policy
 """
 import json
 import re
+from collections.abc import Callable
+from typing import Any
 
 import pytest
 import responses
-from mock import patch
-from requests import HTTPError, ConnectionError
+from mock import MagicMock, patch
+from requests import HTTPError, ConnectionError, PreparedRequest
 from scrapinghub import HubstorageClient
 from six.moves.http_client import BadStatusLine
 
@@ -19,11 +21,15 @@ GET = responses.GET
 POST = responses.POST
 DELETE = responses.DELETE
 
+_Callback = Callable[[PreparedRequest], tuple[int, dict[str, str], str]]
+
 
 @patch.multiple('scrapinghub.HubstorageClient',
                 RETRY_DEFAULT_JITTER_MS=1,
                 RETRY_DEFAULT_EXPONENTIAL_BACKOFF_MS=1)
-def hsclient_with_retries(max_retries=3, max_retry_time=1):
+def hsclient_with_retries(
+    max_retries: int = 3, max_retry_time: float | None = 1,
+) -> HubstorageClient:
     return HubstorageClient(
         auth=TEST_AUTH, endpoint=TEST_ENDPOINT,
         max_retries=max_retries, max_retry_time=max_retry_time,
@@ -31,7 +37,7 @@ def hsclient_with_retries(max_retries=3, max_retry_time=1):
 
 
 @patch('scrapinghub.hubstorage.client.Retrying')
-def test_hsclient_with_retries_no_wait(retrying_class):
+def test_hsclient_with_retries_no_wait(retrying_class: MagicMock) -> None:
     hsclient_with_retries()
     assert retrying_class.call_count == 1
     call = retrying_class.call_args_list[0]
@@ -39,7 +45,8 @@ def test_hsclient_with_retries_no_wait(retrying_class):
     assert int(call[1]['wait_exponential_multiplier']) == 33
 
 
-def mock_api(method=GET, callback=None, url_match='/.*'):
+def mock_api(method: str = GET, *, callback: _Callback,
+             url_match: str = '/.*') -> None:
     """
     Mock an API URL using the responses library.
 
@@ -55,8 +62,10 @@ def mock_api(method=GET, callback=None, url_match='/.*'):
     )
 
 
-def make_request_callback(timeout_count, body_on_success,
-                          http_error_status=504):
+def make_request_callback(
+    timeout_count: int, body_on_success: Any,
+    http_error_status: int = 504,
+) -> tuple[_Callback, list[int]]:
     """Make a request callback that timeout a couple of time before returning
     body_on_success.
 
@@ -67,7 +76,9 @@ def make_request_callback(timeout_count, body_on_success,
     # use a list for nonlocal mutability used in request_callback
     attempts = [0]
 
-    def request_callback(request):
+    def request_callback(
+        request: PreparedRequest,
+    ) -> tuple[int, dict[str, str], str]:
         attempts[0] += 1
 
         if attempts[0] <= timeout_count:
@@ -79,7 +90,7 @@ def make_request_callback(timeout_count, body_on_success,
     return request_callback, attempts
 
 
-def test_delete_on_hubstorage_api_does_not_404():
+def test_delete_on_hubstorage_api_does_not_404() -> None:
     """Delete a non-existing resource without exceptions.
 
     The current Hubstorage API does not raise 404 errors on deleting resources
@@ -107,7 +118,7 @@ def test_delete_on_hubstorage_api_does_not_404():
 
 
 @responses.activate
-def test_retrier_does_not_catch_unwanted_exception(hsspiderid):
+def test_retrier_does_not_catch_unwanted_exception(hsspiderid: str) -> None:
     # Prepare
     client = hsclient_with_retries(max_retries=2)
     job_metadata = {
@@ -136,7 +147,9 @@ def test_retrier_does_not_catch_unwanted_exception(hsspiderid):
 
 @pytest.mark.parametrize('err_code', [408, 429, 502, 503, 504])
 @responses.activate
-def test_retrier_catches_badstatusline_and_selected_http_errors(hsspiderid, err_code):
+def test_retrier_catches_badstatusline_and_selected_http_errors(
+    hsspiderid: str, err_code: int,
+) -> None:
     # Prepare
     client = hsclient_with_retries()
     job_metadata = {
@@ -148,7 +161,9 @@ def test_retrier_catches_badstatusline_and_selected_http_errors(hsspiderid, err_
     # use a list for nonlocal mutability used in request_callback
     attempts_count = [0]
 
-    def request_callback(request):
+    def request_callback(
+        request: PreparedRequest,
+    ) -> tuple[int, dict[str, str], str]:
         attempts_count[0] += 1
 
         if attempts_count[0] <= 2:
@@ -170,7 +185,7 @@ def test_retrier_catches_badstatusline_and_selected_http_errors(hsspiderid, err_
 
 
 @responses.activate
-def test_api_delete_can_be_set_to_non_idempotent(hsspiderid):
+def test_api_delete_can_be_set_to_non_idempotent(hsspiderid: str) -> None:
     # Prepare
     client = hsclient_with_retries()
     job_metadata = {
@@ -199,7 +214,7 @@ def test_api_delete_can_be_set_to_non_idempotent(hsspiderid):
 
 
 @responses.activate
-def test_collection_store_and_delete_are_retried():
+def test_collection_store_and_delete_are_retried() -> None:
     # Prepare
     client = hsclient_with_retries()
     callback_post, attempts_count_post = make_request_callback(2, [])
@@ -219,7 +234,7 @@ def test_collection_store_and_delete_are_retried():
 
 
 @responses.activate
-def test_delete_requests_are_retried(hsspiderid):
+def test_delete_requests_are_retried(hsspiderid: str) -> None:
     # Prepare
     client = hsclient_with_retries()
     job_metadata = {
@@ -247,7 +262,7 @@ def test_delete_requests_are_retried(hsspiderid):
 
 
 @responses.activate
-def test_metadata_save_does_retry(hsspiderid):
+def test_metadata_save_does_retry(hsspiderid: str) -> None:
     # Prepare
     client = hsclient_with_retries()
     job_metadata = {
@@ -271,7 +286,7 @@ def test_metadata_save_does_retry(hsspiderid):
 
 
 @responses.activate
-def test_push_job_does_not_retry():
+def test_push_job_does_not_retry() -> None:
     # Prepare
     client = hsclient_with_retries()
     callback, attempts_count = make_request_callback(2, {'key': '1/2/3'})
@@ -293,7 +308,7 @@ def test_push_job_does_not_retry():
 
 
 @responses.activate
-def test_get_job_does_retry(hsspiderid):
+def test_get_job_does_retry(hsspiderid: str) -> None:
     # Prepare
     client = hsclient_with_retries()
     job_metadata = {
@@ -314,7 +329,7 @@ def test_get_job_does_retry(hsspiderid):
 
 
 @responses.activate
-def test_get_job_does_fails_if_no_retries(hsspiderid):
+def test_get_job_does_fails_if_no_retries(hsspiderid: str) -> None:
     # Prepare
     client = hsclient_with_retries(max_retries=0, max_retry_time=None)
     job_metadata = {
@@ -342,7 +357,7 @@ def test_get_job_does_fails_if_no_retries(hsspiderid):
 
 
 @responses.activate
-def test_get_job_does_fails_on_too_many_retries(hsspiderid):
+def test_get_job_does_fails_on_too_many_retries(hsspiderid: str) -> None:
     # Prepare
     client = hsclient_with_retries(max_retries=2, max_retry_time=1)
     job_metadata = {

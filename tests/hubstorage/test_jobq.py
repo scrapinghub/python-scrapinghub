@@ -2,22 +2,26 @@
 Test JobQ
 """
 import os
+from collections.abc import Iterable, Iterator
+from typing import Any
 import six
 import pytest
 from six.moves import range
 
 from scrapinghub.hubstorage.jobq import DuplicateJobError
 from scrapinghub.hubstorage.utils import apipoll
+from scrapinghub.hubstorage import HubstorageClient
+from scrapinghub.hubstorage.project import Project
 
 from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import hsspiderid
 
 
-def _keys(lst):
+def _keys(lst: Iterable[Any]) -> list[str]:
     return [x['key'] for x in lst]
 
 
-def test_push(hsclient, hsproject):
+def test_push(hsclient: HubstorageClient, hsproject: Project) -> None:
     jobq = hsproject.jobq
     qjob = jobq.push(TEST_SPIDER_NAME)
     assert 'key' in qjob, qjob
@@ -41,21 +45,27 @@ def test_push(hsclient, hsproject):
     assert job.metadata.get('state') == u'deleted'
 
 
-def test_push_with_extras(hsclient, hsproject):
+def test_push_with_extras(
+    hsclient: HubstorageClient, hsproject: Project,
+) -> None:
     qjob = hsproject.jobq.push(TEST_SPIDER_NAME, foo='bar', baz='fuu')
     job = hsclient.get_job(qjob['key'])
     assert job.metadata.get('foo') == u'bar'
     assert job.metadata.get('baz') == u'fuu'
 
 
-def test_push_with_priority(hsclient, hsproject):
+def test_push_with_priority(
+    hsclient: HubstorageClient, hsproject: Project,
+) -> None:
     jobq = hsproject.jobq
     qjob = jobq.push(TEST_SPIDER_NAME, priority=jobq.PRIO_HIGHEST)
     assert 'key' in qjob, qjob
     assert 'auth' in qjob, qjob
 
 
-def test_push_with_state(hsclient, hsproject):
+def test_push_with_state(
+    hsclient: HubstorageClient, hsproject: Project,
+) -> None:
     qjob = hsproject.jobq.push(TEST_SPIDER_NAME, state='running')
     assert 'key' in qjob, qjob
     assert 'auth' in qjob, qjob
@@ -63,7 +73,7 @@ def test_push_with_state(hsclient, hsproject):
     assert job.metadata.get('state') == u'running'
 
 
-def test_push_with_unique(hsproject):
+def test_push_with_unique(hsproject: Project) -> None:
     jobq = hsproject.jobq
     # no unique key
     jobq.push(TEST_SPIDER_NAME)
@@ -82,7 +92,7 @@ def test_push_with_unique(hsproject):
     jobq.push(TEST_SPIDER_NAME, unique='h1')
 
 
-def test_startjob(hsproject):
+def test_startjob(hsproject: Project) -> None:
     jobq = hsproject.jobq
     qj = jobq.push(TEST_SPIDER_NAME)
     nj = jobq.start()
@@ -95,7 +105,7 @@ def test_startjob(hsproject):
     assert nj[u'priority'] == jobq.PRIO_NORMAL
 
 
-def test_startjob_with_extras(hsproject):
+def test_startjob_with_extras(hsproject: Project) -> None:
     jobq = hsproject.jobq
     pushextras = {
         'string': 'foo',
@@ -110,7 +120,8 @@ def test_startjob_with_extras(hsproject):
         'nil': None,
     }
     qj = jobq.push(TEST_SPIDER_NAME, **pushextras)
-    startextras = dict(('s_' + k, v) for k, v in six.iteritems(pushextras))
+    startextras: dict[str, Any] = dict(
+        ('s_' + k, v) for k, v in six.iteritems(pushextras))
     nj = jobq.start(**startextras)
     assert qj['key'] == nj['key']
     for k, v in six.iteritems(dict(pushextras, **startextras)):
@@ -120,7 +131,7 @@ def test_startjob_with_extras(hsproject):
             assert nj.get(k) == v
 
 
-def test_startjob_order(hsproject):
+def test_startjob_order(hsproject: Project) -> None:
     jobq = hsproject.jobq
     q1 = jobq.push(TEST_SPIDER_NAME)
     q2 = jobq.push(TEST_SPIDER_NAME)
@@ -130,7 +141,7 @@ def test_startjob_order(hsproject):
     assert jobq.start()['key'] == q3['key']
 
 
-def test_summary(hsproject):
+def test_summary(hsproject: Project) -> None:
     jobq = hsproject.jobq
     # push at least one job per state
     jobq.push(TEST_SPIDER_NAME)
@@ -143,7 +154,7 @@ def test_summary(hsproject):
     assert jobq.summary('finished')
 
 
-def test_summary_jobmeta(hsproject):
+def test_summary_jobmeta(hsproject: Project) -> None:
     jobq = hsproject.jobq
     jobq.push(TEST_SPIDER_NAME, foo='bar', caz='fuu')
     pendings = jobq.summary('pending', jobmeta='foo')['summary']
@@ -157,7 +168,7 @@ def test_summary_jobmeta(hsproject):
     assert p1.get('caz') == 'fuu'
 
 
-def test_summary_countstart(hsproject):
+def test_summary_countstart(hsproject: Project) -> None:
     # push more than 5 jobs into same queue
     N = 6
     jobq = hsproject.jobq
@@ -177,7 +188,9 @@ def test_summary_countstart(hsproject):
                 [o['key'] for o in s2['summary'][-6:-3]])
 
 
-def test_summaries_and_state_changes(hsproject, hsspiderid):
+def test_summaries_and_state_changes(
+    hsproject: Project, hsspiderid: str,
+) -> None:
     jobq = hsproject.jobq
     j1 = jobq.push(TEST_SPIDER_NAME)
     j2 = jobq.push(TEST_SPIDER_NAME)
@@ -207,7 +220,7 @@ def test_summaries_and_state_changes(hsproject, hsspiderid):
     _assert_queue(hsproject, hsspiderid, 'finished', [])
 
 
-def test_list_with_state(hsproject):
+def test_list_with_state(hsproject: Project) -> None:
     jobq = hsproject.jobq
     j1 = jobq.push(TEST_SPIDER_NAME, state='finished')
     j2 = jobq.push(TEST_SPIDER_NAME, state='running')
@@ -220,7 +233,7 @@ def test_list_with_state(hsproject):
     assert _keys(jobq.list(state=['running', 'pending'])) == _keys([j3, j2])
 
 
-def test_list_with_count(hsproject):
+def test_list_with_count(hsproject: Project) -> None:
     jobq = hsproject.jobq
     j1 = jobq.push(TEST_SPIDER_NAME, state='finished')  # NOQA
     j2 = jobq.push(TEST_SPIDER_NAME, state='finished')  # NOQA
@@ -230,7 +243,7 @@ def test_list_with_count(hsproject):
     assert _keys(jobq.list(count=2)) == _keys([j4, j3])
 
 
-def test_list_with_stop(hsproject):
+def test_list_with_stop(hsproject: Project) -> None:
     jobq = hsproject.jobq
     j1 = jobq.push(TEST_SPIDER_NAME, state='finished')
     j2 = jobq.push(TEST_SPIDER_NAME, state='finished')
@@ -241,7 +254,7 @@ def test_list_with_stop(hsproject):
     assert _keys(jobq.list(stop=j1['key'])) == _keys([j4, j3, j2])
 
 
-def test_list_with_tags(hsproject):
+def test_list_with_tags(hsproject: Project) -> None:
     jobq = hsproject.jobq
     j1 = jobq.push(TEST_SPIDER_NAME, state='finished', tags=['t1'])
     j2 = jobq.push(TEST_SPIDER_NAME, state='finished', tags=['t2'])
@@ -255,7 +268,7 @@ def test_list_with_tags(hsproject):
 
 # endts is not implemented
 @pytest.mark.xfail
-def test_list_with_startts_endts(hsproject):
+def test_list_with_startts_endts(hsproject: Project) -> None:
     jobq = hsproject.jobq
     j1 = jobq.push(TEST_SPIDER_NAME, state='finished')  # NOQA
     j2 = jobq.push(TEST_SPIDER_NAME, state='finished')
@@ -269,11 +282,11 @@ def test_list_with_startts_endts(hsproject):
     assert _keys(jobs) == _keys([j3, j2])
 
 
-def test_spider_updates(hsproject, hsspiderid):
+def test_spider_updates(hsproject: Project, hsspiderid: str) -> None:
     jobq = hsproject.jobq
     spiderkey = '%s/%s' % (TEST_PROJECT_ID, hsspiderid)
 
-    def finish_and_delete_jobs():
+    def finish_and_delete_jobs() -> Iterator[Any]:
         for job in jobq.finish(spiderkey):
             yield job
         jobq.delete(spiderkey)
@@ -293,7 +306,7 @@ def test_spider_updates(hsproject, hsspiderid):
     assert not list(jobq.delete(spiderkey))
 
 
-def test_multiple_job_update(hsproject):
+def test_multiple_job_update(hsproject: Project) -> None:
     jobq = hsproject.jobq
     q1 = jobq.push(TEST_SPIDER_NAME)
     q2 = jobq.push(TEST_SPIDER_NAME)
@@ -307,7 +320,7 @@ def test_multiple_job_update(hsproject):
             ['finished', 'finished', 'finished'])
 
 
-def test_update(hsproject):
+def test_update(hsproject: Project) -> None:
     job = hsproject.push_job(TEST_SPIDER_NAME)
     assert job.metadata['state'] == 'pending'
     hsproject.jobq.update(job, state='running', foo='bar')
@@ -316,7 +329,7 @@ def test_update(hsproject):
     assert job.metadata['foo'] == 'bar'
 
 
-def test_jobsummary(hsproject):
+def test_jobsummary(hsproject: Project) -> None:
     jobs = [hsproject.push_job(TEST_SPIDER_NAME, foo=i)
             for i in range(5)]
     jobmetas = list(hsproject.jobq.jobsummary(
@@ -328,7 +341,9 @@ def test_jobsummary(hsproject):
     }
 
 
-def _assert_queue(hsproject, hsspiderid, qname, jobs):
+def _assert_queue(
+    hsproject: Project, hsspiderid: str, qname: str, jobs: list[Any],
+) -> None:
     summary = hsproject.jobq.summary(qname, spiderid=hsspiderid)
     assert summary['name'] == qname
     assert summary['count'] == len(jobs)

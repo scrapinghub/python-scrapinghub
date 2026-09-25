@@ -1,16 +1,19 @@
 import pytest
 
+from scrapinghub.client.jobs import Job
+from scrapinghub.client.spiders import Spider
+
 from .conftest import TEST_TS
 
 
-def _add_test_samples(job):
+def _add_test_samples(job: Job) -> None:
     job.samples.write([TEST_TS, 1, 2, 3])
     job.samples.write([TEST_TS + 1, 5, 9, 4])
     job.samples.flush()
     job.samples.close()
 
 
-def test_samples_iter(spider, json_and_msgpack):
+def test_samples_iter(spider: Spider, json_and_msgpack: str) -> None:
     job = spider.jobs.run(meta={'state': 'running'})
     assert list(job.samples.iter()) == []
     _add_test_samples(job)
@@ -22,7 +25,7 @@ def test_samples_iter(spider, json_and_msgpack):
         next(o)
 
 
-def test_samples_list(spider, json_and_msgpack):
+def test_samples_list(spider: Spider, json_and_msgpack: str) -> None:
     job = spider.jobs.run(meta={'state': 'running'})
     _add_test_samples(job)
     o = job.samples.list()

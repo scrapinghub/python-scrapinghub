@@ -1,4 +1,5 @@
 import os
+from collections.abc import Iterator
 
 import vcr
 import pytest
@@ -7,6 +8,10 @@ import shutil
 from scrapinghub import ScrapinghubClient
 from scrapinghub.client.exceptions import NotFound
 from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
+from scrapinghub.client.collections import Collection
+from scrapinghub.client.frontiers import Frontier
+from scrapinghub.client.projects import Project
+from scrapinghub.client.spiders import Spider
 
 from ..conftest import request_accept_header_matcher
 from ..conftest import VCRGzipSerializer
@@ -34,7 +39,7 @@ my_vcr.match_on = ('method', 'scheme', 'host', 'port',
                    'path', 'query', 'accept_header')
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     if config.option.update_cassettes:
         # there's vcr `all` mode to update cassettes but it doesn't delete
         # or clear existing records, so its size will always only grow
@@ -49,26 +54,26 @@ def pytest_configure(config):
         my_vcr.before_record_request = lambda request: None
 
 
-def is_using_real_services(request):
-    return (request.config.option.update_cassettes or
-            request.config.option.ignore_cassettes)
+def is_using_real_services(request: pytest.FixtureRequest) -> bool:
+    return bool(request.config.option.update_cassettes or
+                request.config.option.ignore_cassettes)
 
 
 @pytest.fixture(scope='session')
-def client():
+def client() -> ScrapinghubClient:
     return ScrapinghubClient(auth=TEST_ADMIN_AUTH,
                              endpoint=TEST_ENDPOINT,
                              dash_endpoint=TEST_DASH_ENDPOINT)
 
 
 @pytest.fixture(scope='session')
-def project(client):
+def project(client: ScrapinghubClient) -> Project:
     return client.get_project(TEST_PROJECT_ID)
 
 
 @pytest.fixture(scope='session')
-@my_vcr.use_cassette()
-def spider(project, request):
+@my_vcr.use_cassette()  # type: ignore[untyped-decorator]
+def spider(project: Project, request: pytest.FixtureRequest) -> Spider:
     # on normal conditions you can't create a new spider this way:
     # it can only be created on project deploy as usual
     spider = project.spiders.get(TEST_SPIDER_NAME, create=True)
@@ -80,7 +85,9 @@ def spider(project, request):
 
 
 @pytest.fixture(scope='session')
-def collection(project, request):
+def collection(
+    project: Project, request: pytest.FixtureRequest,
+) -> Iterator[Collection]:
     collection = get_test_collection(project)
     if is_using_real_services(request):
         clean_collection(collection)
@@ -88,7 +95,9 @@ def collection(project, request):
 
 
 @pytest.fixture(scope='function')
-def frontier(project, request, frontier_name):
+def frontier(
+    project: Project, request: pytest.FixtureRequest, frontier_name: str,
+) -> Iterator[Frontier]:
     frontier = project.frontiers.get(frontier_name)
     if is_using_real_services(request):
         clean_frontier_slot(frontier)
@@ -96,7 +105,10 @@ def frontier(project, request, frontier_name):
 
 
 @pytest.fixture(autouse=True, scope='session')
-def setup_session(client, project, collection, request):
+def setup_session(
+    client: ScrapinghubClient, project: Project, collection: Collection,
+    request: pytest.FixtureRequest,
+) -> Iterator[None]:
     if is_using_real_services(request):
         remove_all_jobs(project)
     yield
@@ -104,16 +116,22 @@ def setup_session(client, project, collection, request):
 
 
 @pytest.fixture(params=['json', 'msgpack'])
-def json_and_msgpack(client, monkeypatch, request):
+def json_and_msgpack(
+    client: ScrapinghubClient, monkeypatch: pytest.MonkeyPatch,
+    request: pytest.FixtureRequest,
+) -> str:
     if request.param == 'json':
         monkeypatch.setattr(client._hsclient, 'use_msgpack', False)
     elif not MSGPACK_AVAILABLE or request.config.getoption("--disable-msgpack"):
         pytest.skip("messagepack-based tests are disabled")
-    return request.param
+    param: str = request.param
+    return param
 
 
 @pytest.fixture(autouse=True)
-def setup_vcrpy(request, project):
+def setup_vcrpy(
+    request: pytest.FixtureRequest, project: Project,
+) -> Iterator[None]:
     # generates names like "test_module/test_function{-json}.yaml"
     # otherwise it uses current function name (setup_vcrpy) for all tests
     # other option is to add vcr decorator to each test separately
@@ -138,7 +156,7 @@ def setup_vcrpy(request, project):
 # Clean environment section
 
 
-def remove_all_jobs(project):
+def remove_all_jobs(project: Project) -> None:
     for k, _ in project.settings.iter():
         if k != 'botgroups':
             project.settings.delete(k)
@@ -150,7 +168,7 @@ def remove_all_jobs(project):
             _remove_job(project, summary['key'])
 
 
-def _remove_job(project, jobkey):
+def _remove_job(project: Project, jobkey: str) -> None:
     job = project.jobs.get(jobkey)
     job.finish()
     job.delete()
@@ -162,11 +180,11 @@ def _remove_job(project, jobkey):
 # Collection helpers section
 
 
-def get_test_collection(project):
+def get_test_collection(project: Project) -> Collection:
     return project.collections.get_store(TEST_COLLECTION_NAME)
 
 
-def clean_collection(collection):
+def clean_collection(collection: Collection) -> None:
     try:
         for item in collection.iter():
             collection.delete(item['_key'])
@@ -176,5 +194,5 @@ def clean_collection(collection):
 
 # Frontier helpers section
 
-def clean_frontier_slot(frontier):
+def clean_frontier_slot(frontier: Frontier) -> None:
     frontier.get(TEST_FRONTIER_SLOT).delete()

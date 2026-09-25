@@ -1,32 +1,35 @@
+
+from collections.abc import Iterator
+from io import StringIO
+
 import mock
 import pytest
-import requests
 
 from scrapinghub import Job
 from scrapinghub import Project
 
 
-def test_job_attributes():
+def test_job_attributes() -> None:
     assert Job.MAX_RETRIES == 180
     assert Job.RETRY_INTERVAL == 60
 
 
-def test_job_init(job):
+def test_job_init(job: Job) -> None:
     assert isinstance(job.project, Project)
     assert job._id == '1/2/3'
     assert job.info == {'field': 'data'}
 
 
-def test_job_id(job):
+def test_job_id(job: Job) -> None:
     assert job.id == job._id == '1/2/3'
 
 
-def test_job_repr(job):
+def test_job_repr(job: Job) -> None:
     assert repr(job) == "Job(Project(Connection('testkey'), 12345), 1/2/3)"
 
 
-def test_job_items_max_retries(job):
-    job._get = mock.Mock()
+def test_job_items_max_retries(job: Job) -> None:
+    job._get = mock.Mock()  # type: ignore[method-assign]
     job._get.side_effect = ValueError
     job.MAX_RETRIES = 10
     job.RETRY_INTERVAL = 0
@@ -35,18 +38,18 @@ def test_job_items_max_retries(job):
     assert job._get.call_count == 10
 
 
-def test_job_items_base_void(job):
-    job._get = mock.Mock()
+def test_job_items_base_void(job: Job) -> None:
+    job._get = mock.Mock()  # type: ignore[method-assign]
     job._get.return_value = iter([])
     assert list(job.items()) == []
     assert job._get.call_args_list == [
         (('items', 'jl'), {'params': {'offset': 0}})]
 
 
-def test_job_items_base_with_items(job):
-    job._get = mock.Mock()
+def test_job_items_base_with_items(job: Job) -> None:
+    job._get = mock.Mock()  # type: ignore[method-assign]
     job._get.return_value = ['itemA', 'itemB']
-    assert list(job.items(offset=50, count=10, meta={'meta': 'data'})) == [
+    assert list(job.items(offset=50, count=10, meta={'meta': 'data'})) == [  # type: ignore[arg-type]
         'itemA', 'itemB']
     assert job._get.call_count == 1
     assert job._get.call_args_list == [
@@ -54,20 +57,20 @@ def test_job_items_base_with_items(job):
             'offset': 50, 'count': 10, 'meta': {'meta': 'data'}}})]
 
 
-def test_job_items_base_with_retry(job):
-    job._get = mock.Mock()
+def test_job_items_base_with_retry(job: Job) -> None:
+    job._get = mock.Mock()  # type: ignore[method-assign]
     job.RETRY_INTERVAL = 0
 
-    def fake_first_get():
+    def fake_first_get() -> Iterator[str]:
         yield 'itemA1'
         yield 'itemA2'
         raise ValueError()
 
-    def fake_second_get():
+    def fake_second_get() -> Iterator[str]:
         yield 'itemB1'
 
     job._get.side_effect = [fake_first_get(), fake_second_get()]
-    items = job.items(offset=50, count=10, meta={'meta': 'data'})
+    items = job.items(offset=50, count=10, meta={'meta': 'data'})  # type: ignore[arg-type]
     assert next(items) == 'itemA1'
     assert job._get.call_count == 1
     assert job._get.mock_calls == [
@@ -85,8 +88,8 @@ def test_job_items_base_with_retry(job):
         next(items)
 
 
-def test_job_update(job):
-    job._post = mock.Mock()
+def test_job_update(job: Job) -> None:
+    job._post = mock.Mock()  # type: ignore[method-assign]
     job._post.return_value = {'count': 100}
     assert job.update(field='newvalue', paramB='valueB') == 100
     assert job._post.call_args_list == [
@@ -94,29 +97,29 @@ def test_job_update(job):
           {"field": "newvalue", "paramB": "valueB"}), {})]
 
 
-def test_job_stop_ok(job):
-    job._post = mock.Mock()
+def test_job_stop_ok(job: Job) -> None:
+    job._post = mock.Mock()  # type: ignore[method-assign]
     job._post.return_value = {'status': 'ok'}
     assert job.stop()
     assert job._post.call_args_list == [(('jobs_stop', 'json'), {})]
 
 
-def test_job_stop_error(job):
-    job._post = mock.Mock()
+def test_job_stop_error(job: Job) -> None:
+    job._post = mock.Mock()  # type: ignore[method-assign]
     job._post.return_value = {'status': 'error'}
     assert not job.stop()
     assert job._post.call_args_list == [(('jobs_stop', 'json'), {})]
 
 
-def test_job_delete(job):
-    job._post = mock.Mock()
+def test_job_delete(job: Job) -> None:
+    job._post = mock.Mock()  # type: ignore[method-assign]
     job._post.return_value = {'count': 1}
     assert job.delete() == 1
     assert job._post.call_args_list == [(('jobs_delete', 'json'), {})]
 
 
-def test_job_add_report(job):
-    job._post = mock.Mock()
+def test_job_add_report(job: Job) -> None:
+    job._post = mock.Mock()  # type: ignore[method-assign]
     job.add_report('testkey', 'testcontent', content_type='custom/type')
     args = job._post.call_args_list[0]
     assert args[0] == ('reports_add', 'json', {
@@ -125,21 +128,21 @@ def test_job_add_report(job):
     content = args[1].get('files').get('content')
     assert len(content) == 2
     assert content[0] == 'report'
-    assert isinstance(content[1], requests.compat.StringIO)
+    assert isinstance(content[1], StringIO)
     assert content[1].read() == 'testcontent'
 
 
-def test_job_log(job):
-    job._get = mock.Mock()
+def test_job_log(job: Job) -> None:
+    job._get = mock.Mock()  # type: ignore[method-assign]
     job._get.return_value = ['jl logs']
     assert job.log(param='value') == ['jl logs']
     assert job._get.call_args_list == [(('log', 'jl', {'param': 'value'}), {})]
 
 
-def test_job_request_proxy(job):
+def test_job_request_proxy(job: Job) -> None:
     assert job._request_proxy == job.project
 
 
-def test_job_add_params(job):
+def test_job_add_params(job: Job) -> None:
     assert job._add_params({'param': 'value'}) == {
         'param': 'value', 'job': '1/2/3'}

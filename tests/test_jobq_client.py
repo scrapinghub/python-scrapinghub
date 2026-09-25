@@ -1,19 +1,27 @@
+import pytest
+
 from scrapinghub import HubstorageClient
 
 
-def test_hubstorage_jobq_defaults_to_storage_endpoint(monkeypatch):
+def test_hubstorage_jobq_defaults_to_storage_endpoint(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.delenv('SHUB_JOBQ', raising=False)
     client = HubstorageClient(auth='apikey', endpoint='https://storage.example/')
     assert client.jobq.url.startswith('https://storage.example/')
 
 
-def test_hubstorage_jobq_endpoint_uses_env_var(monkeypatch):
+def test_hubstorage_jobq_endpoint_uses_env_var(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv('SHUB_JOBQ', 'https://jobq-internal.zyte.com/')
     client = HubstorageClient(auth='apikey', endpoint='https://storage.example/')
     assert client.jobq.url.startswith('https://jobq-internal.zyte.com/')
 
 
-def test_hubstorage_jobq_endpoint_argument(monkeypatch):
+def test_hubstorage_jobq_endpoint_argument(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.delenv('SHUB_JOBQ', raising=False)
     client = HubstorageClient(
         auth='apikey',
@@ -23,14 +31,16 @@ def test_hubstorage_jobq_endpoint_argument(monkeypatch):
     assert client.jobq.url.startswith('https://jobq.example/')
 
 
-def test_hubstorage_connection_timeout_positional_compatibility(monkeypatch):
+def test_hubstorage_connection_timeout_positional_compatibility(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.delenv('SHUB_JOBQ', raising=False)
     client = HubstorageClient('apikey', 'https://storage.example/', 12)
     assert client.connection_timeout == 12
     assert client.jobq.url.startswith('https://storage.example/')
 
 
-def test_project_and_job_jobq_use_configured_endpoint():
+def test_project_and_job_jobq_use_configured_endpoint() -> None:
     client = HubstorageClient(
         auth='apikey',
         endpoint='https://storage.example/',

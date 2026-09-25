@@ -25,7 +25,7 @@ setup(
     url='http://github.com/scrapinghub/python-scrapinghub',
     platforms=['Any'],
     packages=['scrapinghub', 'scrapinghub.client', 'scrapinghub.hubstorage'],
-    package_data={'scrapinghub': ['VERSION']},
+    package_data={'scrapinghub': ['VERSION', 'py.typed']},
     install_requires=['python-dotenv>=1.0.0', 'requests>=1.0',
                       'retrying>=1.3.3', 'six>=1.10.0'],
     extras_require={'msgpack': mpack_required},

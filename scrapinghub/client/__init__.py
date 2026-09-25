@@ -1,8 +1,16 @@
+from __future__ import annotations
+
+import os
+from typing import Any
+
+from requests import Response
+
 from scrapinghub import Connection as _Connection
 from scrapinghub import HubstorageClient as _HubstorageClient
 
 from .exceptions import _wrap_http_errors
-from .projects import Projects
+from .jobs import Job
+from .projects import Project, Projects
 from .utils import parse_auth
 from .utils import parse_project_id, parse_job_key
 
@@ -15,14 +23,14 @@ DEFAULT_CONNECTION_TIMEOUT = 60
 class Connection(_Connection):
 
     @_wrap_http_errors
-    def _request(self, *args, **kwargs):
+    def _request(self, *args: Any, **kwargs: Any) -> Any:
         return super(Connection, self)._request(*args, **kwargs)
 
 
 class HubstorageClient(_HubstorageClient):
 
     @_wrap_http_errors
-    def request(self, *args, **kwargs):
+    def request(self, *args: Any, **kwargs: Any) -> Response:
         return super(HubstorageClient, self).request(*args, **kwargs)
 
 
@@ -62,9 +70,11 @@ class ScrapinghubClient(object):
         <scrapinghub.client.ScrapinghubClient at 0x1047af2e8>
     """
 
-    def __init__(self, auth=None, dash_endpoint=None,
-                 connection_timeout=DEFAULT_CONNECTION_TIMEOUT,
-                 dotenv_path=None, **kwargs):
+    def __init__(self, auth: str | tuple[str, str] | None = None,
+                 dash_endpoint: str | None = None,
+                 connection_timeout: float = DEFAULT_CONNECTION_TIMEOUT,
+                 dotenv_path: str | os.PathLike[str] | None = None,
+                 **kwargs: Any) -> None:
         self.projects = Projects(self)
         login, password = parse_auth(auth, dotenv_path=dotenv_path)
         timeout = connection_timeout or DEFAULT_CONNECTION_TIMEOUT
@@ -75,7 +85,7 @@ class ScrapinghubClient(object):
         self._hsclient = HubstorageClient(auth=(login, password),
                                           connection_timeout=timeout, **kwargs)
 
-    def get_project(self, project_id):
+    def get_project(self, project_id: int | str) -> Project:
         """Get :class:`scrapinghub.client.projects.Project` instance with
         a given project id.
 
@@ -93,7 +103,7 @@ class ScrapinghubClient(object):
         """
         return self.projects.get(parse_project_id(project_id))
 
-    def get_job(self, job_key):
+    def get_job(self, job_key: str) -> Job:
         """Get :class:`~scrapinghub.client.jobs.Job` with a given job key.
 
         :param job_key: job key string in format ``project_id/spider_id/job_id``,
@@ -110,7 +120,7 @@ class ScrapinghubClient(object):
         project_id = parse_job_key(job_key).project_id
         return self.projects.get(project_id).jobs.get(job_key)
 
-    def close(self, timeout=None):
+    def close(self, timeout: float | None = None) -> None:
         """Close client instance.
 
         :param timeout: (optional) float timeout secs to stop gracefully.

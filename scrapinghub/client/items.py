@@ -1,11 +1,14 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
 
 import sys
+from collections.abc import Iterator
+from typing import Any
 
+from ..hubstorage.job import Items as _Items
 from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 
 
-class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
+class Items(_DownloadableProxyMixin[_Items], _ItemsResourceProxy[_Items]):  # type: ignore[misc]
     """Representation of collection of job items.
 
     Not a public constructor: use :class:`~scrapinghub.client.jobs.Job`
@@ -78,7 +81,7 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
         }]
     """
 
-    def _modify_iter_params(self, params):
+    def _modify_iter_params(self, params: dict[str, Any]) -> dict[str, Any]:
         """Modify iter filter to convert offset to start parameter.
 
         :return: a dict with updated set of params.
@@ -90,7 +93,8 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
             params['start'] = '{}/{}'.format(self.key, offset)
         return params
 
-    def list_iter(self, chunksize=1000, *args, **kwargs):
+    def list_iter(self, chunksize: int = 1000, *args: Any,
+                  **kwargs: Any) -> Iterator[list[Any]]:
         """An alternative interface for reading items by returning them
         as a generator which yields lists of items sized as `chunksize`.
 
@@ -120,7 +124,7 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
                 chunksize = count - processed
             items = [
                 item for item in self.iter(
-                    count=chunksize, start=next_key, *args, **kwargs)
+                    count=chunksize, start=next_key, *args, **kwargs)  # type: ignore[misc]
             ]
             yield items
             processed += len(items)

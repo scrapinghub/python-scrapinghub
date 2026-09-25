@@ -1,6 +1,9 @@
 """
 Test Project
 """
+from collections.abc import Iterator
+from typing import Any
+
 import six
 import json
 import pytest
@@ -8,6 +11,7 @@ from six.moves import range
 from requests.exceptions import HTTPError
 
 from scrapinghub import HubstorageClient
+from scrapinghub.hubstorage.project import Project
 
 from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import hsspiderid
@@ -16,7 +20,7 @@ from .conftest import set_testbotgroup, unset_testbotgroup
 from .testutil import failing_downloader
 
 
-def test_projectid(hsclient):
+def test_projectid(hsclient: HubstorageClient) -> None:
     p1 = hsclient.get_project(int(TEST_PROJECT_ID))
     p2 = hsclient.get_project(str(TEST_PROJECT_ID))
     assert p1.projectid == p2.projectid
@@ -26,7 +30,9 @@ def test_projectid(hsclient):
         hsclient.get_project('111/3')
 
 
-def test_get_job_from_key(hsclient, hsproject, hsspiderid):
+def test_get_job_from_key(
+    hsclient: HubstorageClient, hsproject: Project, hsspiderid: str,
+) -> None:
     job = hsproject.push_job(TEST_SPIDER_NAME)
     parts = tuple(job.key.split('/'))
     assert len(parts) == 3
@@ -39,7 +45,7 @@ def test_get_job_from_key(hsclient, hsproject, hsspiderid):
     assert samejob3.key == job.key
 
 
-def test_get_jobs(hsproject):
+def test_get_jobs(hsproject: Project) -> None:
     p = hsproject
     j1 = p.push_job(TEST_SPIDER_NAME, testid=0)
     j2 = p.push_job(TEST_SPIDER_NAME, testid=1)
@@ -51,7 +57,7 @@ def test_get_jobs(hsproject):
     assert [j.key for j in r] == [j3.key, j2.key, j1.key]
 
 
-def test_get_jobs_with_legacy_filter(hsproject):
+def test_get_jobs_with_legacy_filter(hsproject: Project) -> None:
     p = hsproject
     j1 = p.push_job(TEST_SPIDER_NAME, state='finished',
                     close_reason='finished', tags=['t2'])
@@ -73,7 +79,7 @@ def test_get_jobs_with_legacy_filter(hsproject):
     assert [j.key for j in jobs] == [j2.key], jobs
 
 
-def test_push_job(hsproject):
+def test_push_job(hsproject: Project) -> None:
     job = hsproject.push_job(TEST_SPIDER_NAME, state='running',
                              priority=hsproject.jobq.PRIO_HIGH,
                              foo=u'bar')
@@ -86,7 +92,7 @@ def test_push_job(hsproject):
     assert job.metadata.get('foo') == u'bar'
 
 
-def test_auth(hsclient, json_and_msgpack):
+def test_auth(hsclient: HubstorageClient, json_and_msgpack: str) -> None:
     # client without global auth set
     hsc = HubstorageClient(endpoint=hsclient.endpoint,
                            use_msgpack=hsclient.use_msgpack)
@@ -131,7 +137,9 @@ def test_auth(hsclient, json_and_msgpack):
     assert samejob.key == job.key
 
 
-def test_broad(hsproject, hsspiderid, json_and_msgpack):
+def test_broad(
+    hsproject: Project, hsspiderid: str, json_and_msgpack: str,
+) -> None:
     # populate project with at least one job
     job = hsproject.push_job(TEST_SPIDER_NAME)
     assert job.metadata.get('state') == 'pending'
@@ -158,13 +166,13 @@ def test_broad(hsproject, hsspiderid, json_and_msgpack):
 
 
 @pytest.fixture
-def unset_botgroup(hsproject):
+def unset_botgroup(hsproject: Project) -> Iterator[None]:
     unset_testbotgroup(hsproject)
     yield
     set_testbotgroup(hsproject)
 
 
-def test_settings(hsproject, unset_botgroup):
+def test_settings(hsproject: Project, unset_botgroup: None) -> None:
     settings = dict(hsproject.settings)
     assert settings == {}
     # use some fixed timestamp to represent current time
@@ -180,7 +188,7 @@ def test_settings(hsproject, unset_botgroup):
     }
 
 
-def test_requests(hsproject):
+def test_requests(hsproject: Project) -> None:
     # use some fixed timestamp to represent current time
     ts = 1476803148638
     job = hsproject.push_job(TEST_SPIDER_NAME, state='running')
@@ -216,7 +224,7 @@ def test_requests(hsproject):
         next(rr)
 
 
-def test_samples(hsproject, json_and_msgpack):
+def test_samples(hsproject: Project, json_and_msgpack: str) -> None:
     # use some fixed timestamp to represent current time
     ts = 1476803148638
     # no samples stored
@@ -247,7 +255,7 @@ def test_samples(hsproject, json_and_msgpack):
         assert r1 == r2
 
 
-def test_jobsummary(hsproject):
+def test_jobsummary(hsproject: Project) -> None:
     js = hsproject.jobsummary()
     assert js.get('project') == int(hsproject.projectid), js
     assert js.get('has_capacity') is True, js
@@ -255,7 +263,7 @@ def test_jobsummary(hsproject):
     assert 'running' in js, js
 
 
-def test_bulkdata(hsproject, json_and_msgpack):
+def test_bulkdata(hsproject: Project, json_and_msgpack: str) -> None:
     j = hsproject.push_job(TEST_SPIDER_NAME, state='running')
     for i in range(20):
         j.logs.info("log line %d" % i)
@@ -271,7 +279,7 @@ def test_bulkdata(hsproject, json_and_msgpack):
             assert len(downloaded) == 20
 
 
-def test_output_string(hsclient, hsproject):
+def test_output_string(hsclient: HubstorageClient, hsproject: Project) -> None:
     hsproject.push_job(TEST_SPIDER_NAME)
     job = start_job(hsproject)
     job.items.write({'foo': 'bar'})
@@ -291,7 +299,10 @@ def test_output_string(hsclient, hsproject):
     ('33/1/stats/', False),
     ((33, 1, 'stats'), False),
 ])
-def test_allows_msgpack(hsclient, path, expected_result, json_and_msgpack):
+def test_allows_msgpack(
+    hsclient: HubstorageClient, path: Any, expected_result: bool,
+    json_and_msgpack: str,
+) -> None:
     job = hsclient.get_job('2222000/1/1')
     for resource in [job.items, job.logs, job.samples]:
         assert resource._allows_mpack(path) is (hsclient.use_msgpack and expected_result)

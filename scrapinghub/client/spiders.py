@@ -1,10 +1,16 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
+
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, Any
 
 from requests.compat import urljoin
 
 from .exceptions import NotFound, _wrap_http_errors
 from .jobs import Jobs
 from .utils import get_tags_for_update
+
+if TYPE_CHECKING:
+    from . import ScrapinghubClient
 
 
 class Spiders(object):
@@ -22,11 +28,11 @@ class Spiders(object):
         <scrapinghub.client.spiders.Spiders at 0x1049ca630>
     """
 
-    def __init__(self, client, project_id):
+    def __init__(self, client: ScrapinghubClient, project_id: str) -> None:
         self.project_id = project_id
         self._client = client
 
-    def get(self, spider, **params):
+    def get(self, spider: str, **params: Any) -> Spider:
         """Get a spider object for a given spider name.
 
         The method gets/sets spider id (and checks if spider exists).
@@ -48,7 +54,7 @@ class Spiders(object):
             raise NotFound("Spider {} doesn't exist.".format(spider))
         return Spider(self._client, self.project_id, spider_id, spider)
 
-    def list(self):
+    def list(self) -> Any:
         """Get a list of spiders for a project.
 
         :return: a list of dictionaries with spiders metadata.
@@ -63,7 +69,7 @@ class Spiders(object):
         project = self._client._connection[self.project_id]
         return project.spiders()
 
-    def iter(self):
+    def iter(self) -> Iterator[Any]:
         """Iterate through a list of spiders for a project.
 
         :return: an iterator over spiders list where each spider is represented
@@ -95,7 +101,8 @@ class Spider(object):
         'spider1'
     """
 
-    def __init__(self, client, project_id, spider_id, spider):
+    def __init__(self, client: ScrapinghubClient, project_id: str,
+                 spider_id: int | str, spider: str) -> None:
         self.project_id = project_id
         self.key = '{}/{}'.format(str(project_id), str(spider_id))
         self._id = str(spider_id)
@@ -104,7 +111,8 @@ class Spider(object):
         self._client = client
 
     @_wrap_http_errors
-    def update_tags(self, add=None, remove=None):
+    def update_tags(self, add: list[str] | None = None,
+                    remove: list[str] | None = None) -> None:
         """Update tags for the spider.
 
         :param add: (optional) a list of string tags to add.
@@ -118,7 +126,7 @@ class Spider(object):
         response.raise_for_status()
 
     @_wrap_http_errors
-    def list_tags(self):
+    def list_tags(self) -> Any:
         """List spider tags.
 
         :return: a list of spider tags.

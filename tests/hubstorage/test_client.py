@@ -1,26 +1,29 @@
 """
 Test Client
 """
+from typing import Any
+
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import apipoll
+from scrapinghub.hubstorage.project import Project
 
 from ..conftest import TEST_AUTH, TEST_ENDPOINT
 from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from .conftest import start_job
 
 
-def test_default_ua(hsclient):
+def test_default_ua(hsclient: HubstorageClient) -> None:
     assert hsclient.user_agent == HubstorageClient.DEFAULT_USER_AGENT
 
 
-def test_custom_ua():
+def test_custom_ua() -> None:
     client = HubstorageClient(auth=TEST_AUTH,
                               endpoint=TEST_ENDPOINT,
                               user_agent='testUA')
     assert client.user_agent == 'testUA'
 
 
-def test_push_job(hsclient, hsproject):
+def test_push_job(hsclient: HubstorageClient, hsproject: Project) -> None:
     hsclient.push_job(
         TEST_PROJECT_ID, TEST_SPIDER_NAME,
         priority=hsproject.jobq.PRIO_LOW,
@@ -39,11 +42,11 @@ def test_push_job(hsclient, hsproject):
     assert meta.get('foo') == u'baz'
 
 
-def test_jobsummaries(hsclient):
+def test_jobsummaries(hsclient: HubstorageClient) -> None:
     # add at least one running or pending job to ensure summary is returned
     hsclient.push_job(TEST_PROJECT_ID, TEST_SPIDER_NAME, state='running')
 
-    def _get_summary():
+    def _get_summary() -> Any:
         jss = hsclient.projects.jobsummaries()
         mjss = dict((str(js['project']), js) for js in jss)
         return mjss.get(TEST_PROJECT_ID)
@@ -52,7 +55,7 @@ def test_jobsummaries(hsclient):
     assert summary is not None
 
 
-def test_timestamp(hsclient):
+def test_timestamp(hsclient: HubstorageClient) -> None:
     ts1 = hsclient.server_timestamp()
     ts2 = hsclient.server_timestamp()
     assert ts1 > 0

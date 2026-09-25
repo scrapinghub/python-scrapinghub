@@ -1,5 +1,6 @@
 import types
 from collections import defaultdict
+from typing import Any
 
 import pytest
 import responses
@@ -25,7 +26,7 @@ from .utils import validate_default_meta
 # Projects class tests
 
 
-def test_projects_get(client):
+def test_projects_get(client: ScrapinghubClient) -> None:
     projects = client.projects
     # testing with int project id
     p1 = projects.get(int(TEST_PROJECT_ID))
@@ -36,7 +37,7 @@ def test_projects_get(client):
     assert p1.key == p2.key
 
 
-def test_projects_list(client):
+def test_projects_list(client: ScrapinghubClient) -> None:
     projects = client.projects.list()
     assert client.projects.list() == []
 
@@ -48,7 +49,7 @@ def test_projects_list(client):
 
 
 @responses.activate
-def test_projects_list_server_error(client):
+def test_projects_list_server_error(client: ScrapinghubClient) -> None:
     url = urljoin(TEST_DASH_ENDPOINT, 'scrapyd/listprojects.json')
     responses.add(responses.GET, url, body='some error body', status=500)
     with pytest.raises(ServerError):
@@ -56,11 +57,11 @@ def test_projects_list_server_error(client):
     assert len(responses.calls) == 1
 
 
-def test_projects_summary(client, project):
+def test_projects_summary(client: ScrapinghubClient, project: Project) -> None:
     # add at least one running or pending job to ensure summary is returned
     project.jobs.run(TEST_SPIDER_NAME, meta={'state': 'running'})
 
-    def _get_summary():
+    def _get_summary() -> Any:
         summaries = {str(js['project']): js
                      for js in client.projects.summary()}
         return summaries.get(TEST_PROJECT_ID)
@@ -71,7 +72,7 @@ def test_projects_summary(client, project):
 
 #  Project class tests
 
-def test_project_base(project):
+def test_project_base(project: Project) -> None:
     assert project.key == TEST_PROJECT_ID
     assert isinstance(project.collections, Collections)
     assert isinstance(project.jobs, Jobs)
@@ -81,13 +82,13 @@ def test_project_base(project):
     assert isinstance(project.settings, Settings)
 
 
-def test_project_jobs(project):
+def test_project_jobs(project: Project) -> None:
     jobs = project.jobs
     assert jobs.project_id == TEST_PROJECT_ID
     assert jobs.spider is None
 
 
-def test_project_jobs_count(project):
+def test_project_jobs_count(project: Project) -> None:
     assert project.jobs.count() == 0
     assert project.jobs.count(state=['pending', 'running', 'finished']) == 0
 
@@ -113,7 +114,7 @@ def test_project_jobs_count(project):
     assert project.jobs.count() == 3
 
 
-def test_project_jobs_iter(project):
+def test_project_jobs_iter(project: Project) -> None:
     project.jobs.run(TEST_SPIDER_NAME, meta={'state': 'running'})
 
     # no finished jobs
@@ -132,7 +133,7 @@ def test_project_jobs_iter(project):
     assert isinstance(running_time, int) and running_time > 0
     elapsed = job.get('elapsed')
     assert isinstance(elapsed, int) and elapsed > 0
-    assert job.get('key').startswith(TEST_PROJECT_ID)
+    assert job['key'].startswith(TEST_PROJECT_ID)
     assert job.get('spider') == TEST_SPIDER_NAME
     assert job.get('state') == 'running'
 
@@ -140,7 +141,7 @@ def test_project_jobs_iter(project):
         next(jobs1)
 
 
-def test_project_jobs_list(project):
+def test_project_jobs_list(project: Project) -> None:
     project.jobs.run(TEST_SPIDER_NAME, meta={'state': 'running'})
 
     # no finished jobs
@@ -159,12 +160,12 @@ def test_project_jobs_list(project):
     assert isinstance(running_time, int) and running_time > 0
     elapsed = job.get('elapsed')
     assert isinstance(elapsed, int) and elapsed > 0
-    assert job.get('key').startswith(TEST_PROJECT_ID)
+    assert job['key'].startswith(TEST_PROJECT_ID)
     assert job.get('spider') == TEST_SPIDER_NAME
     assert job.get('state') == 'running'
 
 
-def test_project_jobs_run(project):
+def test_project_jobs_run(project: Project) -> None:
     # scheduling on project level requires spidername
     with pytest.raises(ValueError):
         project.jobs.run()
@@ -196,7 +197,7 @@ def test_project_jobs_run(project):
     assert meta.get('started_by')
 
 
-def test_project_jobs_get(project):
+def test_project_jobs_get(project: Project) -> None:
     # error when using different project id in jobkey
     with pytest.raises(ValueError):
         project.jobs.get('1/2/3')
@@ -205,7 +206,7 @@ def test_project_jobs_get(project):
     assert isinstance(fake_job, Job)
 
 
-def test_project_jobs_summary(project):
+def test_project_jobs_summary(project: Project) -> None:
     expected_summary = [{'count': 0, 'name': state, 'summary': []}
                         for state in ['pending', 'running', 'finished']]
     assert project.jobs.summary() == expected_summary
@@ -243,7 +244,7 @@ def test_project_jobs_summary(project):
     assert summary4['summary'][0].get('units') == 1
 
 
-def test_project_jobs_iter_last(project):
+def test_project_jobs_iter_last(project: Project) -> None:
     lastsumm0 = project.jobs.iter_last()
     assert isinstance(lastsumm0, types.GeneratorType)
     assert list(lastsumm0) == []
@@ -267,25 +268,25 @@ def test_project_jobs_iter_last(project):
     assert lastsumm2[0].get('key') == job2.key
 
 
-def test_settings_get_set(project):
+def test_settings_get_set(project: Project) -> None:
     project.settings.set('job_runtime_limit', 20)
     assert project.settings.get('job_runtime_limit') == 20
     project.settings.set('job_runtime_limit', 24)
     assert project.settings.get('job_runtime_limit') == 24
 
 
-def test_settings_update(project):
+def test_settings_update(project: Project) -> None:
     project.settings.set('job_runtime_limit', 20)
     project.settings.update({'job_runtime_limit': 24})
     assert project.settings.get('job_runtime_limit') == 24
 
 
-def test_settings_delete(project):
+def test_settings_delete(project: Project) -> None:
     project.settings.delete('job_runtime_limit')
     assert not project.settings.get('job_runtime_limit')
 
 
-def test_settings_iter_list(project):
+def test_settings_iter_list(project: Project) -> None:
     project.settings.set('job_runtime_limit', 24)
     settings_iter = project.settings.iter()
     assert isinstance(settings_iter, collections_abc.Iterator)

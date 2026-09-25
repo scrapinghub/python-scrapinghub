@@ -1,5 +1,9 @@
-from datetime import datetime
+from __future__ import annotations
+
+from collections.abc import Iterable, Iterator
+from datetime import datetime, timedelta
 from json import dumps, loads
+from typing import Any, cast
 
 import six
 
@@ -15,18 +19,18 @@ except ImportError:
     MSGPACK_AVAILABLE = False
 
 
-def jlencode(iterable):
+def jlencode(iterable: Any) -> str:
     if isinstance(iterable, (dict, six.string_types)):
         iterable = [iterable]
     return u'\n'.join(jsonencode(o) for o in iterable)
 
 
-def jldecode(lineiterable):
+def jldecode(lineiterable: Iterable[str | bytes]) -> Iterator[Any]:
     for line in lineiterable:
         yield loads(line)
 
 
-def mpdecode(iterable):
+def mpdecode(iterable: Iterable[bytes]) -> Iterator[Any]:
     unpacker = Unpacker()
     for chunk in iterable:
         unpacker.feed(chunk)
@@ -36,15 +40,15 @@ def mpdecode(iterable):
             yield obj
 
 
-def jsonencode(o):
+def jsonencode(o: Any) -> str:
     return dumps(o, default=jsondefault)
 
 
-def jsondefault(o):
+def jsondefault(o: object) -> float | str:
     if isinstance(o, datetime):
         # convert TZ-aware datetime object to POSIX timestamp
         if o.tzinfo:
-            o = o.replace(tzinfo=None) - o.utcoffset()
+            o = o.replace(tzinfo=None) - cast(timedelta, o.utcoffset())
         delta = o - EPOCH
         u = delta.microseconds
         s = delta.seconds

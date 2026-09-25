@@ -1,13 +1,22 @@
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING, Any, NoReturn
+
 from .resourcetype import (ItemsResourceType, DownloadableResource,
                            MappingResourceType)
-from .utils import millitime, urlpathjoin
+from .utils import _Auth, _Part, millitime, urlpathjoin
 from .jobq import JobQ
+
+if TYPE_CHECKING:
+    from .client import HubstorageClient
 
 
 class Job(object):
 
-    def __init__(self, client, key, auth=None, jobauth=None, metadata=None):
+    def __init__(self, client: HubstorageClient, key: _Part, auth: _Auth = None,
+                 jobauth: _Auth = None,
+                 metadata: dict[str, Any] | None = None) -> None:
         self.key = urlpathjoin(key)
         assert len(self.key.split('/')) == 3, \
             'Jobkey must be projectid/spiderid/jobid: %s' % self.key
@@ -21,7 +30,7 @@ class Job(object):
         jobq_client = getattr(client, '_jobq_client', client)
         self.jobq = JobQ(jobq_client, self.key.split('/')[0], auth)
 
-    def close_writers(self):
+    def close_writers(self) -> None:
         wl = [self.items, self.logs, self.samples, self.requests]
         # close all resources that use background writers
         for w in wl:
@@ -30,15 +39,15 @@ class Job(object):
         for w in wl:
             w.close(block=True)
 
-    def update_metadata(self, *args, **kwargs):
+    def update_metadata(self, *args: Any, **kwargs: Any) -> None:
         self.metadata.update(*args, **kwargs)
         self.metadata.save()
         self.metadata.expire()
 
-    def request_cancel(self):
+    def request_cancel(self) -> None:
         self.jobq.request_cancel(self)
 
-    def purged(self):
+    def purged(self) -> None:
         self.jobq.delete(self)
         self.metadata.expire()
 
@@ -48,7 +57,7 @@ class JobMeta(MappingResourceType):
     resource_type = 'jobs'
     ignore_fields = set(('auth', '_key', 'state'))
 
-    def authtoken(self):
+    def authtoken(self) -> Any:
         return self.liveget('auth')
 
 
@@ -57,16 +66,19 @@ class Logs(ItemsResourceType, DownloadableResource):
     resource_type = 'logs'
     batch_content_encoding = 'gzip'
 
-    def __init__(self, client, key, auth=None, appendmode=False):
+    def __init__(self, client: HubstorageClient, key: _Part,
+                 auth: _Auth = None, appendmode: bool = False) -> None:
         ItemsResourceType.__init__(self, client, key, auth)
         self.batch_append = appendmode
 
-    def batch_write_start(self):
+    def batch_write_start(self) -> int:
         if self.batch_append:
-            return self.stats().get('totals', {}).get('input_values', 0)
+            start: int = self.stats().get('totals', {}).get('input_values', 0)
+            return start
         return 0
 
-    def log(self, message, level=logging.INFO, ts=None, **other):
+    def log(self, message: str, level: int = logging.INFO,
+            ts: int | None = None, **other: Any) -> None:
         other.update(message=message, level=level, time=ts or millitime())
         # legacy support for an appendmode argument. This should be set at
         # object initialization time.
@@ -74,17 +86,17 @@ class Logs(ItemsResourceType, DownloadableResource):
             self.batch_append = True
         self.write(other)
 
-    def debug(self, message, **other):
+    def debug(self, message: str, **other: Any) -> None:
         self.log(message, level=logging.DEBUG, **other)
 
-    def info(self, message, **other):
+    def info(self, message: str, **other: Any) -> None:
         self.log(message, level=logging.INFO, **other)
 
-    def warn(self, message, **other):
+    def warn(self, message: str, **other: Any) -> None:
         self.log(message, level=logging.WARNING, **other)
     warning = warn
 
-    def error(self, message, **other):
+    def error(self, message: str, **other: Any) -> None:
         self.log(message, level=logging.ERROR, **other)
 
 
@@ -98,7 +110,7 @@ class Samples(ItemsResourceType):
 
     resource_type = 'samples'
 
-    def stats(self):
+    def stats(self) -> NoReturn:
         raise NotImplementedError('Resource does not expose stats')
 
 
@@ -107,7 +119,9 @@ class Requests(ItemsResourceType, DownloadableResource):
     resource_type = 'requests'
     batch_content_encoding = 'gzip'
 
-    def add(self, url, status, method, rs, parent, duration, ts, fp=None):
+    def add(self, url: str, status: int, method: str, rs: int,
+            parent: int | None, duration: int, ts: int,
+            fp: str | None = None) -> int:
         return self.write({
             'url': url,
             'status': int(status),

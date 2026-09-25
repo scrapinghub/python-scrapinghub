@@ -1,4 +1,6 @@
 import os
+from collections.abc import Iterator
+from typing import Any
 
 import vcr
 import pytest
@@ -9,6 +11,9 @@ from requests import HTTPError
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import urlpathjoin
 from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
+from scrapinghub.hubstorage.collectionsrt import Collection
+from scrapinghub.hubstorage.job import Job
+from scrapinghub.hubstorage.project import Project
 
 from ..conftest import request_accept_header_matcher
 from ..conftest import VCRGzipSerializer
@@ -32,7 +37,7 @@ my_vcr.match_on = ('method', 'scheme', 'host', 'port',
                    'path', 'query', 'accept_header')
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     if config.option.update_cassettes:
         # there's vcr `all` mode to update cassettes but it doesn't delete
         # or clear existing records, so its size will always only grow
@@ -47,29 +52,31 @@ def pytest_configure(config):
         my_vcr.before_record_request = lambda request: None
 
 
-def is_using_real_services(request):
-    return (request.config.option.update_cassettes or
-            request.config.option.ignore_cassettes)
+def is_using_real_services(request: pytest.FixtureRequest) -> bool:
+    return bool(request.config.option.update_cassettes or
+                request.config.option.ignore_cassettes)
 
 
 @pytest.fixture(scope='session')
-def hsclient():
+def hsclient() -> HubstorageClient:
     return HubstorageClient(auth=TEST_AUTH, endpoint=TEST_ENDPOINT)
 
 
 @pytest.fixture(scope='session')
-def hsproject(hsclient):
+def hsproject(hsclient: HubstorageClient) -> Project:
     return hsclient.get_project(TEST_PROJECT_ID)
 
 
 @pytest.fixture(scope='session')
-@my_vcr.use_cassette()
-def hsspiderid(hsproject):
+@my_vcr.use_cassette()  # type: ignore[untyped-decorator]
+def hsspiderid(hsproject: Project) -> str:
     return str(hsproject.ids.spider(TEST_SPIDER_NAME, create=1))
 
 
 @pytest.fixture(scope='session')
-def hscollection(hsproject, request):
+def hscollection(
+    hsproject: Project, request: pytest.FixtureRequest,
+) -> Iterator[Collection]:
     collection = get_test_collection(hsproject)
     if is_using_real_services(request):
         clean_collection(collection)
@@ -77,7 +84,10 @@ def hscollection(hsproject, request):
 
 
 @pytest.fixture(autouse=True, scope='session')
-def setup_session(hsclient, hsproject, hscollection, request):
+def setup_session(
+    hsclient: HubstorageClient, hsproject: Project, hscollection: Collection,
+    request: pytest.FixtureRequest,
+) -> Iterator[None]:
     if is_using_real_services(request):
         set_testbotgroup(hsproject)
         remove_all_jobs(hsproject)
@@ -86,16 +96,22 @@ def setup_session(hsclient, hsproject, hscollection, request):
 
 
 @pytest.fixture(params=['json', 'msgpack'])
-def json_and_msgpack(hsclient, monkeypatch, request):
+def json_and_msgpack(
+    hsclient: HubstorageClient, monkeypatch: pytest.MonkeyPatch,
+    request: pytest.FixtureRequest,
+) -> str:
     if request.param == 'json':
         monkeypatch.setattr(hsclient, 'use_msgpack', False)
     elif not MSGPACK_AVAILABLE or request.config.getoption("--disable-msgpack"):
         pytest.skip("messagepack-based tests are disabled")
-    return request.param
+    param: str = request.param
+    return param
 
 
 @pytest.fixture(autouse=True)
-def setup_vcrpy(request, hsproject):
+def setup_vcrpy(
+    request: pytest.FixtureRequest, hsproject: Project,
+) -> Iterator[None]:
     # generates names like "test_module/test_function.yaml"
     # otherwise it uses current function name (setup_vcrpy) for all tests
     # other option is to add vcr decorator to each test separately
@@ -117,18 +133,18 @@ def setup_vcrpy(request, hsproject):
 # ----------------------------------------------------------------------------
 
 
-def start_job(hsproject, **startparams):
+def start_job(hsproject: Project, **startparams: Any) -> Job:
     jobdata = hsproject.jobq.start(**startparams)
-    if jobdata:
-        jobkey = jobdata.pop('key')
-        jobauth = (jobkey, jobdata['auth'])
-        return hsproject.get_job(jobkey, jobauth=jobauth, metadata=jobdata)
+    assert jobdata
+    jobkey = jobdata.pop('key')
+    jobauth = (jobkey, jobdata['auth'])
+    return hsproject.get_job(jobkey, jobauth=jobauth, metadata=jobdata)
 
 
 # Clean environment section
 
 
-def remove_all_jobs(hsproject):
+def remove_all_jobs(hsproject: Project) -> None:
     for k in list(hsproject.settings.keys()):
         if k != 'botgroups':
             del hsproject.settings[k]
@@ -141,7 +157,7 @@ def remove_all_jobs(hsproject):
             _remove_job(hsproject, summary['key'])
 
 
-def _remove_job(hsproject, jobkey):
+def _remove_job(hsproject: Project, jobkey: str) -> None:
     hsproject.jobq.finish(jobkey)
     hsproject.jobq.delete(jobkey)
     # delete job
@@ -151,24 +167,24 @@ def _remove_job(hsproject, jobkey):
 # Collection helpers section
 
 
-def get_test_collection(project):
+def get_test_collection(project: Project) -> Collection:
     return project.collections.new_store(TEST_COLLECTION_NAME)
 
 
-def clean_collection(collection):
+def clean_collection(collection: Collection) -> None:
     try:
         for item in collection.iter_values():
             collection.delete(item['_key'])
     except HTTPError as e:
         # if collection doesn't exist yet service responds 404
-        if e.response.status_code != 404:
+        if e.response is None or e.response.status_code != 404:
             raise
 
 
 # Botgroups helpers section
 
 
-def set_testbotgroup(hsproject):
+def set_testbotgroup(hsproject: Project) -> None:
     hsproject.settings.apipost(jl={'botgroups': [TEST_BOTGROUP]})
     # Additional step to populate JobQ's botgroups table
     url = urlpathjoin(TEST_ENDPOINT, 'botgroups', TEST_BOTGROUP, 'max_running')
@@ -176,7 +192,7 @@ def set_testbotgroup(hsproject):
     hsproject.settings.expire()
 
 
-def unset_testbotgroup(hsproject):
+def unset_testbotgroup(hsproject: Project) -> None:
     hsproject.settings.apidelete('botgroups')
     hsproject.settings.expire()
     # Additional step to delete botgroups in JobQ

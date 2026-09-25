@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
+from collections.abc import Callable
 from functools import wraps
+from typing import ParamSpec, TypeVar
 
 from requests import HTTPError
 
 from ..legacy import APIError
 
+_P = ParamSpec('_P')
+_T = TypeVar('_T')
 
-def _get_http_error_msg(exc):
-    if isinstance(exc, HTTPError):
+
+def _get_http_error_msg(exc: BaseException | None) -> str:
+    if isinstance(exc, HTTPError) and exc.response is not None:
         try:
             payload = exc.response.json()
         except ValueError:
             payload = None
         if payload and isinstance(payload, dict):
-            message = payload.get('message')
+            message: str | None = payload.get('message')
             if message:
                 return message
         elif exc.response.text:
@@ -25,7 +30,8 @@ def _get_http_error_msg(exc):
 class ScrapinghubAPIError(Exception):
     """Base exception class."""
 
-    def __init__(self, message=None, http_error=None):
+    def __init__(self, message: object = None,
+                 http_error: BaseException | None = None) -> None:
         self.http_error = http_error
         if not message:
             message = _get_http_error_msg(http_error)
@@ -61,13 +67,14 @@ class ServerError(ScrapinghubAPIError):
     """Indicates some server error: something unexpected has happened."""
 
 
-def _wrap_http_errors(method):
+def _wrap_http_errors(method: Callable[_P, _T]) -> Callable[_P, _T]:
     """Internal helper to handle exceptions gracefully."""
     @wraps(method)
-    def wrapped(*args, **kwargs):
+    def wrapped(*args: _P.args, **kwargs: _P.kwargs) -> _T:
         try:
             return method(*args, **kwargs)
         except HTTPError as exc:
+            assert exc.response is not None
             status_code = exc.response.status_code
             if status_code == 400:
                 raise BadRequest(http_error=exc)
