@@ -1,3 +1,75 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "scrapinghub"
+version = "2.9.0"
+description = "Client interface for Scrapinghub API"
+readme = "README.rst"
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+authors = [{name = "Scrapinghub", email = "info@scrapinghub.com"}]
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv>=1.0.0",
+    "requests>=1.0",
+    "retrying>=1.3.3",
+    "six>=1.10.0",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Internet :: WWW/HTTP",
+]
+
+[project.optional-dependencies]
+msgpack = [
+    "msgpack>=1.0.0",
+    "msgpack-pypy>=0.0.2; platform_python_implementation == 'PyPy'",
+]
+
+[project.urls]
+Documentation = "https://python-scrapinghub.readthedocs.io/en/stable/"
+Source = "https://github.com/scrapinghub/python-scrapinghub"
+Tracker = "https://github.com/scrapinghub/python-scrapinghub/issues"
+
+[tool.bumpversion]
+current_version = "2.9.0"
+commit = true
+tag = true
+tag_name = "{new_version}"
+
+[[tool.bumpversion.files]]
+filename = "CHANGES.rst"
+search = "\\(unreleased\\)$"
+replace = "({now:%Y-%m-%d})"
+regex = true
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = '^version = "{current_version}"'
+replace = 'version = "{new_version}"'
+regex = true
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/docs",
+    "/scrapinghub",
+    "/tests",
+    "/CHANGES.rst",
+    "/tox.ini",
+]
+
 [tool.sphinx-scrapy]
 # Keep in sync with .github/workflows/main.yml
 python-version = "3.14"
