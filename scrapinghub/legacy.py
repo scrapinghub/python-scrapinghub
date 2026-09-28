@@ -145,6 +145,12 @@ class Connection(object):
     def _decode_response(self, response, format, raw):
         if response.status_code == 404:
             raise APIError("Not found", _type=APIError.ERR_NOT_FOUND)
+        elif response.status_code in (401, 403):
+            try:
+                message = json.loads(response.text)['detail']
+            except (ValueError, TypeError, KeyError):
+                message = "Authentication failed"
+            raise APIError(message, _type=APIError.ERR_AUTH_ERROR)
         elif 500 <= response.status_code < 600:
             raise APIError("Internal server error",
                            _type=APIError.ERR_SERVER_ERROR)
