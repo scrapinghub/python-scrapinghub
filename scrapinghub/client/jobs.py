@@ -57,7 +57,7 @@ class Jobs(object):
             in milliseconds.
         :param endts: (optional) UNIX timestamp at which to end results,
             in milliseconds.
-        :param \*\*params: (optional) other filter params.
+        :param params: (optional) other filter params.
 
         :return: jobs count.
         :rtype: :class:`int`
@@ -156,7 +156,7 @@ class Jobs(object):
             in millisecons.
         :param meta: (optional) request for additional fields, a single
             field name or a list of field names to return.
-        :param \*\*params: (optional) other filter params.
+        :param params: (optional) other filter params.
 
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.
@@ -227,7 +227,7 @@ class Jobs(object):
             in milliseconds.
         :param meta: (optional) request for additional fields, a single
             field name or a list of field names to return.
-        :param \*\*params: (optional) other filter params.
+        :param params: (optional) other filter params.
 
         :return: list of dictionaries of jobs summary for a given filter params.
         :rtype: :class:`list[dict]`
@@ -262,7 +262,7 @@ class Jobs(object):
         :param job_settings: (optional) a dictionary with job settings.
         :param cmd_args: (optional) a string with script command args.
         :param environment: (option) a dictionary with custom environment
-        :param \*\*params: (optional) additional keyword args.
+        :param params: (optional) additional keyword args.
 
         :return: a job instance, representing the scheduled job.
         :rtype: :class:`Job`
@@ -334,7 +334,7 @@ class Jobs(object):
         :param state: (optional) a string state to filter jobs.
         :param spider: (optional) a spider name (not needed if instantiated
             with :class:`~scrapinghub.client.spiders.Spider`).
-        :param \*\*params: (optional) additional keyword args.
+        :param params: (optional) additional keyword args.
         :return: a list of dictionaries of jobs summary
             for a given filter params grouped by job state.
         :rtype: :class:`list[dict]`
@@ -362,7 +362,7 @@ class Jobs(object):
         :param count: (optional)
         :param spider: (optional) a spider name (not needed if instantiated
             with :class:`~scrapinghub.client.spiders.Spider`).
-        :param \*\*params: (optional) additional keyword args.
+        :param params: (optional) additional keyword args.
         :return: a generator object over a list of dictionaries of jobs summary
             for a given filter params.
         :rtype: :class:`types.GeneratorType[dict]`
@@ -512,7 +512,7 @@ class Job(object):
     def start(self, **params):
         """Move job to running state.
 
-        :param \*\*params: (optional) keyword meta parameters to update.
+        :param params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
         :rtype: :class:`str`
 
@@ -526,7 +526,7 @@ class Job(object):
     def finish(self, **params):
         """Move running job to finished state.
 
-        :param \*\*params: (optional) keyword meta parameters to update.
+        :param params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
         :rtype: :class:`str`
 
@@ -540,7 +540,7 @@ class Job(object):
     def delete(self, **params):
         """Mark finished job for deletion.
 
-        :param \*\*params: (optional) keyword meta parameters to update.
+        :param params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
         :rtype: :class:`str`
 
@@ -555,7 +555,7 @@ class Job(object):
         """Update job state.
 
         :param state: a new job state.
-        :param \*\*params: (optional) keyword meta parameters to update.
+        :param params: (optional) keyword meta parameters to update.
         :return: a previous string job state.
         :rtype: :class:`str`
 

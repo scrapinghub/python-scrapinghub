@@ -106,11 +106,11 @@ class _DownloadableProxyMixin(object):
 
         :param count: limit amount of elements.
         :return: an iterator over elements list.
-        :rtype: :class:`collections.Iterable`
+        :rtype: :class:`collections.abc.Iterable`
         """
         update_kwargs(apiparams, count=count)
         apiparams = self._modify_iter_params(apiparams)
-        drop_key = '_key' not in apiparams.get('meta', [])
+        drop_key = '_key' not in (apiparams.get('meta') or [])
         for entry in self._origin.iter_values(
             _path, requests_params, **apiparams
         ):
@@ -165,7 +165,7 @@ class _MappingProxy(_Proxy):
         """Iterate through key/value pairs.
 
         :return: an iterator over key/value pairs.
-        :rtype: :class:`collections.Iterable`
+        :rtype: :class:`collections.abc.Iterable`
         """
         return six.iteritems(next(self._origin.apiget()))
 

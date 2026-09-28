@@ -15,3 +15,5 @@ docs/_build
 .DS_Store
 pytestdebug.log
 .idea
+coverage.xml
+.python-version

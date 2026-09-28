@@ -41,14 +41,22 @@ def test_format_iter_filters():
 
 
 def test_item_resource_iter_no_params():
-    items_proxy = _ItemsResourceProxy(mock.Mock, mock.Mock(), 'mocked_key')
+    class MockClient:
+        def __init__(self):
+            self._hsclient = object()
+
+    items_proxy = _ItemsResourceProxy(mock.Mock, MockClient(), 'mocked_key')
     items_proxy._origin = mock.Mock()
     items_proxy.iter(count=123)
     assert items_proxy._origin.list.call_args == mock.call(None, count=123)
 
 
 def test_item_resource_iter_with_params():
-    items_proxy = _ItemsResourceProxy(mock.Mock, mock.Mock(), 'mocked_key')
+    class MockClient:
+        def __init__(self):
+            self._hsclient = object()
+
+    items_proxy = _ItemsResourceProxy(mock.Mock, MockClient(), 'mocked_key')
     items_proxy._origin = mock.Mock()
     items_proxy.iter(count=123, startts=12345)
     assert (items_proxy._origin.list.call_args ==

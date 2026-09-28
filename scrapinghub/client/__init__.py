@@ -27,18 +27,28 @@ class HubstorageClient(_HubstorageClient):
 
 
 class ScrapinghubClient(object):
-    """Main class to work with Scrapinghub API.
+    """Main class to work with the Scrapy Cloud API.
 
-    :param auth: (optional) Scrapinghub APIKEY or other SH auth credentials.
-        If not provided, it will read, respectively, from 
-        ``SH_APIKEY`` or ``SHUB_JOBAUTH`` environment variables.
+    :param auth: (optional) Scrapy Cloud API key or other Scrapy Cloud auth
+        credentials. If not provided, it will read, respectively, from
+        ``SH_APIKEY`` (or its ``SHUB_APIKEY`` alias) or ``SHUB_JOBAUTH``
+        environment variables.
         ``SHUB_JOBAUTH`` is available by default in *Scrapy Cloud*, but it does
         not provide access to all endpoints (e.g. job scheduling), but it is allowed
         to access job data, collections, crawl frontier.
         If you need full access to *Scrapy Cloud* features, you'll need to
-        provide a Scrapinghub APIKEY through this argument or deploying ``SH_APIKEY``.
-    :param dash_endpoint: (optional) Scrapinghub Dash panel url.
-    :param \*\*kwargs: (optional) Additional arguments for
+        provide a Scrapy Cloud API key through this argument or deploying
+        ``SH_APIKEY``.
+    :param dash_endpoint: (optional) Scrapy Cloud API URL.
+        If not provided, it will be read from the ``SHUB_APIURL`` environment
+        variable, or fall back to ``"https://app.zyte.com/api/"``.
+    :param dotenv_path: (optional) path to a ``.env`` file to read the
+        ``SH_APIKEY`` (or ``SHUB_APIKEY``) and ``SHUB_JOBAUTH`` credentials from
+        when ``auth`` is not provided and they are not set in the environment.
+        Defaults to the nearest ``.env`` file in the current directory or its
+        parents. Environment variables take precedence over the file, which is
+        never written to.
+    :param kwargs: (optional) Additional arguments for
         :class:`~scrapinghub.hubstorage.HubstorageClient` constructor.
 
     :ivar projects: projects collection,
@@ -53,9 +63,10 @@ class ScrapinghubClient(object):
     """
 
     def __init__(self, auth=None, dash_endpoint=None,
-                 connection_timeout=DEFAULT_CONNECTION_TIMEOUT, **kwargs):
+                 connection_timeout=DEFAULT_CONNECTION_TIMEOUT,
+                 dotenv_path=None, **kwargs):
         self.projects = Projects(self)
-        login, password = parse_auth(auth)
+        login, password = parse_auth(auth, dotenv_path=dotenv_path)
         timeout = connection_timeout or DEFAULT_CONNECTION_TIMEOUT
         self._connection = Connection(apikey=login,
                                       password=password,

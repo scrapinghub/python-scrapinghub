@@ -62,8 +62,8 @@ def hsproject(hsclient):
     return hsclient.get_project(TEST_PROJECT_ID)
 
 
-@my_vcr.use_cassette()
 @pytest.fixture(scope='session')
+@my_vcr.use_cassette()
 def hsspiderid(hsproject):
     return str(hsproject.ids.spider(TEST_SPIDER_NAME, create=1))
 

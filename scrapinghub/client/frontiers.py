@@ -99,7 +99,7 @@ class Frontiers(_Proxy):
         """Iterate through frontiers.
 
         :return: an iterator over frontiers names.
-        :rtype: :class:`collections.Iterable[str]`
+        :rtype: :class:`collections.abc.Iterable[str]`
         """
         return iter(self.list())
 
@@ -174,7 +174,7 @@ class Frontier(object):
         """Iterate through slots.
 
         :return: an iterator over frontier slots names.
-        :rtype: :class:`collections.Iterable[str]`
+        :rtype: :class:`collections.abc.Iterable[str]`
         """
         return iter(self.list())
 
@@ -322,9 +322,9 @@ class FrontierSlotFingerprints(object):
     def iter(self, **params):
         """Iterate through fingerprints in the slot.
 
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: an iterator over fingerprints.
-        :rtype: :class:`collections.Iterable[str]`
+        :rtype: :class:`collections.abc.Iterable[str]`
         """
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'f')
@@ -334,7 +334,7 @@ class FrontierSlotFingerprints(object):
     def list(self, **params):
         """List fingerprints in the slot.
 
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: a list of fingerprints.
         :rtype: :class:`list[str]`
         """
@@ -358,10 +358,10 @@ class FrontierSlotQueue(object):
         """Iterate through batches in the queue.
 
         :param mincount: (optional) limit results with min amount of requests.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: an iterator over request batches in the queue where each
             batch is represented with a dict with ('id', 'requests') field.
-        :rtype: :class:`collections.Iterable[dict]`
+        :rtype: :class:`collections.abc.Iterable[dict]`
         """
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'q')
@@ -372,7 +372,7 @@ class FrontierSlotQueue(object):
         """List request batches in the queue.
 
         :param mincount: (optional) limit results with min amount of requests.
-        :param \*\*params: (optional) additional query params for the request.
+        :param params: (optional) additional query params for the request.
         :return: a list of request batches in the queue where each batch
             is represented with a dict with ('id', 'requests') field.
         :rtype: :class:`list[dict]`

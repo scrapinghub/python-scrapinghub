@@ -11,7 +11,7 @@ from scrapinghub import __version__
 
 
 def test_connection_class_attrs():
-    assert Connection.DEFAULT_ENDPOINT == 'https://app.scrapinghub.com/api/'
+    assert Connection.DEFAULT_ENDPOINT == 'https://app.zyte.com/api/'
     assert isinstance(Connection.API_METHODS, dict)
 
 

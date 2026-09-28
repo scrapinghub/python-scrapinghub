@@ -1,2 +1,0 @@
--r requirements-base.txt
-msgpack>=1.0.0

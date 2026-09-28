@@ -107,7 +107,7 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
             down by `chunksize`.
 
         :return: an iterator over items, yielding lists of items.
-        :rtype: :class:`collections.Iterable`
+        :rtype: :class:`collections.abc.Iterable`
         """
 
         start = kwargs.pop("start", 0)

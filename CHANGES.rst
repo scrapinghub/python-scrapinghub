@@ -1,6 +1,56 @@
 Release notes
 =============
 
+2.9.0 (2026-08-12)
+------------------
+
+- use a separate endpoint for the JobQ API when the ``SHUB_JOBQ`` environment
+  variable or the new ``jobq_endpoint`` argument of
+  :class:`~scrapinghub.hubstorage.HubstorageClient` is set
+- reorganize the documentation, splitting the quickstart page into separate
+  installation and basic usage pages, and moving the overview and API
+  reference pages to new URLs, with redirects from the old ones
+
+2.8.0 (2026-07-14)
+------------------
+
+- accept ``SHUB_APIKEY`` as an alias for the ``SH_APIKEY`` environment variable
+- load the ``SH_APIKEY`` (or ``SHUB_APIKEY``) and ``SHUB_JOBAUTH`` environment
+  variables from a ``.env`` file via `python-dotenv`; use the new
+  ``dotenv_path`` argument of
+  :class:`~scrapinghub.client.ScrapinghubClient` to read a file other than the
+  default ``.env``
+
+2.7.0 (2026-04-07)
+------------------
+
+- drop official support for Python 3.9; require Python 3.10+
+- make the documentation more LLM-friendly, with markdown versions of every
+  page and :file:`llms.txt` and :file:`llms-full.txt` files
+
+2.6.0 (2026-03-20)
+------------------
+
+- remove official support for Python 3.8
+- add official support for Python 3.13
+- fix the deprecation warning caused by ``datetime.utcfromtimestamp()``
+
+2.5.0 (2024-12-16)
+------------------
+
+- remove official support for Python 2.7, 3.5, 3.6 and 3.7
+- add official support for Python 3.11 and 3.12
+- use the ``SHUB_APIURL`` and ``SHUB_STORAGE`` environment variables as default
+  values when available
+- fix the warning when ``msgpack`` is not installed (used to say
+  ``msgpack-python``)
+
+2.4.0 (2022-03-10)
+------------------
+
+- add Python 3.10 support
+- improve ``iter()`` fallback in getting the ``meta`` argument
+
 2.3.1 (2020-03-13)
 ------------------
 

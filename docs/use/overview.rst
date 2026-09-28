@@ -1,3 +1,5 @@
+.. _overview:
+
 Overview
 ========
 
@@ -145,7 +147,7 @@ For example, to run a new job for a given spider with custom parameters::
 
 
 Getting job information
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
 
 To select a specific job for a project, use ``.jobs.get(<jobKey>)``::
 

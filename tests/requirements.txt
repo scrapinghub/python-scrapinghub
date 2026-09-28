@@ -1,0 +1,5 @@
+mock
+vcrpy
+pytest
+pytest-cov
+responses
