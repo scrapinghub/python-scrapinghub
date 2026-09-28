@@ -17,6 +17,9 @@ from .serialization import jsonencode
 
 logger = logging.getLogger('hubstorage.batchuploader')
 
+# Request Timeout and Too Many Requests
+_RETRYABLE_CLIENT_ERRORS = (408, 429)
+
 
 class BatchUploader(object):
 
@@ -161,11 +164,15 @@ class BatchUploader(object):
             emsg = ''
             try:
                 r = self._upload(batch)
+                if (400 <= r.status_code < 500
+                        and r.status_code not in _RETRYABLE_CLIENT_ERRORS):
+                    logger.error(
+                        f"Discarding write to url={url} offset={offset}: "
+                        f"[HTTP error {r.status_code}] {r.reason}\n"
+                        f"{r.text.rstrip()}"
+                    )
+                    return r
                 r.raise_for_status()
-                if not (200 <= r.status_code < 300):
-                    logger.warning('Discarding write to url=%s offset=%s: '
-                                   '[HTTP error %s] %s\n%s', url, offset,
-                                   r.status_code, r.reason, r.text.rstrip())
                 return r
             except (socket.error, requests.RequestException) as e:
                 if isinstance(e, requests.HTTPError):

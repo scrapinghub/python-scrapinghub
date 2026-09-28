@@ -5,8 +5,12 @@ import time
 import pytest
 from six.moves import range
 from collections import defaultdict
+from unittest import mock
+
+from requests import Response
 
 from scrapinghub.hubstorage import ValueTooLarge
+from scrapinghub.hubstorage.batchuploader import BatchUploader
 from ..conftest import TEST_SPIDER_NAME, TEST_AUTH
 from .conftest import start_job
 
@@ -90,3 +94,28 @@ def test_writer_interval(hsclient, hsproject, json_and_msgpack):
         groups[doc['_ts']] += 1
 
     assert len(groups) == 2
+
+
+def _response(status_code):
+    response = Response()
+    response.status_code = status_code
+    response._content = b''
+    return response
+
+
+@pytest.mark.parametrize('statuses,calls', [
+    ([400], 1),
+    ([429, 200], 2),
+    ([500, 200], 2),
+])
+def test_writer_client_errors(statuses, calls):
+    uploader = BatchUploader(mock.Mock(auth=None))
+    responses = iter(_response(status) for status in statuses)
+    with mock.patch.object(uploader, '_upload',
+                           side_effect=lambda batch: next(responses)) as upload, \
+            mock.patch('scrapinghub.hubstorage.batchuploader.time.sleep'):
+        writer = uploader.create_writer('https://example.com')
+        writer.write({'foo': 'bar'})
+        writer.flush()
+        uploader.close()
+    assert upload.call_count == calls
