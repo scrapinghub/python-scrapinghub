@@ -239,7 +239,9 @@ in batches, using the ``start`` parameter::
     >>> jobs_summary = spider.jobs.iter(start=1000)
 
 There are several filters like ``spider``, ``state``, ``has_tag``,
-``lacks_tag``, ``startts`` and ``endts`` (check `list endpoint`_ for more details).
+``lacks_tag``, ``startts`` and ``endts`` (check `list endpoint`_ for more
+details). ``startts`` and ``endts`` also accept :class:`~datetime.datetime`
+objects, and interpret naive ones as UTC.
 
 To get jobs filtered by tags::
 

@@ -3,6 +3,7 @@ High level Hubstorage client
 """
 import logging
 import os
+from datetime import datetime
 
 from requests import session, HTTPError, ConnectionError, Timeout
 from retrying import Retrying
@@ -12,7 +13,7 @@ from .job import Job
 from .jobq import JobQ
 from .batchuploader import BatchUploader
 from .resourcetype import ResourceType
-from .serialization import MSGPACK_AVAILABLE
+from .serialization import MSGPACK_AVAILABLE, jsondefault
 
 
 __all__ = ["HubstorageClient"]
@@ -120,6 +121,11 @@ class HubstorageClient(object):
         Use the retry policy configured in the client when is_idempotent is True
         """
         kwargs.setdefault('timeout', self.connection_timeout)
+        if kwargs.get('params'):
+            kwargs['params'] = {
+                k: int(jsondefault(v)) if isinstance(v, datetime) else v
+                for k, v in kwargs['params'].items()
+            }
 
         def invoke_request():
             r = self.session.request(**kwargs)
