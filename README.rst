@@ -25,11 +25,6 @@ The quick way::
 
     pip install scrapinghub
 
-You can also install the library with MessagePack support, it provides better
-response time and improved bandwidth usage::
-
-    pip install scrapinghub[msgpack]
-
 
 Documentation
 -------------
