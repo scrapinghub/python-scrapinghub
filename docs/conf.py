@@ -41,6 +41,11 @@ VERSION = __version__.rsplit('.', 2)[0]
 # ones.
 extensions = ['sphinx_scrapy', 'sphinx_reredirects']
 
+intersphinx_mapping = {
+    'requests': ('https://requests.readthedocs.io/en/latest/', None),
+}
+scrapy_intersphinx_enable = ['zyte']
+
 redirects = {
     "quickstart": "intro/install.html",
     "client/overview": "../use/overview.html",

@@ -102,9 +102,16 @@ class _ItemsResourceProxy(_Proxy):
 class _DownloadableProxyMixin(object):
 
     def iter(self, _path=None, count=None, requests_params=None, **apiparams):
-        """A general method to iterate through elements.
+        """Iterate through elements.
 
-        :param count: limit amount of elements.
+        *count* limits the number of elements returned. It is best to always
+        set it, or to set other pagination parameters, to avoid timeouts.
+
+        *apiparams* are sent to the :ref:`Scrapy Cloud HTTP API
+        <zyte:scrapycloud>` as query parameters, e.g. ``startts`` or
+        ``meta``, and *requests_params* are passed as keyword arguments to
+        :func:`requests.request`, e.g. ``{'timeout': 60}``.
+
         :return: an iterator over elements list.
         :rtype: :class:`collections.abc.Iterable`
         """

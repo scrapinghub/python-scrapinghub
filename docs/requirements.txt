@@ -11,8 +11,9 @@ charset-normalizer==3.4.6
 docutils==0.22.4
     # via
     #   sphinx
-    #   sphinx-markdown-builder
+    #   sphinx-llm-friendly
     #   sphinx-rtd-theme
+    #   sphinx-scrapy
 idna==3.11
     # via requests
 imagesize==2.0.0
@@ -27,8 +28,12 @@ packaging==26.0
     #   sphinx-scrapy
 pygments==2.19.2
     # via sphinx
+regex==2026.9.10
+    # via tiktoken
 requests==2.32.5
-    # via sphinx
+    # via
+    #   sphinx
+    #   tiktoken
 roman-numerals==4.1.0
     # via sphinx
 snowballstemmer==3.0.1
@@ -36,24 +41,26 @@ snowballstemmer==3.0.1
 sphinx==9.1.0
     # via
     #   sphinx-copybutton
-    #   sphinx-llms-txt
-    #   sphinx-markdown-builder
+    #   sphinx-last-updated-by-git
+    #   sphinx-llm-friendly
     #   sphinx-reredirects
     #   sphinx-rtd-theme
     #   sphinx-scrapy
     #   sphinxcontrib-jquery
 sphinx-copybutton==0.5.2
     # via sphinx-scrapy
-sphinx-llms-txt @ git+https://github.com/zytedata/sphinx-llms-txt.git@5e8866cb0cc249aa2017ad9050b3b83a7ca16f69
-    # via sphinx-scrapy
-sphinx-markdown-builder @ git+https://github.com/zytedata/sphinx-markdown-builder.git@ac9f8babfe622e4300099ab44b96d9d9228e742e
+sphinx-last-updated-by-git==0.3.8
+    # via sphinx-sitemap
+sphinx-llm-friendly==0.5.1
     # via sphinx-scrapy
 sphinx-reredirects==1.1.0
     # via -r requirements.in
 sphinx-rtd-theme==3.1.0
     # via -r requirements.in
-sphinx-scrapy @ git+https://github.com/scrapy/sphinx-scrapy.git@2b5f6c7de64c8317cb771fdeb2e5020d1c9c9dcf
+sphinx-scrapy==0.12.0
     # via -r requirements.in
+sphinx-sitemap==2.9.0
+    # via sphinx-scrapy
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
 sphinxcontrib-devhelp==2.0.0
@@ -69,6 +76,8 @@ sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 tabulate==0.10.0
-    # via sphinx-markdown-builder
+    # via sphinx-llm-friendly
+tiktoken==0.14.0
+    # via sphinx-llm-friendly
 urllib3==2.6.3
     # via requests
