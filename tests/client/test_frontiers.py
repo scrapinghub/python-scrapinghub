@@ -1,6 +1,7 @@
 import time
 from types import GeneratorType
 
+import mock
 from six import string_types
 from six.moves import collections_abc
 
@@ -140,10 +141,15 @@ def test_frontier_newcount(project, frontier):
     frontier._frontiers.close()
 
 
-def test_slot_count(project, frontier):
-    _clean_project_frontiers(project)
-    first_slot = frontier.get(TEST_FRONTIER_SLOT)
-
-    _count = first_slot.q.count()
-    fps = [fp for fp in first_slot.q.iter()]
-    assert _count == len(fps)
+def test_slot_queue_count(project):
+    slot = project.frontiers.get('test').get(TEST_FRONTIER_SLOT)
+    pages = [
+        {'count': 2, 'scanned': 2, 'nextstart': 'a'},
+        {'count': 3, 'scanned': 3, 'nextstart': 'b'},
+        {'count': 1, 'scanned': 1},
+    ]
+    with mock.patch.object(project.frontiers._origin, 'apiget',
+                           side_effect=[iter([page]) for page in pages]) as apiget:
+        assert slot.q.count() == 6
+    assert [c.kwargs['params'].get('start') for c in apiget.call_args_list] == [
+        None, 'a', 'b']

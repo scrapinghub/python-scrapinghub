@@ -242,6 +242,11 @@ class FrontierSlot(object):
         >>> slot.f.list()
         ['page1.html']
 
+    - count requests in a slot::
+
+        >>> slot.q.count()
+        1
+
     - delete a batch with requests from a slot::
 
         >>> slot.q.delete('0115a8579633600006')
@@ -274,9 +279,6 @@ class FrontierSlot(object):
         :rtype: :class:`FrontierSlotQueue`
         """
         return self.queue
-
-    def count(self):
-        return self.q.count()
 
     def delete(self):
         """Delete the slot."""
@@ -385,8 +387,13 @@ class FrontierSlotQueue(object):
         return origin.delete(self._frontier.key, self.key, ids)
 
     def count(self):
-        """Counts the request queue"""
+        """Return the number of requests in the queue."""
         origin = self._frontier._frontiers._origin
         path = (self._frontier.key, 's', self.key, 'q', 'count')
-        response = next(origin.apiget(path))
-        return response['count']
+        count, start = 0, None
+        while True:
+            response = next(origin.apiget(path, params={'start': start}))
+            count += response['count']
+            start = response.get('nextstart')
+            if not start:
+                return count
