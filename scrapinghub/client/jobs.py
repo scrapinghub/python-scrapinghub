@@ -17,6 +17,9 @@ from .proxy import _MappingProxy
 from .utils import get_tags_for_update, parse_job_key, update_kwargs
 
 
+_PAGE_SIZE = 1000
+
+
 class Jobs(object):
     """Class representing a collection of jobs for a project/spider.
 
@@ -142,6 +145,9 @@ class Jobs(object):
              meta=None, **params):
         """Iterate over jobs collection for a given set of params.
 
+        .. versionchanged:: VERSION
+           Returns all matching jobs, instead of at most 1000.
+
         :param count: (optional) limit amount of returned jobs.
         :param start: (optional) number of jobs to skip in the beginning.
         :param spider: (optional) filter by spider name.
@@ -186,11 +192,6 @@ class Jobs(object):
 
             >>> jobs_summary = project.jobs.iter(meta=['scheduled_by', ])
 
-        - by default :meth:`Jobs.iter` returns maximum last 1000 results.
-          Pagination is available using start parameter::
-
-            >>> jobs_summary = spider.jobs.iter(start=1000)
-
         - get jobs filtered by tags (list of tags has ``OR`` power)::
 
             >>> jobs_summary = project.jobs.iter(
@@ -201,12 +202,32 @@ class Jobs(object):
             >>> jobs_summary = project.jobs.iter(
             ...     spider='spider2', state='finished', count=3)
         """
-        update_kwargs(params, count=count, start=start, jobmeta=meta,
-                      spider=spider, state=state, has_tag=has_tag,
-                      lacks_tag=lacks_tag, startts=startts, endts=endts)
+        update_kwargs(params, jobmeta=meta, spider=spider, state=state,
+                      has_tag=has_tag, lacks_tag=lacks_tag, startts=startts,
+                      endts=endts)
         if self.spider:
             params['spider'] = self.spider.name
-        return self._project.jobq.list(**params)
+        return self._iter_pages(count, start, params)
+
+    def _iter_pages(self, count, start, params):
+        if start is not None:
+            params['start'] = start
+        if count is not None:
+            params['count'] = min(count, _PAGE_SIZE)
+        while True:
+            received = 0
+            for job in self._project.jobq.list(**params):
+                received += 1
+                yield job
+            if count is not None:
+                count -= received
+                if count <= 0:
+                    return
+            if received < _PAGE_SIZE:
+                return
+            params['start'] = params.get('start', 0) + received
+            params['count'] = (_PAGE_SIZE if count is None
+                               else min(count, _PAGE_SIZE))
 
     def list(self, count=None, start=None, spider=None, state=None,
              has_tag=None, lacks_tag=None, startts=None, endts=None,

@@ -232,12 +232,6 @@ even default ones::
     >>> job_summary.get('spider', 'missing')
     missing
 
-By default ``.jobs.iter()`` returns the last 1000 jobs at most.
-To get more than the last 1000, you need to paginate through results
-in batches, using the ``start`` parameter::
-
-    >>> jobs_summary = spider.jobs.iter(start=1000)
-
 There are several filters like ``spider``, ``state``, ``has_tag``,
 ``lacks_tag``, ``startts`` and ``endts`` (check `list endpoint`_ for more details).
 
