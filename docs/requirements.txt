@@ -52,7 +52,7 @@ sphinx-reredirects==1.1.0
     # via -r requirements.in
 sphinx-rtd-theme==3.1.0
     # via -r requirements.in
-sphinx-scrapy @ git+https://github.com/scrapy/sphinx-scrapy.git@2b5f6c7de64c8317cb771fdeb2e5020d1c9c9dcf
+sphinx-scrapy @ git+https://github.com/scrapy/sphinx-scrapy.git@0.7.1
     # via -r requirements.in
 sphinxcontrib-applehelp==2.0.0
     # via sphinx
@@ -70,5 +70,5 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 tabulate==0.10.0
     # via sphinx-markdown-builder
-urllib3==2.6.3
+urllib3==2.8.0
     # via requests
