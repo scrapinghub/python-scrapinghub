@@ -1,3 +1,9 @@
 [tool.sphinx-scrapy]
 # Keep in sync with .github/workflows/main.yml
 python-version = "3.14"
+
+[dependency-groups]
+docs = [
+    "sphinx-reredirects",
+    "sphinx-rtd-theme",
+]
