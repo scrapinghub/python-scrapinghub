@@ -441,7 +441,8 @@ class Jobs(object):
         if not params:
             return
         params.update({'project': self.project_id, 'spider': spider})
-        result = self._client._connection._post('jobs_update', 'json', params)
+        result = self._client._idempotent_retrier.call(
+            self._client._connection._post, 'jobs_update', 'json', params)
         return result['count']
 
 
@@ -500,7 +501,8 @@ class Job(object):
         """
         params = get_tags_for_update(add_tag=add, remove_tag=remove)
         params.update({'project': self.project_id, 'job': self.key})
-        self._client._connection._post('jobs_update', 'json', params)
+        self._client._idempotent_retrier.call(
+            self._client._connection._post, 'jobs_update', 'json', params)
 
     def close_writers(self):
         """Stop job batch writers threads gracefully.
