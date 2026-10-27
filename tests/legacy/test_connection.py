@@ -200,6 +200,23 @@ def test_connection_decode_response_json_unknown(connection):
     assert exc.value.args == ("Unknown response status: unexpected",)
 
 
+@pytest.mark.parametrize('status_code', [401, 403])
+@pytest.mark.parametrize('text,message', [
+    ('{"detail": "Authentication credentials were not provided."}',
+     "Authentication credentials were not provided."),
+    ('Forbidden', "Authentication failed"),
+])
+def test_connection_decode_response_auth_error(
+        connection, status_code, text, message):
+    response = mock.Mock()
+    response.status_code = status_code
+    response.text = text
+    with pytest.raises(APIError) as exc:
+        connection._decode_response(response, 'json', raw=False)
+    assert exc.value.args == (message,)
+    assert exc.value._type == APIError.ERR_AUTH_ERROR
+
+
 def test_connection_decode_response_jl(connection):
     jl_data = [{'row1': 'data1'}, {'row2': 'data2'}]
     response = mock.Mock()
