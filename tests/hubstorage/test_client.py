@@ -1,6 +1,9 @@
 """
 Test Client
 """
+from datetime import datetime, timedelta, timezone
+from unittest import mock
+
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import apipoll
 
@@ -57,3 +60,18 @@ def test_timestamp(hsclient):
     ts2 = hsclient.server_timestamp()
     assert ts1 > 0
     assert ts1 <= ts2
+
+
+def test_datetime_params():
+    client = HubstorageClient(auth=TEST_AUTH, endpoint=TEST_ENDPOINT)
+    with mock.patch.object(client.session, 'request') as request:
+        client.request(url='x', params={
+            'startts': datetime(2017, 5, 4, 3, 2, 1, 123456),
+            'endts': datetime(2017, 5, 4, 5, 2, 1, tzinfo=timezone(timedelta(hours=2))),
+            'count': 1,
+        })
+    assert request.call_args.kwargs['params'] == {
+        'startts': 1493866921123,
+        'endts': 1493866921000,
+        'count': 1,
+    }

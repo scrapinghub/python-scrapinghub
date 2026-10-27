@@ -214,8 +214,10 @@ class Collection(object):
         :param key: a string key or a list of keys to filter with.
         :param prefix: a string prefix to filter items.
         :param prefixcount: maximum number of values to return per prefix.
-        :param startts: UNIX timestamp at which to begin results.
-        :param endts: UNIX timestamp at which to end results.
+        :param startts: UNIX timestamp in milliseconds, or
+            :class:`~datetime.datetime`, at which to begin results.
+        :param endts: UNIX timestamp in milliseconds, or
+            :class:`~datetime.datetime`, at which to end results.
         :param requests_params: (optional) a dict with optional requests params.
         :param params: (optional) additional query params for the request.
         :return: an iterator over items list.
@@ -240,8 +242,10 @@ class Collection(object):
         :param key: a string key or a list of keys to filter with.
         :param prefix: a string prefix to filter items.
         :param prefixcount: maximum number of values to return per prefix.
-        :param startts: UNIX timestamp at which to begin results.
-        :param endts: UNIX timestamp at which to end results.
+        :param startts: UNIX timestamp in milliseconds, or
+            :class:`~datetime.datetime`, at which to begin results.
+        :param endts: UNIX timestamp in milliseconds, or
+            :class:`~datetime.datetime`, at which to end results.
         :param requests_params: (optional) a dict with optional requests params.
         :param params: (optional) additional query params for the request.
         :return: a list of items where each item is represented with a dict.

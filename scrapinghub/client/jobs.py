@@ -53,10 +53,10 @@ class Jobs(object):
             or a list of strings.
         :param lacks_tag: (optional) filter results by missing tag(s), a string
             or a list of strings.
-        :param startts: (optional) UNIX timestamp at which to begin results,
-            in milliseconds.
-        :param endts: (optional) UNIX timestamp at which to end results,
-            in milliseconds.
+        :param startts: (optional) UNIX timestamp in milliseconds, or
+            :class:`~datetime.datetime`, at which to begin results.
+        :param endts: (optional) UNIX timestamp in milliseconds, or
+            :class:`~datetime.datetime`, at which to end results.
         :param params: (optional) other filter params.
 
         :return: jobs count.
@@ -221,10 +221,10 @@ class Jobs(object):
             or a list of strings.
         :param lacks_tag: (optional) filter results by missing tag(s), a string
             or a list of strings.
-        :param startts: (optional) UNIX timestamp at which to begin results,
-            in milliseconds.
-        :param endts: (optional) UNIX timestamp at which to end results,
-            in milliseconds.
+        :param startts: (optional) UNIX timestamp in milliseconds, or
+            :class:`~datetime.datetime`, at which to begin results.
+        :param endts: (optional) UNIX timestamp in milliseconds, or
+            :class:`~datetime.datetime`, at which to end results.
         :param meta: (optional) request for additional fields, a single
             field name or a list of field names to return.
         :param params: (optional) other filter params.
