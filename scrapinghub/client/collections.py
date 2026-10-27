@@ -38,6 +38,9 @@ class Collections(_Proxy):
     def get_store(self, name):
         """Method to get a store collection by name.
 
+        The collection is created on the first write; until then, reading
+        from it raises :exc:`~scrapinghub.NotFound`.
+
         :param name: a collection name string.
         :return: a collection object.
         :rtype: :class:`Collection`

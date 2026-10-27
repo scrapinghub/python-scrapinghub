@@ -573,9 +573,9 @@ The usual workflow with :class:`project.collections
 <scrapinghub.client.collections.Collections>` would be:
 
 1. reference your project's ``collections`` attribute,
-2. call ``.get_store(<somename>)`` to create or access the named collection
-   you want (the collection will be created automatically if it doesn't exist) ;
-   you get a "store" object back,
+2. call ``.get_store(<somename>)`` to get a "store" object for the named
+   collection you want (the collection is created on the first write; until
+   then, reading from it raises :exc:`~scrapinghub.NotFound`),
 3. call ``.set(<key/value> pairs)`` to store data.
 
 ::
