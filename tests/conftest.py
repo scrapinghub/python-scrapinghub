@@ -6,7 +6,6 @@ import re
 import sys
 import zlib
 
-from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
 from scrapinghub import HubstorageClient
 from scrapinghub.legacy import Connection
 

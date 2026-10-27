@@ -6,7 +6,6 @@ import shutil
 
 from scrapinghub import ScrapinghubClient
 from scrapinghub.client.exceptions import NotFound
-from scrapinghub.hubstorage.serialization import MSGPACK_AVAILABLE
 
 from ..conftest import request_accept_header_matcher
 from ..conftest import VCRGzipSerializer
@@ -107,7 +106,7 @@ def setup_session(client, project, collection, request):
 def json_and_msgpack(client, monkeypatch, request):
     if request.param == 'json':
         monkeypatch.setattr(client._hsclient, 'use_msgpack', False)
-    elif not MSGPACK_AVAILABLE or request.config.getoption("--disable-msgpack"):
+    elif request.config.getoption("--disable-msgpack"):
         pytest.skip("messagepack-based tests are disabled")
     return request.param
 

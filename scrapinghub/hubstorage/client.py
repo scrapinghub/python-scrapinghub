@@ -12,7 +12,6 @@ from .job import Job
 from .jobq import JobQ
 from .batchuploader import BatchUploader
 from .resourcetype import ResourceType
-from .serialization import MSGPACK_AVAILABLE
 
 
 __all__ = ["HubstorageClient"]
@@ -108,10 +107,7 @@ class HubstorageClient(object):
         self.projects = Projects(self, None)
         self.root = ResourceType(self, None)
         self._batchuploader = None
-        self.use_msgpack = MSGPACK_AVAILABLE and use_msgpack
-        if use_msgpack != self.use_msgpack:
-            logger.warning('Messagepack is not available, please ensure that '
-                           'msgpack library is properly installed.')
+        self.use_msgpack = use_msgpack
 
     def request(self, is_idempotent=False, **kwargs):
         """
