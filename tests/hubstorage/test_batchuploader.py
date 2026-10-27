@@ -2,7 +2,9 @@
 Test Project
 """
 import time
+import mock
 import pytest
+import requests
 from six.moves import range
 from collections import defaultdict
 
@@ -90,3 +92,14 @@ def test_writer_interval(hsclient, hsproject, json_and_msgpack):
         groups[doc['_ts']] += 1
 
     assert len(groups) == 2
+
+
+def test_tryupload_retries_connection_error(hsclient):
+    ok = mock.Mock(status_code=200)
+    uploader = hsclient.batchuploader
+    batch = {'url': 'http://example.com', 'offset': 0}
+    with mock.patch.object(uploader, '_upload', side_effect=[
+            requests.ConnectionError('boom'), ok]) as upload, \
+            mock.patch('scrapinghub.hubstorage.batchuploader.time.sleep'):
+        assert uploader._tryupload(batch) is ok
+    assert upload.call_count == 2

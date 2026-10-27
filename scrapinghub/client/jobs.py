@@ -239,9 +239,6 @@ class Jobs(object):
         amount of logs it's recommended to iterate through it via :meth:`iter`
         method (all params and available filters are same for both methods).
         """
-        # FIXME we double-check the params here, is there a better way?
-        # Simpler way would be to keep **params only here and point to iter(),
-        # but then we loose hinting kwargs for list() method.
         update_kwargs(params, count=count, start=start, meta=meta,
                       spider=spider, state=state, has_tag=has_tag,
                       lacks_tag=lacks_tag, startts=startts, endts=endts)
@@ -293,7 +290,6 @@ class Jobs(object):
                       cmd_args=cmd_args, job_settings=job_settings, meta=meta,
                       environment=environment)
 
-        # FIXME improve to run multiple jobs
         try:
             response = self._client._connection._post('run', 'json', params)
         except BadRequest as exc:

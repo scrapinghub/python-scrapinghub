@@ -96,7 +96,6 @@ class Connection(object):
     def _build_url(self, method, format):
         """Returns full url for given method and format"""
         from requests.compat import urljoin
-        # TODO: verify method's format support
         try:
             base_path = self.API_METHODS[method]
         except KeyError:

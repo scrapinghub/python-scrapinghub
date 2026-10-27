@@ -182,5 +182,4 @@ class Settings(_MappingProxy):
         :param key: a string setting key.
         :param value: new setting value.
         """
-        # FIXME drop the method when post-by-key is implemented on server side
         self.update({key: value})
