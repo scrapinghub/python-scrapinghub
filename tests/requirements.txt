@@ -3,3 +3,4 @@ vcrpy
 pytest
 pytest-cov
 responses
+pytest-httpserver
