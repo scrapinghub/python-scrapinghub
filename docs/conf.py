@@ -47,6 +47,8 @@ redirects = {
     "client/apidocs": "../ref/apidocs.html",
 }
 
+scrapy_intersphinx_enable = ["zyte"]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

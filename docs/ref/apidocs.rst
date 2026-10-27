@@ -66,6 +66,14 @@ Logs
     :undoc-members:
     :inherited-members:
 
+Periodic jobs
+-------------
+
+.. automodule:: scrapinghub.client.periodicjobs
+    :members:
+    :undoc-members:
+    :inherited-members:
+
 Projects
 --------
 

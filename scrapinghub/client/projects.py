@@ -8,6 +8,7 @@ from .activity import Activity
 from .collections import Collections
 from .frontiers import _HSFrontier, Frontiers
 from .jobs import Jobs
+from .periodicjobs import PeriodicJobs
 from .proxy import _MappingProxy
 from .spiders import Spiders
 from .utils import parse_project_id
@@ -108,6 +109,7 @@ class Project(object):
     :ivar collections: :class:`~scrapinghub.client.collections.Collections` resource object.
     :ivar frontiers: :class:`~scrapinghub.client.frontiers.Frontiers` resource object.
     :ivar jobs: :class:`~scrapinghub.client.jobs.Jobs` resource object.
+    :ivar periodic_jobs: :class:`~scrapinghub.client.periodicjobs.PeriodicJobs` resource object.
     :ivar settings: :class:`~scrapinghub.client.settings.Settings` resource object.
     :ivar spiders: :class:`~scrapinghub.client.spiders.Spiders` resource object.
 
@@ -126,6 +128,7 @@ class Project(object):
 
         # sub-resources
         self.jobs = Jobs(client, project_id)
+        self.periodic_jobs = PeriodicJobs(client, project_id)
         self.spiders = Spiders(client, project_id)
 
         # proxied sub-resources
