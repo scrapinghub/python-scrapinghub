@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
 
 import os
 import json
@@ -6,6 +6,8 @@ import logging
 import binascii
 import warnings
 from codecs import decode
+from collections.abc import Sequence
+from typing import Any
 
 import six
 from dotenv import dotenv_values, find_dotenv
@@ -18,7 +20,9 @@ _APIKEY_VARS = ('SH_APIKEY', 'SHUB_APIKEY')
 _DOTENV_AUTH_VARS = _APIKEY_VARS + ('SHUB_JOBAUTH',)
 
 
-def _read_dotenv_auth(dotenv_path=None):
+def _read_dotenv_auth(
+    dotenv_path: str | os.PathLike[str] | None = None,
+) -> dict[str, str]:
     """Read Scrapy Cloud auth credentials from a ``.env`` file.
 
     Only the ``SH_APIKEY``, ``SHUB_APIKEY`` and ``SHUB_JOBAUTH`` variables are
@@ -30,7 +34,8 @@ def _read_dotenv_auth(dotenv_path=None):
     or its parents is used.
     """
     values = dotenv_values(dotenv_path or find_dotenv(usecwd=True))
-    return {var: values[var] for var in _DOTENV_AUTH_VARS if values.get(var)}
+    return {var: value for var in _DOTENV_AUTH_VARS
+            if (value := values.get(var))}
 
 
 class LogLevel(object):
@@ -44,16 +49,16 @@ class LogLevel(object):
 
 class JobKey(object):
 
-    def __init__(self, project_id, spider_id, job_id):
+    def __init__(self, project_id: str, spider_id: str, job_id: str) -> None:
         self.project_id = project_id
         self.spider_id = spider_id
         self.job_id = job_id
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '{}/{}/{}'.format(self.project_id, self.spider_id, self.job_id)
 
 
-def parse_project_id(project_id):
+def parse_project_id(project_id: int | str) -> str:
     """Simple check for project id.
 
     :param project_id: a numeric project id, int or string.
@@ -67,13 +72,14 @@ def parse_project_id(project_id):
     return str(project_id)
 
 
-def parse_job_key(job_key):
+def parse_job_key(job_key: str | tuple[int | str, ...]) -> JobKey:
     """Inner helper to parse job key.
 
     :param job_key: a job key (str or tuple of 3 ints).
     :return: parsed job key.
     :rtype: :class:`JobKey`
     """
+    parts: Sequence[int | str]
     if isinstance(job_key, tuple):
         parts = job_key
     elif isinstance(job_key, six.string_types):
@@ -93,9 +99,9 @@ def parse_job_key(job_key):
     return JobKey(*map(str, parts))
 
 
-def get_tags_for_update(**kwargs):
+def get_tags_for_update(**kwargs: list[str] | None) -> dict[str, Any]:
     """Helper to check tags changes"""
-    params = {}
+    params: dict[str, Any] = {}
     for k, v in kwargs.items():
         if not v:
             continue
@@ -105,13 +111,16 @@ def get_tags_for_update(**kwargs):
     return params
 
 
-def update_kwargs(kwargs, **params):
+def update_kwargs(kwargs: dict[str, Any], **params: Any) -> None:
     """Update kwargs dict with non-empty params with json-encoded values."""
     kwargs.update({k: json.dumps(v) if isinstance(v, dict) else v
                    for k, v in params.items() if v is not None})
 
 
-def parse_auth(auth, dotenv_path=None):
+def parse_auth(
+    auth: str | tuple[str, str] | None,
+    dotenv_path: str | os.PathLike[str] | None = None,
+) -> tuple[str, str]:
     """Parse authentication token.
 
     When ``auth`` is None, the credentials are read from the ``SH_APIKEY`` (or
@@ -153,7 +162,7 @@ def parse_auth(auth, dotenv_path=None):
         if jobauth:
             warnings.warn("You are using the SHUB_JOBAUTH credentials which "
                           "may not work for some API endpoints")
-            return _search_for_jwt_credentials(jobauth)
+            return _search_for_jwt_credentials(jobauth)  # type: ignore[return-value]
 
         raise RuntimeError("No API key provided and neither SH_APIKEY, "
                            "SHUB_APIKEY nor SHUB_JOBAUTH environment variables "
@@ -176,16 +185,15 @@ def parse_auth(auth, dotenv_path=None):
     return login, password
 
 
-def _search_for_jwt_credentials(auth):
+def _search_for_jwt_credentials(auth: str) -> tuple[str, str] | None:
     try:
         decoded_auth = decode(auth, 'hex_codec')
     except (binascii.Error, TypeError):
-        return
+        return None
     try:
-        if not isinstance(decoded_auth, six.string_types):
-            decoded_auth = decoded_auth.decode('ascii')
-        login, _, password = decoded_auth.partition(':')
+        login, _, password = decoded_auth.decode('ascii').partition(':')
         if password and parse_job_key(login):
             return login, password
     except (UnicodeDecodeError, ValueError):
         pass
+    return None

@@ -1,11 +1,15 @@
 import random
 from contextlib import closing
+from collections.abc import Iterator
+from typing import Any
 
 import pytest
 from six.moves import range
 
 from scrapinghub import HubstorageClient
 from scrapinghub.hubstorage.utils import millitime
+from scrapinghub.hubstorage.job import Job
+from scrapinghub.hubstorage.project import Project
 
 from ..conftest import TEST_ENDPOINT, TEST_SPIDER_NAME
 from ..conftest import TEST_PROJECT_ID, TEST_AUTH
@@ -16,31 +20,35 @@ MAGICN = 1211
 
 
 @pytest.fixture
-def panelclient():
+def panelclient() -> HubstorageClient:
     # Panel - no client auth, only project auth using user auth token
     return HubstorageClient(endpoint=TEST_ENDPOINT)
 
 
 @pytest.fixture
-def panelproject(panelclient):
+def panelproject(panelclient: HubstorageClient) -> Project:
     return panelclient.get_project(TEST_PROJECT_ID, auth=TEST_AUTH)
 
 
 @pytest.fixture(autouse=True)
-def close_panelclient(panelclient):
+def close_panelclient(panelclient: HubstorageClient) -> Iterator[None]:
     yield
     panelclient.close()
 
 
-def test_succeed_with_close_reason(hsproject, panelproject):
+def test_succeed_with_close_reason(
+    hsproject: Project, panelproject: Project,
+) -> None:
     _do_test_success(hsproject, panelproject, 'all-good', 'all-good')
 
 
-def test_succeed_without_close_reason(hsproject, panelproject):
+def test_succeed_without_close_reason(
+    hsproject: Project, panelproject: Project,
+) -> None:
     _do_test_success(hsproject, panelproject, None, 'no_reason')
 
 
-def _do_test_success(*args):
+def _do_test_success(*args: Any) -> None:
     """Simple wrapper around _do_test_job with additonal checks"""
     job = _do_test_job(*args)
     assert job.items.stats()['totals']['input_values'] == MAGICN
@@ -48,7 +56,7 @@ def _do_test_success(*args):
     assert job.requests.stats()['totals']['input_values'] == MAGICN
 
 
-def test_scraper_failure(hsproject, panelproject):
+def test_scraper_failure(hsproject: Project, panelproject: Project) -> None:
     job = _do_test_job(
         hsproject,
         panelproject,
@@ -61,8 +69,10 @@ def test_scraper_failure(hsproject, panelproject):
     assert stats['totals']['input_values'] == MAGICN * 4 + 1
 
 
-def _do_test_job(hsproject, panelproject,
-                 job_close_reason, expected_close_reason):
+def _do_test_job(
+    hsproject: Project, panelproject: Project,
+    job_close_reason: str | Exception | None, expected_close_reason: str,
+) -> Job:
     pushed = panelproject.jobq.push(TEST_SPIDER_NAME)
     # check pending state
     job = panelproject.get_job(pushed['key'])
@@ -76,7 +86,10 @@ def _do_test_job(hsproject, panelproject,
     return job
 
 
-def _run_runner(hsproject, pushed, close_reason):
+def _run_runner(
+    hsproject: Project, pushed: dict[str, Any],
+    close_reason: str | Exception | None,
+) -> None:
     client = HubstorageClient(endpoint=TEST_ENDPOINT, auth=TEST_AUTH)
     with closing(client) as runnerclient:
         job = start_job(hsproject)
@@ -97,7 +110,10 @@ def _run_runner(hsproject, pushed, close_reason):
             job.jobq.finish(job, close_reason=close_reason or 'no_reason')
 
 
-def _run_scraper(jobkey, jobauth, close_reason=None):
+def _run_scraper(
+    jobkey: str, jobauth: str | tuple[str, str] | None,
+    close_reason: str | Exception | None = None,
+) -> None:
     httpmethods = 'GET PUT POST DELETE HEAD OPTIONS TRACE CONNECT'.split()
     # Scraper - uses job level auth, no global or project auth available
     client = HubstorageClient(endpoint=TEST_ENDPOINT)

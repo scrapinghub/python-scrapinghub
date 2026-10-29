@@ -2,10 +2,12 @@ import types
 
 import pytest
 
+from scrapinghub.client.projects import Project
+
 from ..conftest import TEST_PROJECT_ID
 
 
-def _add_test_activity(project):
+def _add_test_activity(project: Project) -> None:
     activity = project.activity
     jobkey = TEST_PROJECT_ID + '/2/3'
     events = [{'event': 'job:completed', 'job': jobkey, 'user': 'jobrunner'},
@@ -13,13 +15,13 @@ def _add_test_activity(project):
     activity.add(events)
 
 
-def test_activity_wrong_project(project):
+def test_activity_wrong_project(project: Project) -> None:
     event = {'event': 'job:completed', 'job': '123/1/1', 'user': 'user'}
     with pytest.raises(ValueError):
-        project.activity.add(event)
+        project.activity.add(event)  # type: ignore[arg-type]
 
 
-def test_activity_iter(project):
+def test_activity_iter(project: Project) -> None:
     _add_test_activity(project)
     activity = project.activity.iter()
     assert isinstance(activity, types.GeneratorType)
@@ -29,7 +31,7 @@ def test_activity_iter(project):
                              'user': 'john'}
 
 
-def test_activity_list(project):
+def test_activity_list(project: Project) -> None:
     _add_test_activity(project)
     activity = project.activity.list(count=2)
     assert isinstance(activity, list)

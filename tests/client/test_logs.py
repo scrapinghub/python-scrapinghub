@@ -4,11 +4,13 @@ from numbers import Integral
 import pytest
 
 from scrapinghub.client.utils import LogLevel
+from scrapinghub.client.jobs import Job
+from scrapinghub.client.spiders import Spider
 
 from .conftest import TEST_TS
 
 
-def _add_test_logs(job):
+def _add_test_logs(job: Job) -> None:
     job.logs.log('simple-msg1')
     job.logs.log('simple-msg2', ts=TEST_TS)
     job.logs.log('simple-msg3', level=LogLevel.DEBUG)
@@ -26,7 +28,7 @@ def _add_test_logs(job):
     job.logs.flush()
 
 
-def test_logs_base(spider, json_and_msgpack):
+def test_logs_base(spider: Spider, json_and_msgpack: str) -> None:
     job = spider.jobs.run()
     assert list(job.logs.iter()) == []
     assert job.logs.batch_write_start() == 0
@@ -34,7 +36,7 @@ def test_logs_base(spider, json_and_msgpack):
     log1 = job.logs.get(0)
     assert log1['level'] == 20
     assert log1['message'] == 'simple-msg1'
-    assert isinstance(log1['time'], Integral) and log1['time'] > 0
+    assert isinstance(log1['time'], Integral) and log1['time'] > 0  # type: ignore[operator]
     assert job.logs.stats() == {
         'counts': {'10': 2, '20': 4, '30': 2, '40': 1},
         'totals': {'input_bytes': 91, 'input_values': 9}
@@ -42,7 +44,7 @@ def test_logs_base(spider, json_and_msgpack):
     job.logs.close()
 
 
-def test_logs_iter(spider, json_and_msgpack):
+def test_logs_iter(spider: Spider, json_and_msgpack: str) -> None:
     job = spider.jobs.run()
     _add_test_logs(job)
 
@@ -64,7 +66,7 @@ def test_logs_iter(spider, json_and_msgpack):
         next(logs3).get('message')
 
 
-def test_logs_list(spider, json_and_msgpack):
+def test_logs_list(spider: Spider, json_and_msgpack: str) -> None:
     job = spider.jobs.run()
     _add_test_logs(job)
 
@@ -87,7 +89,7 @@ def test_logs_list(spider, json_and_msgpack):
     assert logs3[0].get('message') == 'error-msg'
 
 
-def test_logs_list_filter(spider, json_and_msgpack):
+def test_logs_list_filter(spider: Spider, json_and_msgpack: str) -> None:
     job = spider.jobs.run()
     _add_test_logs(job)
 

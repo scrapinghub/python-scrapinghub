@@ -7,25 +7,25 @@ from scrapinghub import Project
 
 
 @pytest.fixture
-def connection():
+def connection() -> Connection:
     return Connection(apikey='testkey', url='http://test-url')
 
 
 @pytest.fixture
-def proxy_mixin():
+def proxy_mixin() -> RequestProxyMixin:
     return RequestProxyMixin()
 
 
 @pytest.fixture
-def project(connection):
+def project(connection: Connection) -> Project:
     return Project(connection, 12345)
 
 
 @pytest.fixture
-def jobset(project):
+def jobset(project: Project) -> JobSet:
     return JobSet(project, param='value')
 
 
 @pytest.fixture
-def job(project):
+def job(project: Project) -> Job:
     return Job(project, '1/2/3', {'field': 'data'})

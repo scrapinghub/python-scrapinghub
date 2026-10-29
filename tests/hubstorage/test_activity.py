@@ -3,8 +3,10 @@ Test Activity
 """
 from six.moves import range
 
+from scrapinghub.hubstorage.project import Project
 
-def test_post_and_reverse_get(hsproject):
+
+def test_post_and_reverse_get(hsproject: Project) -> None:
     # make some sample data
     orig_data = [{u'foo': 42, u'counter': i} for i in range(20)]
     data1 = orig_data[:10]
@@ -20,13 +22,13 @@ def test_post_and_reverse_get(hsproject):
     assert orig_data[::-1] == result
 
 
-def test_filters(hsproject):
+def test_filters(hsproject: Project) -> None:
     hsproject.activity.post({'c': i} for i in range(10))
     r = list(hsproject.activity.list(filter='["c", ">", [5]]', count=2))
     assert r == [{'c': 9}, {'c': 8}]
 
 
-def test_timestamp(hsproject):
+def test_timestamp(hsproject: Project) -> None:
     hsproject.activity.add({'foo': 'bar'}, baz='qux')
     entry = next(hsproject.activity.list(count=1, meta='_ts'))
     assert entry.pop('_ts', None)

@@ -3,10 +3,8 @@ __all__ = ["APIError", "Connection", "HubstorageClient",
            "DuplicateJobError", "BadRequest", "NotFound",
            "Unauthorized", "ValueTooLarge", "ServerError"]
 
-import pkgutil
-__version__ = pkgutil.get_data(__package__, 'VERSION')
-__version__ = str(__version__.decode('ascii').strip())
-del pkgutil
+from importlib.metadata import version as _version
+__version__ = _version(__name__)
 
 
 from .legacy import *

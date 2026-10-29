@@ -1,6 +1,7 @@
 import base64
 import os
 import pickle
+from typing import Any
 import pytest
 import re
 import sys
@@ -32,7 +33,7 @@ TEST_DASH_ENDPOINT = os.getenv('DASH_ENDPOINT', DEFAULT_DASH_ENDPOINT)
 
 
 # https://github.com/kevin1024/vcrpy/issues/719#issuecomment-1811544263
-def upgrade_cassette(cassette):
+def upgrade_cassette(cassette: dict[str, Any]) -> None:
     for interaction in cassette['interactions']:
         response = interaction.get('response', {})
         headers = response.get('headers', {})
@@ -46,7 +47,7 @@ def upgrade_cassette(cassette):
 class VCRGzipSerializer(object):
     """Custom ZIP serializer for VCR.py."""
 
-    def serialize(self, cassette_dict):
+    def serialize(self, cassette_dict: dict[str, Any]) -> str:
         # receives a dict, must return a string
         # there can be binary data inside some of the requests,
         # so it's impossible to use json for serialization to string
@@ -54,20 +55,20 @@ class VCRGzipSerializer(object):
         compressed = zlib.compress(pickle.dumps(cassette_dict, protocol=2))
         return base64.b64encode(compressed).decode('utf8')
 
-    def deserialize(self, cassette_string):
+    def deserialize(self, cassette_string: str) -> dict[str, Any]:
         # receives a string, must return a dict
         decoded = base64.b64decode(cassette_string.encode('utf8'))
-        cassette = pickle.loads(zlib.decompress(decoded))
+        cassette: dict[str, Any] = pickle.loads(zlib.decompress(decoded))
         if sys.version_info >= (3, 10):
             upgrade_cassette(cassette)
         return cassette
 
 
-def normalize_endpoint(uri, endpoint, default_endpoint):
+def normalize_endpoint(uri: str, endpoint: str, default_endpoint: str) -> str:
     return uri.replace(endpoint.rstrip('/'), default_endpoint.rstrip('/'))
 
 
-def normalize_cassette(cassette_dict):
+def normalize_cassette(cassette_dict: dict[str, Any]) -> dict[str, Any]:
     """
     This function normalizes the cassette dict trying to make sure
     we are always making API requests with the same variables:
@@ -104,7 +105,7 @@ def normalize_cassette(cassette_dict):
     return cassette_dict
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--update-cassettes", action="store_true", default=False,
         help="test with real services rewriting existing vcr cassettes")
@@ -116,16 +117,17 @@ def pytest_addoption(parser):
         help="disable messagepack-serialization based tests")
 
 
-def request_accept_header_matcher(r1, r2):
+def request_accept_header_matcher(r1: Any, r2: Any) -> bool:
     """Custom VCR.py matcher by Accept header."""
 
-    def _get_accept_header(request):
-        return request.headers.get('Accept', '').lower()
+    def _get_accept_header(request: Any) -> str:
+        accept: str = request.headers.get('Accept', '')
+        return accept.lower()
 
     return _get_accept_header(r1) == _get_accept_header(r2)
 
 
 @pytest.fixture
-def frontier_name(request):
+def frontier_name(request: pytest.FixtureRequest) -> str:
     """Provide a name for test-unique HS frontier."""
     return re.sub(r'\W+', '-', request.node.nodeid)

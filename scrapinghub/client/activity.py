@@ -1,10 +1,14 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
 
+from collections.abc import Iterable, Iterator
+from typing import Any
+
+from ..hubstorage.activity import Activity as _Activity
 from .proxy import _Proxy
 from .utils import parse_job_key, update_kwargs
 
 
-class Activity(_Proxy):
+class Activity(_Proxy[_Activity]):
     """Representation of collection of job activity events.
 
     Not a public constructor: use :class:`~scrapinghub.client.projects.Project`
@@ -44,7 +48,8 @@ class Activity(_Proxy):
         >>> project.activity.add(events)
 
     """
-    def iter(self, count=None, **params):
+    def iter(self, count: int | None = None,
+             **params: Any) -> Iterator[Any]:
         """Iterate over activity events.
 
         :param count: limit amount of elements.
@@ -55,7 +60,7 @@ class Activity(_Proxy):
         params = self._modify_iter_params(params)
         return self._origin.list(**params)
 
-    def add(self, values, **kwargs):
+    def add(self, values: Iterable[dict[str, Any]], **kwargs: Any) -> None:
         """Add new event to the project activity.
 
         :param values: a single event or a list of events, where event is

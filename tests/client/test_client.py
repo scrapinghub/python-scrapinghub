@@ -12,7 +12,7 @@ from ..conftest import TEST_PROJECT_ID
 # ScrapinghubClient class tests
 
 
-def test_client_base(client):
+def test_client_base(client: ScrapinghubClient) -> None:
     """Base tests for client instance"""
     assert isinstance(client, ScrapinghubClient)
     assert client._hsclient
@@ -24,11 +24,11 @@ def test_client_base(client):
     assert isinstance(client.projects, Projects)
 
 
-def test_client_get_project(client):
+def test_client_get_project(client: ScrapinghubClient) -> None:
     project = client.get_project(TEST_PROJECT_ID)
     assert isinstance(project, Project)
 
 
-def test_client_get_job(client):
+def test_client_get_job(client: ScrapinghubClient) -> None:
     fake_job = client.get_job('1/2/3')
     assert isinstance(fake_job, Job)

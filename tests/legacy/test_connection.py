@@ -10,85 +10,87 @@ from scrapinghub import Project
 from scrapinghub import __version__
 
 
-def test_connection_class_attrs():
+def test_connection_class_attrs() -> None:
     assert Connection.DEFAULT_ENDPOINT == 'https://app.zyte.com/api/'
     assert isinstance(Connection.API_METHODS, dict)
 
 
-def test_connection_init_fail_wo_apikey(monkeypatch):
+def test_connection_init_fail_wo_apikey(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.delenv('SH_APIKEY', raising=False)
     with pytest.raises(RuntimeError):
         Connection()
 
 
 @mock.patch.dict(os.environ, {'SH_APIKEY': 'testkey'})
-def test_connection_init_use_key_from_env():
+def test_connection_init_use_key_from_env() -> None:
     conn = Connection()
     assert conn.apikey == 'testkey'
 
 
-def test_connection_init_assert_apikey_not_url():
+def test_connection_init_assert_apikey_not_url() -> None:
     with pytest.raises(AssertionError):
         Connection(password='testpass', apikey='http://some-url')
 
 
-def test_connection_init_with_default_url():
+def test_connection_init_with_default_url() -> None:
     conn = Connection(apikey='testkey')
     assert conn.url == Connection.DEFAULT_ENDPOINT
 
 
-def test_connection_init_with_default_timeout():
+def test_connection_init_with_default_timeout() -> None:
     conn = Connection(apikey='testkey')
     assert conn._connection_timeout is None
 
 
-def test_connection_init_with_custom_timeout():
+def test_connection_init_with_custom_timeout() -> None:
     conn = Connection(apikey='testkey', connection_timeout=60)
     assert conn._connection_timeout == 60
 
 
-def test_connection_init_ok(connection):
+def test_connection_init_ok(connection: Connection) -> None:
     assert connection.apikey == 'testkey'
     assert connection.url == 'http://test-url'
     assert connection._session
 
 
-def test_connection_repr(connection):
+def test_connection_repr(connection: Connection) -> None:
     assert repr(connection) == "Connection('testkey')"
 
 
-def test_connection_auth(connection):
+def test_connection_auth(connection: Connection) -> None:
     assert connection.auth == ('testkey', '')
 
 
-def test_connection_create_session(connection):
+def test_connection_create_session(connection: Connection) -> None:
     session = connection._session
     assert isinstance(session, requests.Session)
     assert session.auth == ('testkey', '')
     assert (session.headers.get('User-Agent') ==
             'python-scrapinghub/{}'.format(__version__))
     assert session.stream
-    assert not session.prefetch
+    assert not session.prefetch  # type: ignore[attr-defined]
 
 
-def test_connection_build_url_unknown_method(connection):
+def test_connection_build_url_unknown_method(connection: Connection) -> None:
     with pytest.raises(APIError):
         connection._build_url('unknown_method', 'json')
 
 
-def test_connection_build_url_ok(connection):
+def test_connection_build_url_ok(connection: Connection) -> None:
     assert (connection._build_url('addversion', 'json') ==
             'http://test-url/scrapyd/addversion.json')
 
 
-def test_connection_request_wrong_format(connection):
+def test_connection_request_wrong_format(connection: Connection) -> None:
     with pytest.raises(APIError):
         connection._request('http://some-url', 'data', {},
-                            'wrongformat', None, None)
+                            'wrongformat', None, None)  # type: ignore[arg-type]
 
 
-def test_connection_get_wo_params(connection):
-    connection._request = mock.Mock()
+def test_connection_get_wo_params(connection: Connection) -> None:
+    connection._request = mock.Mock()  # type: ignore[method-assign]
     connection._request.return_value = 'expected'
     assert connection._get('addversion', 'json', headers={'Header': 'value'},
                            raw=True) == 'expected'
@@ -98,8 +100,8 @@ def test_connection_get_wo_params(connection):
          {'Header': 'value'}, 'json', True), {})]
 
 
-def test_connection_get_with_params(connection):
-    connection._request = mock.Mock()
+def test_connection_get_with_params(connection: Connection) -> None:
+    connection._request = mock.Mock()  # type: ignore[method-assign]
     connection._request.return_value = 'expected'
     assert connection._get(
         'addversion', 'json', headers={'Header': 'value'},
@@ -110,8 +112,8 @@ def test_connection_get_with_params(connection):
          {'Header': 'value'}, 'json', True), {})]
 
 
-def test_connection_post(connection):
-    connection._request = mock.Mock()
+def test_connection_post(connection: Connection) -> None:
+    connection._request = mock.Mock()  # type: ignore[method-assign]
     connection._request.return_value = 'expected'
     assert connection._post(
         'addversion', 'json', headers={'Header': 'value'},
@@ -124,12 +126,14 @@ def test_connection_post(connection):
 
 
 @pytest.mark.parametrize("timeout", [None, 0.1])
-def test_connection_request_handle_get(connection, timeout):
+def test_connection_request_handle_get(
+    connection: Connection, timeout: float | None,
+) -> None:
     if timeout:
         connection._connection_timeout = timeout
     connection._session = mock.Mock()
     connection._session.get.return_value = 'get_response'
-    connection._decode_response = mock.Mock()
+    connection._decode_response = mock.Mock()  # type: ignore[method-assign]
     connection._decode_response.return_value = 'expected'
     assert connection._request(
         'http://some-url', None, {'HeaderA': 'value'},
@@ -144,12 +148,14 @@ def test_connection_request_handle_get(connection, timeout):
 
 
 @pytest.mark.parametrize("timeout", [None, 0.1])
-def test_connection_request_handle_post(connection, timeout):
+def test_connection_request_handle_post(
+    connection: Connection, timeout: float | None,
+) -> None:
     if timeout:
         connection._connection_timeout = timeout
     connection._session = mock.Mock()
     connection._session.post.return_value = 'post_response'
-    connection._decode_response = mock.Mock()
+    connection._decode_response = mock.Mock()  # type: ignore[method-assign]
     connection._decode_response.return_value = 'expected'
     assert connection._request(
         'http://some-url', 'data', {'HeaderA': 'value'},
@@ -165,7 +171,7 @@ def test_connection_request_handle_post(connection, timeout):
         (('post_response', 'json', True),)]
 
 
-def test_connection_decode_response_raw(connection):
+def test_connection_decode_response_raw(connection: Connection) -> None:
     response = mock.Mock()
     response.status_code = 200
     response.raw = 'expected'
@@ -173,7 +179,7 @@ def test_connection_decode_response_raw(connection):
         response, 'json', raw=True) == 'expected'
 
 
-def test_connection_decode_response_json_ok(connection):
+def test_connection_decode_response_json_ok(connection: Connection) -> None:
     response = mock.Mock()
     response.status_code = 200
     response.text = '{"status":"ok","data":"some-data"}'
@@ -181,7 +187,7 @@ def test_connection_decode_response_json_ok(connection):
         response, 'json', raw=False) == {"status": "ok", "data": "some-data"}
 
 
-def test_connection_decode_response_json_error(connection):
+def test_connection_decode_response_json_error(connection: Connection) -> None:
     response = mock.Mock()
     response.status_code = 400
     for status in ['error', 'badrequest']:
@@ -191,7 +197,9 @@ def test_connection_decode_response_json_error(connection):
         assert exc.value.args == ("error",)
 
 
-def test_connection_decode_response_json_unknown(connection):
+def test_connection_decode_response_json_unknown(
+    connection: Connection,
+) -> None:
     response = mock.Mock()
     response.status_code = 400
     response.text = json.dumps({"status": "unexpected", "message": "error"})
@@ -200,7 +208,7 @@ def test_connection_decode_response_json_unknown(connection):
     assert exc.value.args == ("Unknown response status: unexpected",)
 
 
-def test_connection_decode_response_jl(connection):
+def test_connection_decode_response_jl(connection: Connection) -> None:
     jl_data = [{'row1': 'data1'}, {'row2': 'data2'}]
     response = mock.Mock()
     response.status_code = 200
@@ -209,21 +217,21 @@ def test_connection_decode_response_jl(connection):
         response, 'jl', raw=False)) == jl_data
 
 
-def test_connection_getitem(connection):
+def test_connection_getitem(connection: Connection) -> None:
     project = connection['key']
     assert isinstance(project, Project)
     assert project.id == 'key'
 
 
-def test_connection_project_ids(connection):
-    connection._get = mock.Mock()
+def test_connection_project_ids(connection: Connection) -> None:
+    connection._get = mock.Mock()  # type: ignore[method-assign]
     connection._get.return_value = {'projects': [1, 2, 3]}
     assert connection.project_ids() == [1, 2, 3]
     assert connection._get.called
     assert connection._get.call_args_list == [(('listprojects', 'json'), {})]
 
 
-def test_connection_project_names(connection):
-    connection._get = mock.Mock()
+def test_connection_project_names(connection: Connection) -> None:
+    connection._get = mock.Mock()  # type: ignore[method-assign]
     connection._get.return_value = {'projects': [1, 2, 3]}
     assert connection.project_names() == [1, 2, 3]

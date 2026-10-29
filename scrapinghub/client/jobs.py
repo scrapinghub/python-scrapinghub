@@ -1,6 +1,8 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
 
 import json
+from collections.abc import Iterator, Sequence
+from typing import TYPE_CHECKING, Any
 
 from ..hubstorage.job import JobMeta as _JobMeta
 from ..hubstorage.job import Items as _Items
@@ -15,6 +17,13 @@ from .samples import Samples
 from .exceptions import NotFound, BadRequest, DuplicateJobError
 from .proxy import _MappingProxy
 from .utils import get_tags_for_update, parse_job_key, update_kwargs
+
+if TYPE_CHECKING:
+    from . import ScrapinghubClient
+    from .spiders import Spider
+
+_Tags = str | Sequence[str] | None
+_TagList = list[str]
 
 
 class Jobs(object):
@@ -37,14 +46,17 @@ class Jobs(object):
         <scrapinghub.client.jobs.Jobs at 0x104767e80>
     """
 
-    def __init__(self, client, project_id, spider=None):
+    def __init__(self, client: ScrapinghubClient, project_id: str,
+                 spider: Spider | None = None) -> None:
         self.project_id = project_id
         self.spider = spider
         self._client = client
         self._project = client._hsclient.get_project(project_id)
 
-    def count(self, spider=None, state=None, has_tag=None, lacks_tag=None,
-              startts=None, endts=None, **params):
+    def count(self, spider: str | None = None, state: _Tags = None,
+              has_tag: _Tags = None, lacks_tag: _Tags = None,
+              startts: int | None = None, endts: int | None = None,
+              **params: Any) -> Any:
         """Count jobs with a given set of filters.
 
         :param spider: (optional) filter by spider name.
@@ -79,7 +91,8 @@ class Jobs(object):
             params['spider'] = self.spider.name
         return next(self._project.jobq.apiget(('count',), params=params))
 
-    def cancel(self, keys=None, count=None, **params):
+    def cancel(self, keys: list[str] | None = None, count: int | None = None,
+               **params: Any) -> Any:
         """Cancel a list of jobs using the keys provided.
 
         :param keys: (optional) a list of strings containing the job keys in
@@ -117,15 +130,15 @@ class Jobs(object):
                 raise ValueError("keys should be a list")
 
             # it raises ValueError if invalid
-            keys = [parse_job_key(k) for k in keys]
+            job_keys = [parse_job_key(k) for k in keys]
 
-            if not all([key.project_id == self.project_id for key in keys]):
+            if not all([key.project_id == self.project_id for key in job_keys]):
                 raise ValueError(
                     "all keys should belong to project: %s" % self.project_id
                 )
 
             # change it to the format in which JobQ expects.
-            data = [{"key": str(k)} for k in keys]
+            data = [{"key": str(k)} for k in job_keys]
 
             # may raise BadRequest if JobQ doesn't validate
             return list(self._project.jobq.apipost("cancel",
@@ -137,9 +150,11 @@ class Jobs(object):
             # may raise Forbidden
             return self._project.jobq.apipost("cancel?count=%s" % count)
 
-    def iter(self, count=None, start=None, spider=None, state=None,
-             has_tag=None, lacks_tag=None, startts=None, endts=None,
-             meta=None, **params):
+    def iter(self, count: int | None = None, start: int | None = None,
+             spider: str | None = None, state: _Tags = None,
+             has_tag: _Tags = None, lacks_tag: _Tags = None,
+             startts: int | None = None, endts: int | None = None,
+             meta: _Tags = None, **params: Any) -> Iterator[Any]:
         """Iterate over jobs collection for a given set of params.
 
         :param count: (optional) limit amount of returned jobs.
@@ -208,9 +223,11 @@ class Jobs(object):
             params['spider'] = self.spider.name
         return self._project.jobq.list(**params)
 
-    def list(self, count=None, start=None, spider=None, state=None,
-             has_tag=None, lacks_tag=None, startts=None, endts=None,
-             meta=None, **params):
+    def list(self, count: int | None = None, start: int | None = None,
+             spider: str | None = None, state: _Tags = None,
+             has_tag: _Tags = None, lacks_tag: _Tags = None,
+             startts: int | None = None, endts: int | None = None,
+             meta: _Tags = None, **params: Any) -> list[Any]:
         """Convenient shortcut to list iter results.
 
         :param count: (optional) limit amount of returned jobs.
@@ -247,9 +264,13 @@ class Jobs(object):
                       lacks_tag=lacks_tag, startts=startts, endts=endts)
         return list(self.iter(**params))
 
-    def run(self, spider=None, units=None, priority=None, meta=None,
-            add_tag=None, job_args=None, job_settings=None, cmd_args=None,
-            environment=None, **params):
+    def run(self, spider: str | None = None, units: int | None = None,
+            priority: int | None = None, meta: dict[str, Any] | None = None,
+            add_tag: _Tags = None, job_args: dict[str, Any] | None = None,
+            job_settings: dict[str, Any] | None = None,
+            cmd_args: str | None = None,
+            environment: dict[str, str] | None = None,
+            **params: Any) -> Job:
         """Schedule a new job and returns its job key.
 
         :param spider: a spider name string
@@ -275,7 +296,8 @@ class Jobs(object):
             >>> job.key
             '123/1/1'
         """
-        if not spider and not self.spider:
+        spider = spider or (self.spider.name if self.spider else None)
+        if not spider:
             raise ValueError('Please provide `spider` name')
         if job_args:
             if not isinstance(job_args, dict):
@@ -287,7 +309,7 @@ class Jobs(object):
             raise ValueError("environment should be a dictionary")
 
         params['project'] = self.project_id
-        params['spider'] = spider or self.spider.name
+        params['spider'] = spider
 
         update_kwargs(params, units=units, priority=priority, add_tag=add_tag,
                       cmd_args=cmd_args, job_settings=job_settings, meta=meta,
@@ -302,7 +324,7 @@ class Jobs(object):
             raise
         return Job(self._client, response['jobid'])
 
-    def get(self, job_key):
+    def get(self, job_key: str | tuple[int | str, ...]) -> Job:
         """Get a :class:`Job` with a given job_key.
 
         :param job_key: a string job key.
@@ -321,14 +343,15 @@ class Jobs(object):
             >>> job.key
             '123/1/2'
         """
-        job_key = parse_job_key(job_key)
-        if job_key.project_id != self.project_id:
+        parsed_key = parse_job_key(job_key)
+        if parsed_key.project_id != self.project_id:
             raise ValueError('Please use same project id')
-        if self.spider and job_key.spider_id != self.spider._id:
+        if self.spider and parsed_key.spider_id != self.spider._id:
             raise ValueError('Please use same spider id')
-        return Job(self._client, str(job_key))
+        return Job(self._client, str(parsed_key))
 
-    def summary(self, state=None, spider=None, **params):
+    def summary(self, state: str | None = None, spider: str | None = None,
+                **params: Any) -> Any:
         """Get jobs summary (optionally by state).
 
         :param state: (optional) a string state to filter jobs.
@@ -353,8 +376,10 @@ class Jobs(object):
         return self._project.jobq.summary(
             state, spiderid=spider_id, **params)
 
-    def iter_last(self, start=None, start_after=None, count=None,
-                  spider=None, **params):
+    def iter_last(self, start: int | None = None,
+                  start_after: str | None = None, count: int | None = None,
+                  spider: str | None = None,
+                  **params: Any) -> Iterator[Any]:
         """Iterate through last jobs for each spider.
 
         :param start: (optional)
@@ -394,7 +419,7 @@ class Jobs(object):
         update_kwargs(params, start=start, startafter=start_after, count=count)
         return self._project.spiders.lastjobsummary(spider_id, **params)
 
-    def _extract_spider_id(self, spider):
+    def _extract_spider_id(self, spider: str | None) -> str | None:
         if not spider and self.spider:
             return self.spider._id
         if spider:
@@ -405,7 +430,9 @@ class Jobs(object):
             return spider_id
         return None
 
-    def update_tags(self, add=None, remove=None, spider=None):
+    def update_tags(self, add: _TagList | None = None,
+                    remove: _TagList | None = None,
+                    spider: str | None = None) -> Any:
         """Update tags for all existing spider jobs.
 
         :param add: (optional) list of tags to add to selected jobs.
@@ -469,7 +496,7 @@ class Job(object):
         >>> job.metadata.get('state')
         'finished'
     """
-    def __init__(self, client, job_key):
+    def __init__(self, client: ScrapinghubClient, job_key: str) -> None:
         self.project_id = parse_job_key(job_key).project_id
         self.key = job_key
 
@@ -485,7 +512,8 @@ class Job(object):
 
         self.metadata = JobMeta(_JobMeta, client, job_key)
 
-    def update_tags(self, add=None, remove=None):
+    def update_tags(self, add: list[str] | None = None,
+                    remove: list[str] | None = None) -> None:
         """Partially update job tags.
 
         It provides a convenient way to mark specific jobs (for better search,
@@ -502,14 +530,14 @@ class Job(object):
         params.update({'project': self.project_id, 'job': self.key})
         self._client._connection._post('jobs_update', 'json', params)
 
-    def close_writers(self):
+    def close_writers(self) -> None:
         """Stop job batch writers threads gracefully.
 
         Called on :meth:`ScrapinghubClient.close` method.
         """
         self._job.close_writers()
 
-    def start(self, **params):
+    def start(self, **params: Any) -> Any:
         """Move job to running state.
 
         :param params: (optional) keyword meta parameters to update.
@@ -523,7 +551,7 @@ class Job(object):
         """
         return self.update(state='running', **params)
 
-    def finish(self, **params):
+    def finish(self, **params: Any) -> Any:
         """Move running job to finished state.
 
         :param params: (optional) keyword meta parameters to update.
@@ -537,7 +565,7 @@ class Job(object):
         """
         return self.update(state='finished', **params)
 
-    def delete(self, **params):
+    def delete(self, **params: Any) -> Any:
         """Mark finished job for deletion.
 
         :param params: (optional) keyword meta parameters to update.
@@ -551,7 +579,7 @@ class Job(object):
         """
         return self.update(state='deleted', **params)
 
-    def update(self, state, **params):
+    def update(self, state: str, **params: Any) -> Any:
         """Update job state.
 
         :param state: a new job state.
@@ -570,7 +598,7 @@ class Job(object):
         except StopIteration:
             raise NotFound("Job {} doesn't exist".format(self.key))
 
-    def cancel(self):
+    def cancel(self) -> None:
         """Schedule a running job for cancellation.
 
         Usage::
@@ -582,7 +610,7 @@ class Job(object):
         self._project.jobq.request_cancel(self)
 
 
-class JobMeta(_MappingProxy):
+class JobMeta(_MappingProxy[_JobMeta]):
     """Class representing job metadata.
 
     Not a public constructor: use :class:`Job` instance to get a

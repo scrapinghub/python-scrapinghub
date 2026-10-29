@@ -1,17 +1,20 @@
 import pytest
 from six.moves import range
 
+from scrapinghub.client.jobs import Job
+from scrapinghub.client.spiders import Spider
+
 from .utils import normalize_job_for_tests
 
 
-def _add_test_items(job, size=3):
+def _add_test_items(job: Job, size: int = 3) -> None:
     for i in range(size):
         job.items.write({'id': i, 'data': 'data' + str(i)})
     job.items.flush()
     job.items.close()
 
 
-def test_items_iter(spider, json_and_msgpack):
+def test_items_iter(spider: Spider, json_and_msgpack: str) -> None:
     job = spider.jobs.run(meta={'state': 'running'})
     _add_test_items(job)
 
@@ -28,7 +31,7 @@ def test_items_iter(spider, json_and_msgpack):
         next(o)
 
 
-def test_items_list(spider, json_and_msgpack):
+def test_items_list(spider: Spider, json_and_msgpack: str) -> None:
     job = spider.jobs.run(meta={'state': 'running'})
     job = normalize_job_for_tests(job)
     _add_test_items(job)
@@ -41,7 +44,7 @@ def test_items_list(spider, json_and_msgpack):
     assert o[2] == {'id': 2, 'data': 'data2'}
 
 
-def test_items_list_iter(spider, json_and_msgpack):
+def test_items_list_iter(spider: Spider, json_and_msgpack: str) -> None:
     job = spider.jobs.run(meta={'state': 'running'})
     job = normalize_job_for_tests(job)
     _add_test_items(job)
@@ -59,7 +62,9 @@ def test_items_list_iter(spider, json_and_msgpack):
         next(o)
 
 
-def test_items_list_iter_with_start_and_count(spider, json_and_msgpack):
+def test_items_list_iter_with_start_and_count(
+    spider: Spider, json_and_msgpack: str,
+) -> None:
     job = spider.jobs.run(meta={'state': 'running'})
     job = normalize_job_for_tests(job)
     _add_test_items(job, size=10)
@@ -83,7 +88,9 @@ def test_items_list_iter_with_start_and_count(spider, json_and_msgpack):
         next(o)
 
 
-def test_items_list_iter_with_start_and_count_2(spider, json_and_msgpack):
+def test_items_list_iter_with_start_and_count_2(
+    spider: Spider, json_and_msgpack: str,
+) -> None:
     """2nd version from the test above but this case makes sure that the total
     number of items returned would be equal to `count`.
     """

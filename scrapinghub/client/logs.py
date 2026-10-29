@@ -1,13 +1,15 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, annotations
 
 import json
 import logging
+from typing import Any
 
+from ..hubstorage.job import Logs as _Logs
 from .proxy import _ItemsResourceProxy, _DownloadableProxyMixin
 from .utils import LogLevel
 
 
-class Logs(_DownloadableProxyMixin, _ItemsResourceProxy):
+class Logs(_DownloadableProxyMixin[_Logs], _ItemsResourceProxy[_Logs]):  # type: ignore[misc]
     """Representation of collection of job logs.
 
     Not a public constructor: use :class:`~scrapinghub.client.jobs.Job` instance
@@ -49,7 +51,8 @@ class Logs(_DownloadableProxyMixin, _ItemsResourceProxy):
             'time': 1486375511188,
         }]
     """
-    def log(self, message, level=logging.INFO, ts=None, **other):
+    def log(self, message: str, level: int = logging.INFO,
+            ts: int | None = None, **other: Any) -> None:
         """Base method to write a log entry.
 
         :param message: a string message.
@@ -59,28 +62,28 @@ class Logs(_DownloadableProxyMixin, _ItemsResourceProxy):
         """
         self._origin.log(message, level=level, ts=ts, **other)
 
-    def debug(self, message, **other):
+    def debug(self, message: str, **other: Any) -> None:
         """Log a message with DEBUG level."""
         self._origin.debug(message, **other)
 
-    def info(self, message, **other):
+    def info(self, message: str, **other: Any) -> None:
         """Log a message with INFO level."""
         self._origin.info(message, **other)
 
-    def warn(self, message, **other):
+    def warn(self, message: str, **other: Any) -> None:
         """Log a message with WARN level."""
         self._origin.warn(message, **other)
     warning = warn
 
-    def error(self, message, **other):
+    def error(self, message: str, **other: Any) -> None:
         """Log a message with ERROR level."""
         self._origin.error(message, **other)
 
-    def batch_write_start(self):
+    def batch_write_start(self) -> int:
         """Override to set a start parameter when commencing writing."""
         return self._origin.batch_write_start()
 
-    def _modify_iter_params(self, params):
+    def _modify_iter_params(self, params: dict[str, Any]) -> dict[str, Any]:
         """Modify iter() filters on-the-fly.
 
         - convert offset to start parameter

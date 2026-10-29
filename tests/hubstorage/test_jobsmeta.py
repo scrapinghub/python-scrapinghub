@@ -3,12 +3,20 @@ Test job metadata
 
 System tests for operations on stored job metadata
 """
+from collections.abc import Mapping
+from typing import Any
+
+from scrapinghub.hubstorage import HubstorageClient
+from scrapinghub.hubstorage.project import Project
+
 from ..conftest import TEST_SPIDER_NAME
 from .conftest import start_job
 
 
-def _assertMetadata(meta1, meta2):
-    def _clean(m):
+def _assertMetadata(
+    meta1: Mapping[str, Any], meta2: Mapping[str, Any],
+) -> None:
+    def _clean(m: Mapping[str, Any]) -> dict[str, Any]:
         return dict((k, v) for k, v in m.items() if k != 'updated_time')
 
     meta1 = _clean(meta1)
@@ -16,7 +24,7 @@ def _assertMetadata(meta1, meta2):
     assert meta1 == meta2
 
 
-def test_basic(hsclient, hsproject):
+def test_basic(hsclient: HubstorageClient, hsproject: Project) -> None:
     job = hsproject.push_job(TEST_SPIDER_NAME)
     assert 'auth' not in job.metadata
     assert 'state' in job.metadata
@@ -60,7 +68,7 @@ def test_basic(hsclient, hsproject):
     _assertMetadata(job.metadata, job2.metadata)
 
 
-def test_updating(hsproject):
+def test_updating(hsproject: Project) -> None:
     job = hsproject.push_job(TEST_SPIDER_NAME)
     assert job.metadata.get('foo') is None
     job.update_metadata({'foo': 'bar'})
@@ -78,7 +86,7 @@ def test_updating(hsproject):
     assert job.metadata['state'] == state
 
 
-def test_representation(hsproject):
+def test_representation(hsproject: Project) -> None:
     job = hsproject.push_job(TEST_SPIDER_NAME)
     meta = job.metadata
     assert str(meta) != repr(meta)
@@ -87,7 +95,7 @@ def test_representation(hsproject):
     assert meta.__class__.__name__ not in str(meta)
 
 
-def test_jobauth(hsclient, hsproject):
+def test_jobauth(hsclient: HubstorageClient, hsproject: Project) -> None:
     job = hsproject.push_job(TEST_SPIDER_NAME)
     assert job.jobauth is None
     assert job.auth == hsproject.auth
@@ -99,7 +107,7 @@ def test_jobauth(hsclient, hsproject):
     assert samejob.items.auth == hsproject.auth
 
 
-def test_authtoken(hsproject):
+def test_authtoken(hsproject: Project) -> None:
     pendingjob = hsproject.push_job(TEST_SPIDER_NAME)
     runningjob = start_job(hsproject)
     assert pendingjob.key == runningjob.key

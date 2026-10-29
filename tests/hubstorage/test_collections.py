@@ -3,21 +3,27 @@ Test Collections
 """
 import random
 from contextlib import closing
+from collections.abc import Callable
+from typing import Any
 
+import mock
 import pytest
+from requests import HTTPError, Response
 from scrapinghub import HubstorageClient
+from scrapinghub.hubstorage.collectionsrt import Collection
+from scrapinghub.hubstorage.project import Project
 from six.moves import range
 
 from ..conftest import TEST_COLLECTION_NAME
 from .testutil import failing_downloader
 
 
-def _mkitem():
+def _mkitem() -> dict[str, Any]:
     return dict(field1='value1', field2=['value2a', 'value2b'],
                 field3=3, field4={'v4k': 'v4v'})
 
 
-def test_simple_count(hsproject, hscollection):
+def test_simple_count(hsproject: Project, hscollection: Collection) -> None:
     test_item = dict(_mkitem())
     test_item['_key'] = 'a'
 
@@ -25,7 +31,7 @@ def test_simple_count(hsproject, hscollection):
     assert hscollection.count() == 1
 
 
-def post_get_delete_test(hsproject):
+def post_get_delete_test(hsproject: Project) -> None:
     test_item = _mkitem()
     item_to_send = dict(test_item)
     item_to_send['_key'] = test_key = 'insert_test_key'
@@ -50,7 +56,7 @@ def post_get_delete_test(hsproject):
             col.get(test_key)
 
 
-def post_scan_test(hsproject, hscollection):
+def post_scan_test(hsproject: Project, hscollection: Collection) -> None:
     # populate with 20 items
     test_item = _mkitem()
     last_key = None
@@ -86,7 +92,9 @@ def post_scan_test(hsproject, hscollection):
         hscollection.get(last_key)
 
 
-def test_errors_bad_key(hscollection, json_and_msgpack):
+def test_errors_bad_key(
+    hscollection: Collection, json_and_msgpack: str,
+) -> None:
     with pytest.raises(KeyError):
         hscollection.get('does_not_exist')
 
@@ -96,12 +104,12 @@ def test_errors_bad_key(hscollection, json_and_msgpack):
         {'_key': []},
         {'_key': 'large_test', 'value': 'x' * 1024 ** 2},
 ])
-def test_errors(hscollection, testarg):
+def test_errors(hscollection: Collection, testarg: dict[str, Any]) -> None:
     with pytest.raises(ValueError):
         hscollection.set(testarg)
 
 
-def test_data_download(hsproject, hscollection):
+def test_data_download(hsproject: Project, hscollection: Collection) -> None:
     items = []
     with closing(hscollection.create_writer()) as writer:
         for i in range(20):
@@ -121,15 +129,16 @@ def test_data_download(hsproject, hscollection):
         assert len(downloaded) == 19
 
 
-def test_invalid_collection_name(hsproject):
+def test_invalid_collection_name(hsproject: Project) -> None:
     cols = hsproject.collections
-    for method, args in [
+    cases: list[tuple[Callable[..., Any], tuple[str, ...]]] = [
             (cols.new_collection, ('invalidtype', 'n')),
             (cols.new_store, ('foo-bar',)),
             (cols.new_store, ('foo/bar',)),
             (cols.new_store, ('/foo',)),
             (cols.create_writer, ('invalidtype', 'n')),
-            (cols.create_writer, ('s', 'foo-bar'))]:
+            (cols.create_writer, ('s', 'foo-bar'))]
+    for method, args in cases:
         with pytest.raises(ValueError):
             method(*args)
 
@@ -153,12 +162,15 @@ def test_invalid_collection_name(hsproject):
         ('list', False),
         (None, False),
 ])
-def test_allows_msgpack(hsclient, path, expected_result, json_and_msgpack):
+def test_allows_msgpack(
+    hsclient: HubstorageClient, path: str | None, expected_result: bool,
+    json_and_msgpack: str,
+) -> None:
     collections = hsclient.get_project(2222000).collections
     assert collections._allows_mpack(path) is (hsclient.use_msgpack and expected_result)
 
 
-def test_truncate(hscollection):
+def test_truncate(hscollection: Collection) -> None:
     # populate with 20 items
     test_item = _mkitem()
     with closing(hscollection.create_writer()) as writer:
@@ -171,3 +183,21 @@ def test_truncate(hscollection):
 
     hscollection.truncate()
     assert len(list(hscollection.iter_values(prefix='my_key'))) == 0
+
+
+@pytest.mark.parametrize('status_code,expected_exception', [
+    (400, ValueError),
+    (500, HTTPError),
+])
+def test_count_http_error(
+    hscollection: Collection, status_code: int,
+    expected_exception: type[Exception],
+) -> None:
+    response = Response()
+    response.status_code = status_code
+    response._content = b'error'
+    collections = hscollection._collections
+    with mock.patch.object(collections, 'apirequest',
+                           side_effect=HTTPError(response=response)):
+        with pytest.raises(expected_exception):
+            hscollection.count()

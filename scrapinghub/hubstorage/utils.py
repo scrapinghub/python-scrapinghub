@@ -1,9 +1,27 @@
-import six
+from __future__ import annotations
+
 import time
+from collections.abc import Callable, Iterator
+from typing import TYPE_CHECKING, Any, overload
+
+import six
 from six.moves.queue import Empty
 
+if TYPE_CHECKING:
+    from queue import Queue
 
-def urlpathjoin(*parts):
+
+_Part = str | int | tuple[Any, ...]
+_Auth = str | tuple[str, str] | None
+
+
+@overload
+def urlpathjoin(first: _Part, /, *parts: _Part | None) -> str: ...
+@overload
+def urlpathjoin(*parts: _Part | None) -> str | None: ...
+
+
+def urlpathjoin(*parts: _Part | None) -> str | None:
     """Join multiple paths into a single url
 
     >>> urlpathjoin('https://storage.scrapinghub.com:8002/', 'jobs', '1/2/3')
@@ -30,7 +48,7 @@ def urlpathjoin(*parts):
     'http://localhost:8003/jobs/1111111/2/1'
 
     """
-    url = None
+    url: str | None = None
     for p in parts:
         if p is None:
             continue
@@ -44,7 +62,7 @@ def urlpathjoin(*parts):
     return url
 
 
-def xauth(auth):
+def xauth(auth: _Auth) -> tuple[str, str] | None:
     """Expand authentication token
 
     >>> xauth(None)
@@ -63,7 +81,7 @@ def xauth(auth):
         return u, p
 
 
-def millitime(*a, **kw):
+def millitime(*a: Any, **kw: Any) -> int:
     """The difference, measured in milliseconds, between the current time
     and midnight, January 1, 1970 UTC.
 
@@ -99,12 +117,12 @@ class iterqueue(object):
     4
     """
 
-    def __init__(self, queue, maxcount=None):
+    def __init__(self, queue: Queue[Any], maxcount: int | None = None) -> None:
         self.queue = queue
         self.maxcount = maxcount
         self.count = 0
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         while (self.maxcount is None) or (self.count < self.maxcount):
             try:
                 yield self.queue.get_nowait()
@@ -113,7 +131,7 @@ class iterqueue(object):
                 break
 
 
-def apipoll(endpoint, *args, **kwargs):
+def apipoll(endpoint: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     """Poll an api endpoint until there is a result that is not None
 
     poll_wait and max_poll can be specified in kwargs to set the polling
@@ -132,7 +150,7 @@ def apipoll(endpoint, *args, **kwargs):
             return result
 
 
-def sizeof_fmt(num):
+def sizeof_fmt(num: float) -> str:
     """Little helper to get size in human readable form.
 
     Size is rounded to a closest integer value (for simplicity).

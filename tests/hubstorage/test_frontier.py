@@ -1,22 +1,26 @@
 """
 Test Frontier
 """
+from typing import Any
+
 import pytest
+
+from scrapinghub.hubstorage.project import Project
 
 from ..conftest import TEST_FRONTIER_SLOT
 
 
 @pytest.fixture(autouse=True)
-def delete_frontier_slot(hsproject, frontier_name):
+def delete_frontier_slot(hsproject: Project, frontier_name: str) -> None:
     frontier = hsproject.frontier
     frontier.delete_slot(frontier_name, TEST_FRONTIER_SLOT)
 
 
-def _get_urls(batch):
+def _get_urls(batch: Any) -> list[Any]:
     return [r[0] for r in batch['requests']]
 
 
-def test_add_read(hsproject, frontier_name):
+def test_add_read(hsproject: Project, frontier_name: str) -> None:
     frontier = hsproject.frontier
 
     fps = [{'fp': '/'}]
@@ -31,7 +35,7 @@ def test_add_read(hsproject, frontier_name):
     assert urls == expected_urls
 
 
-def test_add_multiple_chunks(hsproject, frontier_name):
+def test_add_multiple_chunks(hsproject: Project, frontier_name: str) -> None:
     frontier = hsproject.frontier
     old_count = frontier.newcount
 
@@ -75,7 +79,7 @@ def test_add_multiple_chunks(hsproject, frontier_name):
     assert urls == expected_urls
 
 
-def test_add_big_chunk(hsproject, frontier_name):
+def test_add_big_chunk(hsproject: Project, frontier_name: str) -> None:
     frontier = hsproject.frontier
 
     batch_size = 300
@@ -113,7 +117,7 @@ def test_add_big_chunk(hsproject, frontier_name):
     assert urls == expected_urls
 
 
-def test_add_extra_params(hsproject, frontier_name):
+def test_add_extra_params(hsproject: Project, frontier_name: str) -> None:
     frontier = hsproject.frontier
 
     qdata = {"a": 1, "b": 2, "c": 3}

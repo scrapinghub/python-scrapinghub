@@ -1,9 +1,16 @@
+from __future__ import annotations
+
 import re
+from collections.abc import Callable, Iterable, Iterator
+from typing import TYPE_CHECKING, Any
 
 from requests.exceptions import HTTPError
 
 from .resourcetype import DownloadableResource
-from .utils import urlpathjoin
+from .utils import _Part, urlpathjoin
+
+if TYPE_CHECKING:
+    from .batchuploader import _BatchWriter
 
 
 COLLECTIONS_MSGPACK_REGEX = re.compile(
@@ -23,7 +30,7 @@ class Collections(DownloadableResource):
 
     resource_type = 'collections'
 
-    def _allows_mpack(self, path=None):
+    def _allows_mpack(self, path: _Part | None = None) -> bool:
         """Check if request can be served with msgpack data.
 
         Collection scan and get requests for keys are able to return msgpack data.
@@ -38,11 +45,13 @@ class Collections(DownloadableResource):
         # count endpoint doesn't support msgpack
         return bool(match and match.group('key') != 'count')
 
-    def get(self, _type, _name, _key=None, **params):
+    def get(self, _type: str, _name: str, _key: str | None = None,
+            **params: Any) -> Any:
         try:
             r = self.apiget((_type, _name, _key), params=params)
             return r if _key is None else next(r)
         except HTTPError as exc:
+            assert exc.response is not None
             if exc.response.status_code == 404:
                 raise KeyError(_key)
             elif exc.response.status_code == 400:
@@ -50,32 +59,41 @@ class Collections(DownloadableResource):
             else:
                 raise
 
-    def set(self, _type, _name, _values):
+    def set(self, _type: str, _name: str, _values: Any) -> Iterator[Any]:
         try:
             return self.apipost((_type, _name), is_idempotent=True, jl=_values)
         except HTTPError as exc:
+            assert exc.response is not None
             if exc.response.status_code in (400, 413):
                 raise ValueError(exc.response.text)
             else:
                 raise
 
-    def delete(self, _type, _name, _keys):
+    def delete(self, _type: str, _name: str,
+               _keys: str | Iterable[str]) -> Iterator[Any]:
         return self.apipost((_type, _name, 'deleted'), is_idempotent=True, jl=_keys)
 
-    def truncate(self, _name):
+    def truncate(self, _name: str) -> Iterator[Any]:
         return self.apipost('delete', params={'name': _name}, is_idempotent=True)
 
-    def iter_json(self, _type, _name, requests_params=None, **apiparams):
+    def iter_json(  # type: ignore[override]
+        self, _type: str, _name: str,
+        requests_params: dict[str, Any] | None = None, **apiparams: Any,
+    ) -> Iterator[str]:
         return DownloadableResource.iter_json(
             self, (_type, _name), requests_params=requests_params, **apiparams
         )
 
-    def iter_msgpack(self, _type, _name, requests_params=None, **apiparams):
+    def iter_msgpack(  # type: ignore[override]
+        self, _type: str, _name: str,
+        requests_params: dict[str, Any] | None = None, **apiparams: Any,
+    ) -> Iterator[bytes]:
         return DownloadableResource.iter_msgpack(
             self, (_type, _name), requests_params=requests_params, **apiparams
         )
 
-    def create_writer(self, coltype, colname, **writer_kwargs):
+    def create_writer(self, coltype: str, colname: str,
+                      **writer_kwargs: Any) -> _BatchWriter:
         self._validate_collection(coltype, colname)
         kwargs = dict(writer_kwargs)
         kwargs.setdefault('content_encoding', 'gzip')
@@ -83,26 +101,26 @@ class Collections(DownloadableResource):
         url = urlpathjoin(self.url, coltype, colname)
         return self.client.batchuploader.create_writer(url, **kwargs)
 
-    def new_collection(self, coltype, colname):
+    def new_collection(self, coltype: str, colname: str) -> Collection:
         self._validate_collection(coltype, colname)
         return Collection(coltype, colname, self)
 
-    def new_store(self, colname):
+    def new_store(self, colname: str) -> Collection:
         return self.new_collection('s', colname)
 
-    def new_cached_store(self, colname):
+    def new_cached_store(self, colname: str) -> Collection:
         return self.new_collection('cs', colname)
 
-    def new_versioned_store(self, colname):
+    def new_versioned_store(self, colname: str) -> Collection:
         return self.new_collection('vs', colname)
 
-    def new_versioned_cached_store(self, colname):
+    def new_versioned_cached_store(self, colname: str) -> Collection:
         return self.new_collection('vcs', colname)
 
-    def count(self, _type, _name, **params):
+    def count(self, _type: str, _name: str, **params: Any) -> int:
         return self._batch('GET', (_type, _name, 'count'), 'count', **params)
 
-    def _validate_collection(self, coltype, colname):
+    def _validate_collection(self, coltype: str, colname: str) -> None:
         if coltype not in {'s', 'cs', 'vs', 'vcs'}:
             raise ValueError('Invalid collection type: {}'.format(coltype))
 
@@ -110,8 +128,10 @@ class Collections(DownloadableResource):
             raise ValueError('Invalid collection name {!r}, only alphanumeric '
                              'characters'.format(colname))
 
-    def _batch(self, method, path, total_param, progress=None, **params):
-        total = 0
+    def _batch(self, method: str, path: _Part, total_param: str,
+               progress: Callable[[int, Any], object] | None = None,
+               **params: Any) -> int:
+        total: int = 0
         getparams = dict(params)
         try:
             while True:
@@ -128,6 +148,7 @@ class Collections(DownloadableResource):
                     progress(total, next_start)
             return total
         except HTTPError as exc:
+            assert exc.response is not None
             if exc.response.status_code == 400:
                 raise ValueError(exc.response.text)
             else:
@@ -136,12 +157,13 @@ class Collections(DownloadableResource):
 
 class Collection(object):
 
-    def __init__(self, coltype, colname, collections):
+    def __init__(self, coltype: str, colname: str,
+                 collections: Collections) -> None:
         self.coltype = coltype
         self.colname = colname
         self._collections = collections
 
-    def create_writer(self, **kwargs):
+    def create_writer(self, **kwargs: Any) -> _BatchWriter:
         """Create a writer for async writing of bulk data
 
         kwargs are passed to batchuploader.create_writer, but auth and gzip
@@ -149,27 +171,29 @@ class Collection(object):
         """
         return self._collections.create_writer(self.coltype, self.colname, **kwargs)
 
-    def get(self, *args, **kwargs):
+    def get(self, *args: Any, **kwargs: Any) -> Any:
         return self._collections.get(self.coltype, self.colname, *args, **kwargs)
 
-    def set(self, *args, **kwargs):
+    def set(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
         return self._collections.set(self.coltype, self.colname, *args, **kwargs)
 
-    def delete(self, *args, **kwargs):
+    def delete(self, *args: Any, **kwargs: Any) -> Iterator[Any]:
         return self._collections.delete(self.coltype, self.colname, *args, **kwargs)
 
-    def truncate(self):
+    def truncate(self) -> Iterator[Any]:
         return self._collections.truncate(self.colname)
 
-    def count(self, *args, **kwargs):
+    def count(self, *args: Any, **kwargs: Any) -> int:
         return self._collections.count(self.coltype, self.colname, *args, **kwargs)
 
-    def iter_json(self, requests_params=None, **apiparams):
+    def iter_json(self, requests_params: dict[str, Any] | None = None,
+                  **apiparams: Any) -> Iterator[str]:
         return self._collections.iter_json(
             self.coltype, self.colname, requests_params=requests_params, **apiparams
         )
 
-    def iter_values(self, requests_params=None, **apiparams):
+    def iter_values(self, requests_params: dict[str, Any] | None = None,
+                    **apiparams: Any) -> Iterator[Any]:
         return self._collections.iter_values(
             self.coltype, self.colname, requests_params=requests_params, **apiparams
         )

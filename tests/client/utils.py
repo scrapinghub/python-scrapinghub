@@ -1,9 +1,15 @@
+from typing import Any
+
+from scrapinghub.client.jobs import Job
+
 from ..conftest import TEST_PROJECT_ID, TEST_SPIDER_NAME
 from ..conftest import TEST_DASH_ENDPOINT
 
 
-def validate_default_meta(meta, state='pending', units=1,
-                          priority=2, tags=None):
+def validate_default_meta(
+    meta: Any, state: str = 'pending', units: int = 1, priority: int = 2,
+    tags: list[str] | None = None,
+) -> None:
     assert meta.get('project') == int(TEST_PROJECT_ID)
     assert meta.get('spider') == TEST_SPIDER_NAME
     assert meta.get('state') == state
@@ -15,7 +21,7 @@ def validate_default_meta(meta, state='pending', units=1,
     assert meta.get('portia_url')
 
 
-def normalize_job_for_tests(job):
+def normalize_job_for_tests(job: Job) -> Job:
     """A temporary workaround to deal with VCR.py cassettes(snapshots).
 
     The existing tests highly rely on VCR.py which creates snapshots of real

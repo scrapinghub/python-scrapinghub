@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import time
 import socket
 import random
@@ -12,8 +14,13 @@ from itertools import count
 import requests
 from collections import deque
 from threading import Thread, Event
-from .utils import xauth, iterqueue, sizeof_fmt
+from collections.abc import Callable, Iterable
+from typing import TYPE_CHECKING, Any
+from .utils import _Auth, xauth, iterqueue, sizeof_fmt
 from .serialization import jsonencode
+
+if TYPE_CHECKING:
+    from .client import HubstorageClient
 
 logger = logging.getLogger('hubstorage.batchuploader')
 
@@ -38,18 +45,21 @@ class BatchUploader(object):
     # - standard deviation = approx. 40m, which means that 95% of the time the
     #   total delay will be within 2*std = 1h20m of the average.
 
-    def __init__(self, client):
+    def __init__(self, client: HubstorageClient) -> None:
         self.client = client
         self.closed = False
         self._wait_event = Event()
-        self._writers = deque()
+        self._writers: deque[_BatchWriter] = deque()
         self._thread = Thread(target=self._worker)
         self._thread.daemon = True
         self._thread.start()
 
-    def create_writer(self, url, start=0, auth=None, size=1000, interval=15,
-                      qsize=None, content_encoding='identity',
-                      maxitemsize=1024 ** 2, callback=None):
+    def create_writer(
+        self, url: str, start: int = 0, auth: _Auth = None, size: int = 1000,
+        interval: float = 15, qsize: int | None = None,
+        content_encoding: str = 'identity', maxitemsize: int = 1024 ** 2,
+        callback: Callable[[requests.Response | None], object] | None = None,
+    ) -> _BatchWriter:
         # callback shouldn't try to inject more items in the queue
         # otherwise it can lead to deadlock on _checkpoint step
         assert not self.closed, 'Can not create new writers when closed'
@@ -67,24 +77,24 @@ class BatchUploader(object):
         self._writers.append(w)
         return w
 
-    def close(self, timeout=None):
+    def close(self, timeout: float | None = None) -> None:
         self.closed = True
         self.interrupt()
         self._thread.join(timeout)
 
-    def interrupt(self):
+    def interrupt(self) -> None:
         self._wait_event.set()
 
-    def __del__(self):
+    def __del__(self) -> None:
         if not self.closed:
             warnings.warn("%r not closed properly, some items may have been "
                           "lost!: %r" % (self.__class__.__name__, self._writers))
 
-    def _interruptable_sleep(self):
+    def _interruptable_sleep(self) -> None:
         self._wait_event.wait(self.worker_loop_delay)
         self._wait_event.clear()
 
-    def _worker(self):
+    def _worker(self) -> None:
         ctr = count()
         while True:
             if not self._writers:
@@ -116,7 +126,7 @@ class BatchUploader(object):
             if not (w.closed and w.itemsq.empty()):
                 self._writers.append(w)
 
-    def _checkpoint(self, w):
+    def _checkpoint(self, w: _BatchWriter) -> None:
         q = w.itemsq
         qiter = iterqueue(q, w.size)
         data = self._content_encode(qiter, w)
@@ -137,7 +147,7 @@ class BatchUploader(object):
             for _ in range(qiter.count):
                 q.task_done()
 
-    def _content_encode(self, qiter, w):
+    def _content_encode(self, qiter: iterqueue, w: _BatchWriter) -> bytes:
         ce = w.content_encoding
         if ce == 'identity':
             return _encode_identity(qiter)
@@ -146,7 +156,7 @@ class BatchUploader(object):
         else:
             raise ValueError('Writer using unknown content encoding: %s' % ce)
 
-    def _tryupload(self, batch):
+    def _tryupload(self, batch: dict[str, Any]) -> requests.Response | None:
         """Retry uploads in case of server failures
 
         Use polinomial backoff with 10 minutes maximum interval that accounts
@@ -168,7 +178,7 @@ class BatchUploader(object):
                                    r.status_code, r.reason, r.text.rstrip())
                 return r
             except (socket.error, requests.RequestException) as e:
-                if isinstance(e, requests.HTTPError):
+                if isinstance(e, requests.HTTPError) and e.response is not None:
                     emsg = "[HTTP error {0}] {1}".format(e.response.status_code,
                                                          e.response.text.rstrip())
                 else:
@@ -182,8 +192,9 @@ class BatchUploader(object):
             backoff = min(max(retryn ** 2, self.worker_min_interval),
                           self.worker_max_interval)
             time.sleep(backoff * (0.5 + random.random()))
+        return None
 
-    def _upload(self, batch):
+    def _upload(self, batch: dict[str, Any]) -> requests.Response:
         params = {'start': batch['offset']}
         headers = {'content-encoding': batch['content-encoding']}
         return self.client.session.request(
@@ -205,8 +216,12 @@ class _BatchWriter(object):
     #: Truncate overly big items to that many bytes for the error message.
     ERRMSG_DATA_TRUNCATION_LEN = 1024
 
-    def __init__(self, url, start, auth, size, interval, qsize,
-                 maxitemsize, content_encoding, uploader, callback=None):
+    def __init__(
+        self, url: str, start: int, auth: tuple[str, str] | None, size: int,
+        interval: float, qsize: int | None, maxitemsize: int,
+        content_encoding: str, uploader: BatchUploader,
+        callback: Callable[[requests.Response | None], object] | None = None,
+    ) -> None:
         self.url = url
         self.offset = start
         self._nextid = count(start)
@@ -216,13 +231,13 @@ class _BatchWriter(object):
         self.maxitemsize = maxitemsize
         self.content_encoding = content_encoding
         self.checkpoint = time.time()
-        self.itemsq = Queue(size * 2 if qsize is None else qsize)
+        self.itemsq: Queue[str] = Queue(size * 2 if qsize is None else qsize)
         self.closed = False
         self.flushme = False
         self.uploader = uploader
         self.callback = callback
 
-    def write(self, item):
+    def write(self, item: Any) -> int:
         assert not self.closed, 'attempting writes to a closed writer'
         data = jsonencode(item)
         if len(data) > self.maxitemsize:
@@ -236,25 +251,25 @@ class _BatchWriter(object):
             self.uploader.interrupt()
         return next(self._nextid)
 
-    def flush(self):
+    def flush(self) -> None:
         self.flushme = True
         self._waitforq()
         self.flushme = False
 
-    def close(self, block=True):
+    def close(self, block: bool = True) -> None:
         self.closed = True
         if block:
             self._waitforq()
 
-    def _waitforq(self):
+    def _waitforq(self) -> None:
         self.uploader.interrupt()
         self.itemsq.join()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.url
 
 
-def _encode_identity(iterable):
+def _encode_identity(iterable: Iterable[str | bytes]) -> bytes:
     data = BytesIO()
     for item in iterable:
         if isinstance(item, six.text_type):
@@ -264,7 +279,7 @@ def _encode_identity(iterable):
     return data.getvalue()
 
 
-def _encode_gzip(iterable):
+def _encode_gzip(iterable: Iterable[str | bytes]) -> bytes:
     data = BytesIO()
     with GzipFile(fileobj=data, mode='w') as gzo:
         for item in iterable:

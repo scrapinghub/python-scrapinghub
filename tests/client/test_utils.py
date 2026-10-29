@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import pytest
 from codecs import encode
 
@@ -10,7 +11,7 @@ from scrapinghub.client.utils import (
 
 
 @pytest.fixture(autouse=True)
-def isolated_auth_env(tmp_path, monkeypatch):
+def isolated_auth_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep auth resolution hermetic: drop any ambient auth env vars and run
     from an empty directory so ``find_dotenv()`` can't pick up a stray ``.env``
     from the developer's working tree."""
@@ -19,67 +20,67 @@ def isolated_auth_env(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 
 
-def test_parse_auth_none():
+def test_parse_auth_none() -> None:
     with pytest.raises(RuntimeError):
         parse_auth(None)
 
 
 @mock.patch.dict(os.environ, {'SH_APIKEY': 'testkey'})
-def test_parse_auth_none_with_env():
+def test_parse_auth_none_with_env() -> None:
     assert parse_auth(None) == ('testkey', '')
 
 
 @mock.patch.dict(os.environ, {'SH_APIKEY': 'testkey', 'SHUB_JOBAUTH': 'jwt'})
-def test_parse_auth_none_with_multiple_env():
+def test_parse_auth_none_with_multiple_env() -> None:
     assert parse_auth(None) == ('testkey', '')
 
 
 @mock.patch.dict(os.environ, {'SHUB_APIKEY': 'aliaskey'})
-def test_parse_auth_none_with_shub_apikey_alias():
+def test_parse_auth_none_with_shub_apikey_alias() -> None:
     assert parse_auth(None) == ('aliaskey', '')
 
 
 @mock.patch.dict(os.environ, {'SH_APIKEY': 'primary', 'SHUB_APIKEY': 'alias'})
-def test_parse_auth_sh_apikey_takes_precedence_over_alias():
+def test_parse_auth_sh_apikey_takes_precedence_over_alias() -> None:
     assert parse_auth(None) == ('primary', '')
 
 
-def test_parse_auth_tuple():
+def test_parse_auth_tuple() -> None:
     assert parse_auth(('test', 'test')) == ('test', 'test')
     assert parse_auth(('apikey', '')) == ('apikey', '')
 
     with pytest.raises(ValueError):
-        parse_auth(('user', 'pass', 'bad-param'))
+        parse_auth(('user', 'pass', 'bad-param'))  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        parse_auth((None, None))
+        parse_auth((None, None))  # type: ignore[arg-type]
 
     with pytest.raises(ValueError):
-        parse_auth((1234, ''))
+        parse_auth((1234, ''))  # type: ignore[arg-type]
 
 
-def test_parse_auth_not_string():
+def test_parse_auth_not_string() -> None:
     with pytest.raises(ValueError):
-        parse_auth(12345)
+        parse_auth(12345)  # type: ignore[arg-type]
 
 
-def test_parse_auth_simple():
+def test_parse_auth_simple() -> None:
     assert parse_auth('user:pass') == ('user', 'pass')
 
 
-def test_parse_auth_apikey():
+def test_parse_auth_apikey() -> None:
     apikey = 'c3a3c298c2b8c3a6c291c284c3a9'
     assert parse_auth(apikey) == (apikey, '')
 
 
-def test_parse_auth_jwt_token():
+def test_parse_auth_jwt_token() -> None:
     test_job, test_token = '1/2/3', 'some.jwt.token'
     raw_token = (test_job + ':' + test_token).encode('utf8')
     encoded_token = encode(raw_token, 'hex_codec').decode('ascii')
     assert parse_auth(encoded_token) == (test_job, test_token)
 
 
-def test_parse_auth_jwt_token_with_jwt_token_env():
+def test_parse_auth_jwt_token_with_jwt_token_env() -> None:
     dummy_test_job, dummy_test_token = '1/2/3', 'some.dummy.jwt.token'
     raw_token = (dummy_test_job + ':' + dummy_test_token).encode('utf8')
     dummy_encoded_token = encode(raw_token, 'hex_codec').decode('ascii')
@@ -92,7 +93,7 @@ def test_parse_auth_jwt_token_with_jwt_token_env():
         assert parse_auth(encoded_token) == (test_job, test_token)
 
 
-def test_parse_auth_none_with_jwt_token_env():
+def test_parse_auth_none_with_jwt_token_env() -> None:
     test_job, test_token = '1/2/3', 'some.jwt.token'
     raw_token = (test_job + ':' + test_token).encode('utf8')
     encoded_token = encode(raw_token, 'hex_codec').decode('ascii')
@@ -101,14 +102,16 @@ def test_parse_auth_none_with_jwt_token_env():
         assert parse_auth(None) == (test_job, test_token)
 
 
-def test_read_dotenv_auth_default_path(tmp_path):
+def test_read_dotenv_auth_default_path(tmp_path: Path) -> None:
     (tmp_path / '.env').write_text('SH_APIKEY=FROMDOTENV\n')
 
     assert _read_dotenv_auth() == {'SH_APIKEY': 'FROMDOTENV'}
     assert 'SH_APIKEY' not in os.environ  # reading the file must not touch env
 
 
-def test_read_dotenv_auth_parent_dir(tmp_path, monkeypatch):
+def test_read_dotenv_auth_parent_dir(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
     (tmp_path / '.env').write_text('SHUB_APIKEY=FROMPARENT\n')
     subdir = tmp_path / 'project' / 'subdir'
     subdir.mkdir(parents=True)
@@ -117,7 +120,7 @@ def test_read_dotenv_auth_parent_dir(tmp_path, monkeypatch):
     assert _read_dotenv_auth() == {'SHUB_APIKEY': 'FROMPARENT'}
 
 
-def test_read_dotenv_auth_custom_path(tmp_path):
+def test_read_dotenv_auth_custom_path(tmp_path: Path) -> None:
     env_file = tmp_path / 'custom.env'
     env_file.write_text('SH_APIKEY=CUSTOMKEY\nSHUB_JOBAUTH=CUSTOMJWT\n')
 
@@ -126,7 +129,7 @@ def test_read_dotenv_auth_custom_path(tmp_path):
     }
 
 
-def test_read_dotenv_auth_only_reads_auth_vars(tmp_path):
+def test_read_dotenv_auth_only_reads_auth_vars(tmp_path: Path) -> None:
     env_file = tmp_path / 'custom.env'
     env_file.write_text('SH_APIKEY=ONLYTHIS\nOTHER_VAR=ignored\n')
 
@@ -134,25 +137,27 @@ def test_read_dotenv_auth_only_reads_auth_vars(tmp_path):
     assert 'OTHER_VAR' not in os.environ
 
 
-def test_read_dotenv_auth_missing_file(tmp_path):
+def test_read_dotenv_auth_missing_file(tmp_path: Path) -> None:
     assert _read_dotenv_auth(str(tmp_path / 'does-not-exist.env')) == {}
 
 
-def test_parse_auth_none_reads_dotenv(tmp_path):
+def test_parse_auth_none_reads_dotenv(tmp_path: Path) -> None:
     env_file = tmp_path / 'custom.env'
     env_file.write_text('SH_APIKEY=DOTENVKEY\n')
 
     assert parse_auth(None, dotenv_path=str(env_file)) == ('DOTENVKEY', '')
 
 
-def test_parse_auth_none_reads_shub_apikey_alias_from_dotenv(tmp_path):
+def test_parse_auth_none_reads_shub_apikey_alias_from_dotenv(
+    tmp_path: Path,
+) -> None:
     env_file = tmp_path / 'custom.env'
     env_file.write_text('SHUB_APIKEY=ALIASFROMFILE\n')
 
     assert parse_auth(None, dotenv_path=str(env_file)) == ('ALIASFROMFILE', '')
 
 
-def test_parse_auth_none_reads_jobauth_from_dotenv(tmp_path):
+def test_parse_auth_none_reads_jobauth_from_dotenv(tmp_path: Path) -> None:
     test_job, test_token = '1/2/3', 'some.jwt.token'
     raw_token = (test_job + ':' + test_token).encode('utf8')
     encoded_token = encode(raw_token, 'hex_codec').decode('ascii')
@@ -163,7 +168,9 @@ def test_parse_auth_none_reads_jobauth_from_dotenv(tmp_path):
         assert parse_auth(None, dotenv_path=str(env_file)) == (test_job, test_token)
 
 
-def test_parse_auth_env_takes_precedence_over_dotenv(tmp_path, monkeypatch):
+def test_parse_auth_env_takes_precedence_over_dotenv(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.setenv('SH_APIKEY', 'FROMENV')
     env_file = tmp_path / 'custom.env'
     env_file.write_text('SH_APIKEY=FROMDOTENV\n')
@@ -171,7 +178,7 @@ def test_parse_auth_env_takes_precedence_over_dotenv(tmp_path, monkeypatch):
     assert parse_auth(None, dotenv_path=str(env_file)) == ('FROMENV', '')
 
 
-def test_parse_auth_none_does_not_mutate_environ(tmp_path):
+def test_parse_auth_none_does_not_mutate_environ(tmp_path: Path) -> None:
     env_file = tmp_path / 'custom.env'
     env_file.write_text('SH_APIKEY=DOTENVKEY\nSHUB_JOBAUTH=JWT\n')
 
@@ -181,18 +188,18 @@ def test_parse_auth_none_does_not_mutate_environ(tmp_path):
     assert 'SHUB_JOBAUTH' not in os.environ
 
 
-def test_parse_job_key():
+def test_parse_job_key() -> None:
     job_key = parse_job_key('123/10/11')
     assert job_key.project_id == '123'
     assert job_key.spider_id == '10'
     assert job_key.job_id == '11'
 
 
-def test_parse_job_key_non_numeric():
+def test_parse_job_key_non_numeric() -> None:
     with pytest.raises(ValueError):
         parse_job_key('123/a/6')
 
 
-def test_parse_job_key_incorrect_length():
+def test_parse_job_key_incorrect_length() -> None:
     with pytest.raises(ValueError):
         parse_job_key('123/1')
