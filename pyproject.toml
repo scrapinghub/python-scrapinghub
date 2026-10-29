@@ -8,3 +8,9 @@ strict = true
 [[tool.mypy.overrides]]
 module = ["msgpack", "retrying", "vcr"]
 ignore_missing_imports = true
+
+[dependency-groups]
+docs = [
+    "sphinx-reredirects",
+    "sphinx-rtd-theme",
+]
