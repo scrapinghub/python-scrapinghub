@@ -17,6 +17,11 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
     :meth:`iter` method (all params and available filters are same for
     both methods).
 
+    Besides the parameters of the :ref:`zyte:api-items`, :meth:`iter`
+    supports a *filter* parameter: a list of ``(field, operator, values)``
+    tuples, all of which an item must match, as shown in the last example
+    below.
+
     Usage:
 
     - retrieve all scraped items from a job::
@@ -92,7 +97,7 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
 
     def list_iter(self, chunksize=1000, *args, **kwargs):
         """An alternative interface for reading items by returning them
-        as a generator which yields lists of items sized as `chunksize`.
+        as a generator which yields lists of up to *chunksize* items.
 
         This is a convenient method for cases when processing a large amount of
         items from a job isn't ideal in one go due to the large memory needed.
@@ -101,10 +106,9 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
         You can improve I/O overheads by increasing the chunk value but that
         would also increase the memory consumption.
 
-        :param chunksize: size of list to be returned per iteration
-        :param start: offset to specify the start of the item iteration
-        :param count: overall number of items to be returned, which is broken
-            down by `chunksize`.
+        *start* is the index of the first item to read, and *count* the
+        overall number of items to return. Other parameters, e.g. *filter*,
+        work as in :meth:`iter`.
 
         :return: an iterator over items, yielding lists of items.
         :rtype: :class:`collections.abc.Iterable`
@@ -112,6 +116,12 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
 
         start = kwargs.pop("start", 0)
         count = kwargs.pop("count", sys.maxsize)
+        meta = kwargs.pop("meta", None) or []
+        if isinstance(meta, str):
+            meta = [meta]
+        drop_key = "_key" not in meta
+        if drop_key:
+            meta = [*meta, "_key"]
         processed = 0
 
         while True:
@@ -120,11 +130,18 @@ class Items(_DownloadableProxyMixin, _ItemsResourceProxy):
                 chunksize = count - processed
             items = [
                 item for item in self.iter(
-                    count=chunksize, start=next_key, *args, **kwargs)
+                    count=chunksize, start=next_key, meta=meta,
+                    *args, **kwargs)
             ]
+            if items:
+                # Filters may skip items, so resume right after the last
+                # item returned.
+                start = int(items[-1]["_key"].rsplit("/", 1)[1]) + 1
+            if drop_key:
+                for item in items:
+                    del item["_key"]
             yield items
             processed += len(items)
-            start += len(items)
             if processed >= count:
                 break
             if len(items) < chunksize:
